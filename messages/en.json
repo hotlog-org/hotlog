@@ -9,7 +9,10 @@
   },
   "modules": {
     "home": {
-      "welcome": "Welcome to HotLog!"
+      "welcome": "Welcome to HotLog!",
+      "getStarted": "Get Started",
+      "blackSectionTitle": "Clean up your way with HotLog!",
+      "blackSectionText": "Here their is some long, veeeery interesting description of the product"
     }
   }
 }

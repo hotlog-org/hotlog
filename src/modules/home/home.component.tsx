@@ -1,9 +1,13 @@
-import { getHomeService } from './home.service'
+import HomeClient from "./home.client"
+import { getHomeService } from "./home.service"
 
-const HomeComponent = async () => {
+export default async function HomeComponent() {
   const service = await getHomeService()
-
-  return <div>{service.t('welcome')}</div>
+  const translations = {
+    welcome: service.t("welcome"),
+    getStarted: service.t("getStarted"),
+    blackSectionTitle: service.t("blackSectionTitle"),
+    blackSectionText: service.t("blackSectionText"),
+  }
+  return <HomeClient translations={translations} />
 }
-
-export default HomeComponent
