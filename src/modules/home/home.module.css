@@ -1,16 +1,12 @@
 .section {
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  padding: 48px 24px;
-  text-align: center;
-  background: linear-gradient(to bottom, #FF6C40 0%, #FDE577 100%);
-  border-radius: 0;
-  max-width: 100vw;
-  margin: 0;
+  background: radial-gradient(
+      ellipse at bottom,
+      #FF6C40 0%,
+      transparent 70%
+    ),
+    linear-gradient(to top, #2C112B 0%, #FF6C40 50%, #FDE577 100%);
 }
+
 
 .homeTitle {
   font-size: 3.2rem;
@@ -24,37 +20,17 @@
   background-clip: text;
 }
 
-.getStartedButton {
-  padding: 12px 40px;
-  font-size: 2rem;
-  background: #2C112B;
-  color: #fff;
-  border: none;
-  border-radius: 999px;
-  cursor: pointer;
-  font-weight: 700;
-  box-shadow: 0 2px 8px rgba(255, 108, 64, 0.12);
-  transition: transform 0.3s ease, box-shadow 0.3s ease, background 0.4s ease;
-  outline: none;
-  letter-spacing: 0.5px;
-}
-
-.getStartedButton:hover,
-.getStartedButton:focus {
-  transform: scale(1.05);
-  box-shadow: 0 4px 16px rgba(255, 108, 64, 0.18);
-}
-
 .blackSection {
-  min-height: 100vh;
-  background: #2C112B;
-  color: #fff;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
+  background: 
+    radial-gradient(
+      ellipse at top,
+      #FF6C40 0%,
+      transparent 70%
+    ),
+    #2C112B;
   animation: slideDown 0.8s cubic-bezier(0.23, 1, 0.32, 1);
 }
+
 
 @keyframes slideDown {
   from {
@@ -65,16 +41,4 @@
     opacity: 1;
     transform: translateY(0);
   }
-}
-
-.blackSectionTitle {
-  font-size: 2.2rem;
-  font-weight: 800;
-  margin-bottom: 16px;
-  letter-spacing: 1px;
-}
-
-.blackSectionText {
-  font-size: 1.2rem;
-  opacity: 0.85;
 }
