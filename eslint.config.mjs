@@ -1,40 +1,40 @@
-import { FlatCompat } from '@eslint/eslintrc'
-import prettierConfig from 'eslint-config-prettier'
-import prettierPlugin from 'eslint-plugin-prettier'
-import { dirname } from 'path'
-import { fileURLToPath } from 'url'
+// eslint.config.mjs
+import tseslint from "@typescript-eslint/eslint-plugin";
+import tsparser from "@typescript-eslint/parser";
+import prettierConfig from "eslint-config-prettier";
+import prettierPlugin from "eslint-plugin-prettier";
 
-const __filename = fileURLToPath(import.meta.url)
-const __dirname = dirname(__filename)
-
-const compat = new FlatCompat({
-  baseDirectory: __dirname,
-})
-
-// Integrate Prettier: disable stylistic rules that conflict and run prettier as an ESLint rule.
-const eslintConfig = [
-  ...compat.extends('next/core-web-vitals', 'next/typescript'),
-  // Disable conflicting stylistic rules
-  prettierConfig,
+export default [
   {
-    files: ['**/*.{js,jsx,ts,tsx}'],
-    plugins: { prettier: prettierPlugin },
+    files: ["**/*.{js,jsx,ts,tsx}"],
+    languageOptions: {
+      parser: tsparser,
+      sourceType: "module",
+    },
+    plugins: {
+      "@typescript-eslint": tseslint,
+      prettier: prettierPlugin,
+    },
     rules: {
-      'prettier/prettier': 'error',
+      ...tseslint.configs.recommended.rules,
+      ...prettierConfig.rules,
+      "@typescript-eslint/no-unused-vars": "warn",
+      "no-console": "warn",
+      "semi": ["error", "never"],
+      "quotes": ["error", "single"],
+      "prettier/prettier": "error",
     },
   },
   {
     ignores: [
-      'node_modules',
-      'dist',
-      '.next',
-      'build',
-      'coverage',
-      '*.config.js',
-      '*.config.cjs',
-      '*.config.mjs',
+      "node_modules",
+      "dist",
+      ".next",
+      "build",
+      "coverage",
+      "*.config.js",
+      "*.config.cjs",
+      "*.config.mjs",
     ],
   },
-]
-
-export default eslintConfig
+];

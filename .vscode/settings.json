@@ -1,6 +1,7 @@
 {
-  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "editor.tabSize": 2,
   "editor.formatOnSave": true,
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
   "editor.codeActionsOnSave": {
     "source.fixAll.eslint": "explicit",
     "source.organizeImports": "explicit"
@@ -11,5 +12,8 @@
     "typescript",
     "typescriptreact"
   ],
-  "files.eol": "auto"
+  "files.eol": "auto",
+  "cSpell.words": [
+    "hotlog"
+  ],
 }
