@@ -81,7 +81,7 @@
     }
   },
   "errors": {
-    "signup": {
+    "auth": {
       "USER_NOT_FOUND": "User not found.",
       "FAILED_TO_CREATE_USER": "Failed to create user. Please try again.",
       "FAILED_TO_CREATE_SESSION": "Failed to create session. Please try again.",
@@ -106,19 +106,6 @@
       "FAILED_TO_UNLINK_LAST_ACCOUNT": "You cannot unlink your last account.",
       "ACCOUNT_NOT_FOUND": "Account not found.",
       "USER_ALREADY_HAS_PASSWORD": "User already has a password. Please provide the current password to proceed."
-    },
-    "login": {
-      "USER_NOT_FOUND": "User not found. Please check your email address.",
-      "FAILED_TO_CREATE_SESSION": "Failed to create session. Please try again.",
-      "FAILED_TO_GET_SESSION": "Failed to get session information.",
-      "INVALID_PASSWORD": "Invalid password. Please check your password and try again.",
-      "INVALID_EMAIL": "Please enter a valid email address.",
-      "INVALID_EMAIL_OR_PASSWORD": "Invalid email or password. Please check your credentials.",
-      "PROVIDER_NOT_FOUND": "Authentication provider not found.",
-      "INVALID_TOKEN": "Invalid authentication token. Please try again.",
-      "SESSION_EXPIRED": "Your session has expired. Please sign in again.",
-      "ACCOUNT_NOT_FOUND": "Account not found. Please check your credentials.",
-      "EMAIL_NOT_VERIFIED": "Please verify your email address before signing in."
     }
   }
 }

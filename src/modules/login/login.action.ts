@@ -1,8 +1,5 @@
-'use server'
-
-import { authClient } from '@/lib/better-auth/client'
+import { authClient } from '@/lib/better-auth'
 import { ErrorCode, mapErrorToCode } from '@/shared/utils'
-import { getTranslations } from 'next-intl/server'
 
 export interface LoginData {
   email: string
@@ -12,12 +9,12 @@ export interface LoginData {
 export interface LoginResult {
   success: boolean
   error?: string
-  errorCode?: ErrorCode
 }
 
-export const loginAction = async (data: LoginData): Promise<LoginResult> => {
-  const t = await getTranslations('errors.login')
-
+export const loginAction = async (
+  data: LoginData,
+  t: (key: string) => string,
+): Promise<LoginResult> => {
   try {
     const result = await authClient.signIn.email({
       email: data.email,
@@ -26,10 +23,10 @@ export const loginAction = async (data: LoginData): Promise<LoginResult> => {
 
     if (result.error) {
       const errorCode = mapErrorToCode(result.error)
+
       return {
         success: false,
         error: t(errorCode) || t(ErrorCode.INVALID_EMAIL_OR_PASSWORD),
-        errorCode,
       }
     }
 
@@ -39,10 +36,11 @@ export const loginAction = async (data: LoginData): Promise<LoginResult> => {
   } catch (error) {
     const errorCode = mapErrorToCode(error)
 
+    console.log('Error:', error)
+
     return {
       success: false,
       error: t(errorCode) || t(ErrorCode.INVALID_EMAIL_OR_PASSWORD),
-      errorCode,
     }
   }
 }

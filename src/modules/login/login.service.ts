@@ -8,12 +8,14 @@ import { loginAction } from './login.action'
 
 export const useLoginService = () => {
   const t = useTranslations('modules.login')
+  const tErrors = useTranslations('errors.auth')
+
   const [isLoading, setIsLoading] = useState(false)
   const [success, setSuccess] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   const loginSchema = z.object({
-    email: z.string().email(t('validation.email.invalid')),
+    email: z.email(t('validation.email.invalid')),
     password: z.string().min(1, t('validation.password.required')),
   })
 
@@ -33,7 +35,7 @@ export const useLoginService = () => {
     setSuccess(false)
 
     try {
-      const result = await loginAction(data)
+      const result = await loginAction(data, tErrors)
 
       if (result.success) {
         setSuccess(true)

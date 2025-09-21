@@ -1,4 +1,4 @@
-import { auth } from './auth'
 import { authClient } from './client'
+import { AuthContext, AuthProvider } from './provider'
 
-export { auth, authClient }
+export { authClient, AuthContext, AuthProvider }

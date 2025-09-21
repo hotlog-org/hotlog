@@ -1,8 +1,7 @@
-'use server'
+'use client'
 
-import { authClient } from '@/lib/better-auth/client'
+import { authClient } from '@/lib/better-auth'
 import { ErrorCode, mapErrorToCode } from '@/shared/utils'
-import { getTranslations } from 'next-intl/server'
 
 export interface SignUpData {
   username: string
@@ -16,9 +15,10 @@ export interface SignUpResult {
   errorCode?: ErrorCode
 }
 
-export const signUpAction = async (data: SignUpData): Promise<SignUpResult> => {
-  const t = await getTranslations('errors.signup')
-
+export const signUpAction = async (
+  data: SignUpData,
+  t: (key: string) => string,
+): Promise<SignUpResult> => {
   try {
     const result = await authClient.signUp.email({
       name: data.username,
@@ -28,6 +28,9 @@ export const signUpAction = async (data: SignUpData): Promise<SignUpResult> => {
 
     if (result.error) {
       const errorCode = mapErrorToCode(result.error)
+
+      console.log('Error:', result.error)
+
       return {
         success: false,
         error: t(errorCode) || t(ErrorCode.FAILED_TO_CREATE_USER),
@@ -40,6 +43,8 @@ export const signUpAction = async (data: SignUpData): Promise<SignUpResult> => {
     }
   } catch (error) {
     const errorCode = mapErrorToCode(error)
+
+    console.log('Error:', error)
 
     return {
       success: false,

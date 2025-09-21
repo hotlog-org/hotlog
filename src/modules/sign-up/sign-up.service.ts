@@ -8,6 +8,8 @@ import { signUpAction } from './sign-up.action'
 
 export const useSignUpService = () => {
   const t = useTranslations('modules.sign-up')
+  const tErrors = useTranslations('errors.auth')
+
   const [isLoading, setIsLoading] = useState(false)
   const [success, setSuccess] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -35,7 +37,7 @@ export const useSignUpService = () => {
     setSuccess(false)
 
     try {
-      const result = await signUpAction(data)
+      const result = await signUpAction(data, tErrors)
 
       if (result.success) {
         setSuccess(true)

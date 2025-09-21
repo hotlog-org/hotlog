@@ -1,3 +1,5 @@
+'use client'
+
 import { envClient } from '@/config/env'
 import { createAuthClient } from 'better-auth/react'
 
