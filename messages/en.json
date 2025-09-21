@@ -9,23 +9,20 @@
   },
   "modules": {
     "sign-up": {
-      "title": "Create your account",
-      "description": "Enter your details below to create your account",
+      "title": "Sign up",
+      "description": "Enter credentials to create your account.",
       "fields": {
         "username": {
           "label": "Username",
-          "placeholder": "Enter your username",
-          "description": "This is your public display name."
+          "placeholder": "Enter your username"
         },
         "email": {
           "label": "Email",
-          "placeholder": "Enter your email address",
-          "description": "We'll use this email to contact you."
+          "placeholder": "Enter your email address"
         },
         "password": {
           "label": "Password",
-          "placeholder": "Enter your password",
-          "description": "Choose a secure password with at least 6 characters."
+          "placeholder": "Enter your password"
         }
       },
       "actions": {
@@ -52,18 +49,16 @@
       }
     },
     "login": {
-      "title": "Sign in to your account",
-      "description": "Enter your email and password to sign in",
+      "title": "Sign in",
+      "description": "Enter your credentials to sign in.",
       "fields": {
         "email": {
           "label": "Email",
-          "placeholder": "Enter your email address",
-          "description": "The email address associated with your account."
+          "placeholder": "Enter your email address"
         },
         "password": {
           "label": "Password",
-          "placeholder": "Enter your password",
-          "description": "Your account password."
+          "placeholder": "Enter your password"
         }
       },
       "actions": {
