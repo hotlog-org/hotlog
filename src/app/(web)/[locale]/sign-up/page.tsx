@@ -8,7 +8,7 @@ export default async function SignUpPage() {
     headers: await headers(),
   })
 
-  if (session.user) {
+  if (session?.user) {
     redirect('/')
   }
 

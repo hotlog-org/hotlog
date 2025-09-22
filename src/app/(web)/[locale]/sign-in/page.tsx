@@ -8,7 +8,7 @@ export default async function SignInPage() {
     headers: await headers(),
   })
 
-  if (session.user) {
+  if (session?.user) {
     redirect('/')
   }
 

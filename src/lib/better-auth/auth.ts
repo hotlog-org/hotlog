@@ -5,10 +5,10 @@ import { Pool } from 'pg'
 
 export const auth = betterAuth({
   database: new Pool({
-    database: envServer.POSTGRES_DB,
-    user: envServer.POSTGRES_USER,
-    password: envServer.POSTGRES_PASSWORD,
-    port: 5432,
+    connectionString: envServer.DATABASE_URL,
+    ssl: {
+      rejectUnauthorized: false,
+    },
   }),
   emailAndPassword: {
     enabled: true,
