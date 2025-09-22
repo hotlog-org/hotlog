@@ -1,6 +1,7 @@
 import '@/config/styles/globals.css'
 
 import { routing } from '@/i18n/routing'
+import { AuthProvider } from '@/lib/better-auth'
 import { ApiProvider } from '@/lib/rest-api/provider'
 import { cn } from '@/shared/utils/shadcn.utils'
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
@@ -35,19 +36,21 @@ export default async function LocaleLayout({
       className={cn(geist.variable, newsreader.variable)}
     >
       <body>
-        <ApiProvider>
-          <NextIntlClientProvider>
-            <ThemeProvider
-              attribute={'class'}
-              defaultTheme={'system'}
-              disableTransitionOnChange
-              enableSystem
-            >
-              <main className={cn('h-[calc(100vh)]')}>{children}</main>
-            </ThemeProvider>
-          </NextIntlClientProvider>
-          <ReactQueryDevtools initialIsOpen={false} />
-        </ApiProvider>
+        <AuthProvider>
+          <ApiProvider>
+            <NextIntlClientProvider>
+              <ThemeProvider
+                attribute={'class'}
+                defaultTheme={'system'}
+                disableTransitionOnChange
+                enableSystem
+              >
+                <main className={cn('h-[calc(100vh)]')}>{children}</main>
+              </ThemeProvider>
+            </NextIntlClientProvider>
+            <ReactQueryDevtools initialIsOpen={false} />
+          </ApiProvider>
+        </AuthProvider>
       </body>
     </html>
   )

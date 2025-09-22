@@ -13,6 +13,105 @@
       "getStarted": "Get Started",
       "blackSectionTitle": "Clean up your way with HotLog!",
       "blackSectionText": "Here their is some long, veeeery interesting description of the product"
+    },
+    "sign-up": {
+      "title": "Sign up",
+      "description": "Enter credentials to create your account.",
+      "fields": {
+        "username": {
+          "label": "Username",
+          "placeholder": "Enter your username"
+        },
+        "email": {
+          "label": "Email",
+          "placeholder": "Enter your email address"
+        },
+        "password": {
+          "label": "Password",
+          "placeholder": "Enter your password"
+        }
+      },
+      "actions": {
+        "submit": "Create Account",
+        "submitting": "Creating Account..."
+      },
+      "validation": {
+        "username": {
+          "min": "Username must be at least 3 characters",
+          "required": "Username is required"
+        },
+        "email": {
+          "invalid": "Invalid email address",
+          "required": "Email is required"
+        },
+        "password": {
+          "min": "Password must be at least 6 characters",
+          "required": "Password is required"
+        }
+      },
+      "messages": {
+        "success": "Account created successfully!",
+        "error": "Failed to create account. Please try again."
+      }
+    },
+    "login": {
+      "title": "Sign in",
+      "description": "Enter your credentials to sign in.",
+      "fields": {
+        "email": {
+          "label": "Email",
+          "placeholder": "Enter your email address"
+        },
+        "password": {
+          "label": "Password",
+          "placeholder": "Enter your password"
+        }
+      },
+      "actions": {
+        "submit": "Sign In",
+        "submitting": "Signing In..."
+      },
+      "validation": {
+        "email": {
+          "invalid": "Invalid email address",
+          "required": "Email is required"
+        },
+        "password": {
+          "required": "Password is required"
+        }
+      },
+      "messages": {
+        "success": "Signed in successfully!",
+        "error": "Failed to sign in. Please try again."
+      }
+    }
+  },
+  "errors": {
+    "auth": {
+      "USER_NOT_FOUND": "User not found.",
+      "FAILED_TO_CREATE_USER": "Failed to create user. Please try again.",
+      "FAILED_TO_CREATE_SESSION": "Failed to create session. Please try again.",
+      "FAILED_TO_UPDATE_USER": "Failed to update user information.",
+      "FAILED_TO_GET_SESSION": "Failed to get session information.",
+      "INVALID_PASSWORD": "Invalid password. Please check your password and try again.",
+      "INVALID_EMAIL": "Please enter a valid email address.",
+      "INVALID_EMAIL_OR_PASSWORD": "Invalid email or password. Please check your credentials.",
+      "SOCIAL_ACCOUNT_ALREADY_LINKED": "This social account is already linked to another user.",
+      "PROVIDER_NOT_FOUND": "Authentication provider not found.",
+      "INVALID_TOKEN": "Invalid authentication token. Please try again.",
+      "ID_TOKEN_NOT_SUPPORTED": "ID token authentication is not supported.",
+      "FAILED_TO_GET_USER_INFO": "Failed to retrieve user information.",
+      "USER_EMAIL_NOT_FOUND": "User email not found.",
+      "EMAIL_NOT_VERIFIED": "Please verify your email address before proceeding.",
+      "PASSWORD_TOO_SHORT": "Password is too short. Please choose a longer password.",
+      "PASSWORD_TOO_LONG": "Password is too long. Please choose a shorter password.",
+      "USER_ALREADY_EXISTS": "An account with this email already exists. Please use a different email or sign in.",
+      "EMAIL_CAN_NOT_BE_UPDATED": "Email address cannot be updated at this time.",
+      "CREDENTIAL_ACCOUNT_NOT_FOUND": "Credential account not found.",
+      "SESSION_EXPIRED": "Your session has expired. Please sign in again.",
+      "FAILED_TO_UNLINK_LAST_ACCOUNT": "You cannot unlink your last account.",
+      "ACCOUNT_NOT_FOUND": "Account not found.",
+      "USER_ALREADY_HAS_PASSWORD": "User already has a password. Please provide the current password to proceed."
     }
   }
 }
