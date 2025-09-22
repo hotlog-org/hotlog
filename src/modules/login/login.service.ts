@@ -6,6 +6,9 @@ import z from 'zod'
 
 import { loginAction } from './login.action'
 
+import { ERoutes } from '@/config/routes'
+import { redirect } from 'next/navigation'
+
 export const useLoginService = () => {
   const t = useTranslations('modules.login')
   const tErrors = useTranslations('errors.auth')
@@ -40,6 +43,7 @@ export const useLoginService = () => {
       if (result.success) {
         setSuccess(true)
         form.reset()
+        redirect(ERoutes.DASHBOARD)
       } else {
         setError(result.error || t('messages.error'))
       }

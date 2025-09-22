@@ -1,3 +1,4 @@
+import { ERoutes } from '@/config/routes'
 import { auth } from '@/lib/better-auth/auth'
 import { SignUpComponent } from '@/modules/sign-up'
 import { headers } from 'next/headers'
@@ -9,7 +10,7 @@ export default async function SignUpPage() {
   })
 
   if (session?.user) {
-    redirect('/')
+    redirect(ERoutes.BASE)
   }
 
   return <SignUpComponent />

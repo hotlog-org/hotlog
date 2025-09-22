@@ -4,6 +4,8 @@ import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import z from 'zod'
 
+import { ERoutes } from '@/config/routes'
+import { redirect } from 'next/navigation'
 import { signUpAction } from './sign-up.action'
 
 export const useSignUpService = () => {
@@ -16,7 +18,7 @@ export const useSignUpService = () => {
 
   const signUpSchema = z.object({
     username: z.string().min(3, t('validation.username.min')),
-    email: z.string().email(t('validation.email.invalid')),
+    email: z.email(t('validation.email.invalid')),
     password: z.string().min(6, t('validation.password.min')),
   })
 
@@ -42,6 +44,7 @@ export const useSignUpService = () => {
       if (result.success) {
         setSuccess(true)
         form.reset()
+        redirect(ERoutes.DASHBOARD)
       } else {
         setError(result.error || t('messages.error'))
       }
