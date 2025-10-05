@@ -78,6 +78,27 @@
         "success": "Signed in successfully!",
         "error": "Failed to sign in. Please try again."
       }
+    },
+    "dashboard": {
+      "sidebar": {
+        "navigation": {
+          "overview": "Overview",
+          "recordings": "Recordings",
+          "identities": "Identities",
+          "flags": "Flags"
+        },
+        "groups": {
+          "addNew": "Add Dashboard"
+        },
+        "projects": {
+          "label": "Project",
+          "select": "Select Project",
+          "create": "Create Project"
+        },
+        "footer": {
+          "logout": "Log out"
+        }
+      }
     }
   },
   "errors": {
@@ -105,7 +126,8 @@
       "SESSION_EXPIRED": "Your session has expired. Please sign in again.",
       "FAILED_TO_UNLINK_LAST_ACCOUNT": "You cannot unlink your last account.",
       "ACCOUNT_NOT_FOUND": "Account not found.",
-      "USER_ALREADY_HAS_PASSWORD": "User already has a password. Please provide the current password to proceed."
+      "USER_ALREADY_HAS_PASSWORD": "User already has a password. Please provide the current password to proceed.",
+      "SOMETHING_WENT_WRONG": "Something went wrong. Please try again later."
     }
   }
 }

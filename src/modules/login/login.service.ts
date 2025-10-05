@@ -7,12 +7,13 @@ import z from 'zod'
 import { loginAction } from './login.action'
 
 import { ERoutes } from '@/config/routes'
-import { redirect } from 'next/navigation'
+import { useRouter } from '@/i18n/navigation'
 
 export const useLoginService = () => {
   const t = useTranslations('modules.login')
   const tErrors = useTranslations('errors.auth')
 
+  const router = useRouter()
   const [isLoading, setIsLoading] = useState(false)
   const [success, setSuccess] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -34,21 +35,24 @@ export const useLoginService = () => {
 
   const onSubmit = async (data: LoginInputs) => {
     setIsLoading(true)
-    setError(null)
     setSuccess(false)
+    setError(null)
 
     try {
       const result = await loginAction(data, tErrors)
 
       if (result.success) {
+        router.push(ERoutes.DASHBOARD)
         setSuccess(true)
+        setError(null)
         form.reset()
-        redirect(ERoutes.DASHBOARD)
       } else {
         setError(result.error || t('messages.error'))
+        setSuccess(false)
       }
     } catch {
       setError(t('messages.error'))
+      setSuccess(false)
     } finally {
       setIsLoading(false)
     }
