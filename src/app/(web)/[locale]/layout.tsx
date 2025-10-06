@@ -7,14 +7,10 @@ import { cn } from '@/shared/utils/shadcn.utils'
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 import { hasLocale, NextIntlClientProvider } from 'next-intl'
 import { ThemeProvider } from 'next-themes'
-import { Geist, Newsreader } from 'next/font/google'
+import { Geist } from 'next/font/google'
 import { notFound } from 'next/navigation'
 
 const geist = Geist({ subsets: ['latin'], variable: '--font-geist' })
-const newsreader = Newsreader({
-  subsets: ['latin'],
-  variable: '--font-newsreader',
-})
 
 export default async function LocaleLayout({
   children,
@@ -30,11 +26,7 @@ export default async function LocaleLayout({
   }
 
   return (
-    <html
-      lang={locale}
-      suppressHydrationWarning
-      className={cn(geist.variable, newsreader.variable)}
-    >
+    <html lang={locale} suppressHydrationWarning className={cn(geist.variable)}>
       <body>
         <AuthProvider>
           <ApiProvider>

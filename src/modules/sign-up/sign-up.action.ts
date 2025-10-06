@@ -29,8 +29,6 @@ export const signUpAction = async (
     if (result.error) {
       const errorCode = mapErrorToCode(result.error)
 
-      console.log('Error:', result.error)
-
       return {
         success: false,
         error: t(errorCode) || t(ErrorCode.FAILED_TO_CREATE_USER),
@@ -43,8 +41,6 @@ export const signUpAction = async (
     }
   } catch (error) {
     const errorCode = mapErrorToCode(error)
-
-    console.log('Error:', error)
 
     return {
       success: false,

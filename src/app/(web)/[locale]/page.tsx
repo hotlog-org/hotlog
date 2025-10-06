@@ -15,7 +15,7 @@ export default function RootPage() {
         <>
           <p className='text-red-500'>Hello {JSON.stringify(user)}</p>
           <p className='text-red-500'>Is logged: {isLogged ? 'yes' : 'no'}</p>
-          <Link href='/sign-in'>sign-in</Link>
+          <Link href='/dashboard'>Dashboard</Link>
         </>
       )}
     </>

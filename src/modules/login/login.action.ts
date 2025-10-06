@@ -36,8 +36,6 @@ export const loginAction = async (
   } catch (error) {
     const errorCode = mapErrorToCode(error)
 
-    console.log('Error:', error)
-
     return {
       success: false,
       error: t(errorCode) || t(ErrorCode.INVALID_EMAIL_OR_PASSWORD),

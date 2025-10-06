@@ -1,3 +1,4 @@
+import { ERoutes } from '@/config/routes'
 import { auth } from '@/lib/better-auth/auth'
 import { LoginComponent } from '@/modules/login'
 import { headers } from 'next/headers'
@@ -9,7 +10,7 @@ export default async function SignInPage() {
   })
 
   if (session?.user) {
-    redirect('/')
+    redirect(ERoutes.BASE)
   }
 
   return <LoginComponent />
