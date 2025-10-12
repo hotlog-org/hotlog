@@ -4,20 +4,16 @@ Modern Next.js 15 application with Turbopack, TypeScript, Tailwind CSS v4, `next
 
 ## Getting Started
 
-Clone and install dependencies:
+- Clone and install dependencies:
 
 ```bash
 git clone https://github.com/hotlog-org/hotlog hotlog
 cd hotlog
 ```
 
-Install dependencies:
+- [Install bun here](https://bun.com/docs/installation)
 
-```bash
-yarn install
-```
-
-Create an environment file:
+- Create `.env` for environmental variables:
 
 ```bash
 cp .env.example .env
@@ -25,13 +21,13 @@ cp .env.example .env
 
 Then fill in the required variables (see below). Next.js automatically loads `.env`.
 
-Run the development server (Turbopack):
+- Run the development server (Turbopack):
 
 ```bash
-yarn dev
+bun dev
 ```
 
-Open `http://localhost:3000` in the browser.
+- Open `http://localhost:3000` in the browser.
 
 ## Scripts
 
