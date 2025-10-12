@@ -1,9 +1,11 @@
 'use client'
 
+import { useSidebar } from '@/shared/ui/sidebar'
 import { useTranslations } from 'next-intl'
 
 export const useDashboardSidebarContentService = () => {
   const t = useTranslations('modules.dashboard.sidebar')
+  const { state: sidebarState } = useSidebar()
 
   // Mock dashboards data - will be replaced with real data from API
   const dashboards = [
@@ -32,5 +34,6 @@ export const useDashboardSidebarContentService = () => {
   return {
     t,
     dashboards,
+    sidebarState,
   }
 }

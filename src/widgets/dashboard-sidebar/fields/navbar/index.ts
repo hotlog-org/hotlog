@@ -1,2 +1,1 @@
-export { default as DashboardSidebarNavbarComponent } from './dashboard-sidebar-navbar.component';
-
+export { default as DashboardSidebarNavbarComponent } from './dashboard-sidebar-navbar.component'
