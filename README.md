@@ -4,20 +4,16 @@ Modern Next.js 15 application with Turbopack, TypeScript, Tailwind CSS v4, `next
 
 ## Getting Started
 
-Clone and install dependencies:
+- Clone and install dependencies:
 
 ```bash
 git clone https://github.com/hotlog-org/hotlog hotlog
 cd hotlog
 ```
 
-Install dependencies:
+- [Install bun here](https://bun.com/docs/installation)
 
-```bash
-yarn install
-```
-
-Create an environment file:
+- Create `.env` for environmental variables:
 
 ```bash
 cp .env.example .env
@@ -25,25 +21,25 @@ cp .env.example .env
 
 Then fill in the required variables (see below). Next.js automatically loads `.env`.
 
-Run the development server (Turbopack):
+- Run the development server (Turbopack):
 
 ```bash
-yarn dev
+bun dev
 ```
 
-Open `http://localhost:3000` in the browser.
+- Open `http://localhost:3000` in the browser.
 
 ## Scripts
 
-| Command | Description |
-|---------|-------------|
-| `yarn dev` | Start dev server with Turbopack |
-| `yarn build` | Production build |
-| `yarn start` | Start production server (after build) |
-| `yarn lint` | Run ESLint (Next.js + custom config) |
-| `yarn lint:fix` | Auto-fix lint issues |
-| `yarn format` | Format code with Prettier |
-| `yarn format:check` | Check formatting |
+| Command             | Description                           |
+| ------------------- | ------------------------------------- |
+| `yarn dev`          | Start dev server with Turbopack       |
+| `yarn build`        | Production build                      |
+| `yarn start`        | Start production server (after build) |
+| `yarn lint`         | Run ESLint (Next.js + custom config)  |
+| `yarn lint:fix`     | Auto-fix lint issues                  |
+| `yarn format`       | Format code with Prettier             |
+| `yarn format:check` | Check formatting                      |
 
 ## Environment Variables
 
@@ -51,15 +47,15 @@ Managed with `@t3-oss/env-nextjs` + `zod`. Validation fails fast during build/ru
 
 Client-side (must be prefixed with `NEXT_PUBLIC_`):
 
-| Variable | Required | Description |
-|----------|----------|-------------|
-| `NEXT_PUBLIC_CLIENT_WEB_URL` | Yes | Base public web URL (e.g. `http://localhost:3000`) |
-| `NEXT_PUBLIC_CLIENT_API_URL` | Yes | Base API URL for REST calls |
+| Variable                     | Required | Description                                        |
+| ---------------------------- | -------- | -------------------------------------------------- |
+| `NEXT_PUBLIC_CLIENT_WEB_URL` | Yes      | Base public web URL (e.g. `http://localhost:3000`) |
+| `NEXT_PUBLIC_CLIENT_API_URL` | Yes      | Base API URL for REST calls                        |
 
 Server-side:
 
-| Variable | Required | Description |
-|----------|----------|-------------|
+| Variable   | Required      | Description                   |
+| ---------- | ------------- | ----------------------------- |
 | `NODE_ENV` | No (defaults) | `development` or `production` |
 
 Example `.env.example` (create this if not present):

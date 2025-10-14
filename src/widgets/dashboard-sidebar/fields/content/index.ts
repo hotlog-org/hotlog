@@ -1,2 +1,1 @@
-export { default as DashboardSidebarContentComponent } from './dashboard-content.component';
-
+export { default as DashboardSidebarContentComponent } from './dashboard-content.component'

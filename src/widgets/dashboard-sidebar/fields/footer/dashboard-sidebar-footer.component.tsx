@@ -19,6 +19,7 @@ import { Skeleton } from '@/shared/ui/skeleton'
 import {
   LogoutSquare01Icon,
   MoreHorizontalIcon,
+  UserIcon,
 } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
 
@@ -32,26 +33,37 @@ const DashboardSidebarFooterComponent = () => {
           <DropdownMenuTrigger className='focus-visible:ring-0' asChild>
             <SidebarMenuButton
               size='lg'
-              className='data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground'
+              className='data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground flex items-center justify-center'
+              tooltip={service.user?.name || 'User'}
             >
-              <div className='h-full w-full flex flex-col leading-tight'>
-                {service.isLoading ? (
-                  <Skeleton className='h-full w-full' />
-                ) : (
-                  <>
-                    <span className='truncate text-sm font-medium'>
-                      {service.user?.name}
-                    </span>
-                    <span className='truncate text-xs text-muted-foreground'>
-                      {service.user?.email}
-                    </span>
-                  </>
-                )}
-              </div>
-              {service.isLoading ? (
-                <Skeleton className='h-full w-4' />
+              {service.sidebarState === 'collapsed' ? (
+                <HugeiconsIcon
+                  icon={UserIcon}
+                  size={20}
+                  className='text-muted-foreground'
+                />
               ) : (
-                <HugeiconsIcon icon={MoreHorizontalIcon} />
+                <>
+                  <div className='h-full w-full flex flex-col leading-tight'>
+                    {service.isLoading ? (
+                      <Skeleton className='h-full w-full' />
+                    ) : (
+                      <>
+                        <span className='truncate text-sm font-medium'>
+                          {service.user?.name}
+                        </span>
+                        <span className='truncate text-xs text-muted-foreground'>
+                          {service.user?.email}
+                        </span>
+                      </>
+                    )}
+                  </div>
+                  {service.isLoading ? (
+                    <Skeleton className='h-full w-4' />
+                  ) : (
+                    <HugeiconsIcon icon={MoreHorizontalIcon} />
+                  )}
+                </>
               )}
             </SidebarMenuButton>
           </DropdownMenuTrigger>
