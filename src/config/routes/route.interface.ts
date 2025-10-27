@@ -7,4 +7,5 @@ export enum ERoutes {
   DASHBOARD_IDENTITIES = '/dashboard/identities',
   DASHBOARD_MODULES = '/dashboard/modules',
   DASHBOARD_FLAGS = '/dashboard/flags',
+  DASHBOARD_GROUP = '/dashboard/group',
 }

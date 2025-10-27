@@ -4,6 +4,7 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  useSidebar,
 } from '@/shared/ui/sidebar'
 
 import {
@@ -25,6 +26,7 @@ import { useDashboardSidebarHeaderService } from './dashboard-sidebar-header.ser
 const DashboardSidebarHeaderComponent = () => {
   const service = useDashboardSidebarHeaderService()
   const { projects, selectedProject, setSelectedProject } = service
+  const { state } = useSidebar()
 
   return (
     <SidebarMenu>
@@ -34,27 +36,40 @@ const DashboardSidebarHeaderComponent = () => {
             <SidebarMenuButton
               size='lg'
               className='data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground'
+              tooltip={selectedProject.name}
             >
-              <div className='flex aspect-square size-8 items-center justify-center rounded-lg'>
-                <HugeiconsIcon
-                  icon={selectedProject.icon}
-                  size={20}
-                  color={selectedProject.color}
-                />
-              </div>
-              <div className='grid flex-1 text-left text-sm leading-tight'>
-                <span className='truncate font-semibold'>
-                  {selectedProject.name}
-                </span>
-                <span className='truncate text-xs text-muted-foreground'>
-                  {service.t('label')}
-                </span>
-              </div>
+              {state === 'collapsed' ? (
+                <div className='flex aspect-square size-8 items-center justify-center rounded-lg'>
+                  <HugeiconsIcon
+                    icon={selectedProject.icon}
+                    size={20}
+                    color={selectedProject.color}
+                  />
+                </div>
+              ) : (
+                <>
+                  <div className='flex aspect-square size-8 items-center justify-center rounded-lg'>
+                    <HugeiconsIcon
+                      icon={selectedProject.icon}
+                      size={20}
+                      color={selectedProject.color}
+                    />
+                  </div>
+                  <div className='grid flex-1 text-left text-sm leading-tight'>
+                    <span className='truncate font-semibold'>
+                      {selectedProject.name}
+                    </span>
+                    <span className='truncate text-xs text-muted-foreground'>
+                      {service.t('label')}
+                    </span>
+                  </div>
 
-              <HugeiconsIcon
-                icon={ArrowDown01Icon}
-                className='ml-auto size-4'
-              />
+                  <HugeiconsIcon
+                    icon={ArrowDown01Icon}
+                    className='ml-auto size-4'
+                  />
+                </>
+              )}
             </SidebarMenuButton>
           </DropdownMenuTrigger>
           <DropdownMenuContent
@@ -69,21 +84,29 @@ const DashboardSidebarHeaderComponent = () => {
             {projects.map((project) => (
               <DropdownMenuItem
                 key={project.id}
-                className='gap-2 p-2 cursor-pointer'
+                className='gap-2 p-2 cursor-pointer text-color-400'
                 onClick={() => setSelectedProject(project)}
               >
                 <div className='flex size-6 items-center justify-center rounded-sm'>
                   <HugeiconsIcon
+                    style={{ color: `${project.color}` }}
                     icon={project.icon}
                     size={16}
-                    color={project.color}
                   />
                 </div>
+
                 <div className='flex-1'>
                   <span className='font-medium'>{project.name}</span>
                 </div>
+
                 {project.id === selectedProject.id && (
-                  <HugeiconsIcon icon={Tick02Icon} className='ml-auto size-4' />
+                  <>
+                    <HugeiconsIcon
+                      icon={Tick02Icon}
+                      className='ml-auto size-4'
+                      color={selectedProject.color}
+                    />
+                  </>
                 )}
               </DropdownMenuItem>
             ))}

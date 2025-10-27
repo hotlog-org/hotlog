@@ -1,2 +1,1 @@
-export { default as SignUpComponent } from './sign-up.component';
-
+export { default as SignUpComponent } from './sign-up.component'

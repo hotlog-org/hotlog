@@ -89,12 +89,14 @@
       "sidebar": {
         "navigation": {
           "overview": "Overview",
+          "group": "Group",
           "recordings": "Recordings",
           "identities": "Identities",
           "flags": "Flags"
         },
         "groups": {
-          "addNew": "Add Dashboard"
+          "label": "Layouts",
+          "addNew": "Create layout"
         },
         "projects": {
           "label": "Project",

@@ -1,2 +1,1 @@
-export { default as DashboardSidebarHeaderComponent } from './dashboard-sidebar-header.component';
-
+export { default as DashboardSidebarHeaderComponent } from './dashboard-sidebar-header.component'

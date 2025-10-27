@@ -1,2 +1,1 @@
-export { default as DashboardSidebarFooterComponent } from './dashboard-sidebar-footer.component';
-
+export { default as DashboardSidebarFooterComponent } from './dashboard-sidebar-footer.component'

@@ -3,7 +3,7 @@
 import {
   Rocket02Icon,
   TestTube02Icon,
-  ThreeDRotateIcon
+  ThreeDRotateIcon,
 } from '@hugeicons/core-free-icons'
 import { useTranslations } from 'next-intl'
 import { useState } from 'react'
