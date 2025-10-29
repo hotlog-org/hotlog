@@ -21,6 +21,7 @@
   "dependencies": {
     "@floating-ui/react": "^0.27.16",
     "@googleapis/calendar": "^11.0.1",
+    "@heroicons/react": "^2.2.0",
     "@hookform/resolvers": "^5.2.2",
     "@hugeicons/core-free-icons": "^1.1.0",
     "@hugeicons/react": "^1.1.1",
@@ -44,7 +45,7 @@
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
     "dotenv": "^17.2.1",
-    "echarts": "^6.0.0",
+    "echarts": "^5.6.0",
     "echarts-for-react": "^3.0.2",
     "ky": "^1.8.2",
     "lucide-react": "^0.539.0",

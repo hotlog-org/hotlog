@@ -1,16 +1,16 @@
 'use client'
 
 import {
-  AreaChart,
-  BarChart,
-  DonutChart,
-  HeatmapChart,
-  HistogramChart,
-  LineChart,
-  PieChart,
-  ScatterChart,
-  StackedBarChart,
-  TimelineChart,
+    AreaChart,
+    BarChart,
+    DonutChart,
+    HeatmapChart,
+    HistogramChart,
+    LineChart,
+    PieChart,
+    ScatterChart,
+    StackedBarChart,
+    TimelineChart,
 } from '@/shared/charts'
 import type { DateRange } from '@/shared/charts/chart.types'
 import CalendarRangeSingleMonth from '@/shared/ui/calendar2'
@@ -28,7 +28,7 @@ export function GroupComponent({ groupId }: GroupComponentProps) {
   return (
     <div className='space-y-8'>
       {/* Header */}
-      <div className='flex items-center justify-between'>
+      <div className='flex items-center justify-between flex-wrap gap-4'>
         <div>
           <h1 className='text-3xl font-bold tracking-tight'>
             Group Analytics Dashboard
@@ -38,7 +38,7 @@ export function GroupComponent({ groupId }: GroupComponentProps) {
           </p>
         </div>
         {/* Centralized Date Range Picker */}
-        <div>
+        <div className='flex items-center'>
           <CalendarRangeSingleMonth value={dateRange} onChange={setDateRange} />
         </div>
       </div>
