@@ -1,207 +1,224 @@
-'use client'
+"use client";
 
-import { Badge } from '@/shared/ui/badge'
-import { Button } from '@/shared/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
+import { Badge } from "@/shared/ui/badge";
+import { Button } from "@/shared/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui/card";
 import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
-    DialogTrigger,
-} from '@/shared/ui/dialog'
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/shared/ui/dialog";
 import {
-    Form,
-    FormControl,
-    FormDescription,
-    FormField,
-    FormItem,
-    FormLabel,
-    FormMessage,
-} from '@/shared/ui/form'
-import { Input } from '@/shared/ui/input'
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/shared/ui/form";
+import { Input } from "@/shared/ui/input";
 import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from '@/shared/ui/table'
-import { cn } from '@/shared/utils/shadcn.utils'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { Check, Link as LinkIcon, Search, ToggleLeft, ToggleRight, X } from 'lucide-react'
-import { useMemo, useState } from 'react'
-import { useForm } from 'react-hook-form'
-import * as z from 'zod'
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/shared/ui/table";
+import { cn } from "@/shared/utils/shadcn.utils";
+import { zodResolver } from "@hookform/resolvers/zod";
+import {
+  Check,
+  Link as LinkIcon,
+  Search,
+  ToggleLeft,
+  ToggleRight,
+  X,
+} from "lucide-react";
+import { useMemo, useState } from "react";
+import { useForm } from "react-hook-form";
+import * as z from "zod";
 
 interface FeatureFlag {
-  id: string
-  key: string
-  name: string
-  description: string
-  enabled: boolean
-  environment: 'production' | 'staging' | 'development'
-  createdAt: Date
-  updatedAt: Date
-  enabledPercentage?: number // For gradual rollouts
-  targetUsers?: string[]
+  id: string;
+  key: string;
+  name: string;
+  description: string;
+  enabled: boolean;
+  environment: "production" | "staging" | "development";
+  createdAt: Date;
+  updatedAt: Date;
+  enabledPercentage?: number; // For gradual rollouts
+  targetUsers?: string[];
 }
 
 // Generate sample feature flags
 const generateSampleFlags = (): FeatureFlag[] => {
   const flags: FeatureFlag[] = [
     {
-      id: 'flag-1',
-      key: 'new-payment-api',
-      name: 'New Payment API',
-      description: 'Enable the new payment processing API endpoint',
+      id: "flag-1",
+      key: "new-payment-api",
+      name: "New Payment API",
+      description: "Enable the new payment processing API endpoint",
       enabled: true,
-      environment: 'production',
+      environment: "production",
       createdAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
       updatedAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000),
       enabledPercentage: 100,
     },
     {
-      id: 'flag-2',
-      key: 'rate-limiting-v2',
-      name: 'Rate Limiting V2',
-      description: 'New rate limiting algorithm with improved accuracy',
+      id: "flag-2",
+      key: "rate-limiting-v2",
+      name: "Rate Limiting V2",
+      description: "New rate limiting algorithm with improved accuracy",
       enabled: false,
-      environment: 'production',
+      environment: "production",
       createdAt: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000),
       updatedAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
       enabledPercentage: 0,
     },
     {
-      id: 'flag-3',
-      key: 'experimental-auth',
-      name: 'Experimental Authentication',
-      description: 'Test new OAuth2 flow with enhanced security',
+      id: "flag-3",
+      key: "experimental-auth",
+      name: "Experimental Authentication",
+      description: "Test new OAuth2 flow with enhanced security",
       enabled: true,
-      environment: 'staging',
+      environment: "staging",
       createdAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000),
       updatedAt: new Date(Date.now() - 2 * 60 * 60 * 1000),
       enabledPercentage: 25,
-      targetUsers: ['beta-users', 'internal-team'],
+      targetUsers: ["beta-users", "internal-team"],
     },
     {
-      id: 'flag-4',
-      key: 'graphql-api',
-      name: 'GraphQL API',
-      description: 'Enable GraphQL endpoint alongside REST API',
+      id: "flag-4",
+      key: "graphql-api",
+      name: "GraphQL API",
+      description: "Enable GraphQL endpoint alongside REST API",
       enabled: true,
-      environment: 'production',
+      environment: "production",
       createdAt: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
       updatedAt: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000),
       enabledPercentage: 75,
     },
     {
-      id: 'flag-5',
-      key: 'analytics-tracking',
-      name: 'Enhanced Analytics',
-      description: 'Improved request tracking and analytics collection',
+      id: "flag-5",
+      key: "analytics-tracking",
+      name: "Enhanced Analytics",
+      description: "Improved request tracking and analytics collection",
       enabled: false,
-      environment: 'development',
+      environment: "development",
       createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
       updatedAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000),
       enabledPercentage: 0,
     },
     {
-      id: 'flag-6',
-      key: 'caching-layer',
-      name: 'Response Caching',
-      description: 'Enable caching layer for frequently accessed endpoints',
+      id: "flag-6",
+      key: "caching-layer",
+      name: "Response Caching",
+      description: "Enable caching layer for frequently accessed endpoints",
       enabled: true,
-      environment: 'production',
+      environment: "production",
       createdAt: new Date(Date.now() - 21 * 24 * 60 * 60 * 1000),
       updatedAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000),
       enabledPercentage: 50,
     },
     {
-      id: 'flag-7',
-      key: 'webhook-retries',
-      name: 'Webhook Retry Logic',
-      description: 'Improved webhook delivery with exponential backoff',
+      id: "flag-7",
+      key: "webhook-retries",
+      name: "Webhook Retry Logic",
+      description: "Improved webhook delivery with exponential backoff",
       enabled: false,
-      environment: 'staging',
+      environment: "staging",
       createdAt: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000),
       updatedAt: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000),
       enabledPercentage: 0,
     },
     {
-      id: 'flag-8',
-      key: 'api-version-v3',
-      name: 'API Version 3',
-      description: 'Enable API v3 endpoints with breaking changes',
+      id: "flag-8",
+      key: "api-version-v3",
+      name: "API Version 3",
+      description: "Enable API v3 endpoints with breaking changes",
       enabled: true,
-      environment: 'production',
+      environment: "production",
       createdAt: new Date(Date.now() - 60 * 24 * 60 * 60 * 1000),
       updatedAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
       enabledPercentage: 100,
     },
-  ]
-  
-  return flags.sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime())
-}
+  ];
+
+  return flags.sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime());
+};
 
 function getEnvironmentBadge(environment: string) {
   const colors: Record<string, string> = {
-    production: 'bg-green-500/10 text-green-600 dark:text-green-400 border-green-500/20',
-    staging: 'bg-yellow-500/10 text-yellow-600 dark:text-yellow-400 border-yellow-500/20',
-    development: 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20',
-  }
-  
+    production:
+      "bg-green-500/10 text-green-600 dark:text-green-400 border-green-500/20",
+    staging:
+      "bg-yellow-500/10 text-yellow-600 dark:text-yellow-400 border-yellow-500/20",
+    development:
+      "bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20",
+  };
+
   return (
-    <Badge variant="outline" className={colors[environment] || ''}>
+    <Badge variant="outline" className={colors[environment] || ""}>
       {environment}
     </Badge>
-  )
+  );
 }
 
 const flagFormSchema = z.object({
-  key: z.string().min(2, 'Key must be at least 2 characters').regex(/^[a-z0-9-]+$/, 'Key must contain only lowercase letters, numbers, and hyphens'),
-  name: z.string().min(2, 'Name must be at least 2 characters'),
-  description: z.string().min(5, 'Description must be at least 5 characters'),
-  environment: z.enum(['production', 'staging', 'development']),
+  key: z.string().min(2, "Key must be at least 2 characters").regex(
+    /^[a-z0-9-]+$/,
+    "Key must contain only lowercase letters, numbers, and hyphens",
+  ),
+  name: z.string().min(2, "Name must be at least 2 characters"),
+  description: z.string().min(5, "Description must be at least 5 characters"),
+  environment: z.enum(["production", "staging", "development"]),
   enabled: z.boolean().default(false),
   enabledPercentage: z.number().min(0).max(100).optional(),
   resources: z.array(z.string()).optional(),
-})
+});
 
-type FlagFormValues = z.infer<typeof flagFormSchema>
+type FlagFormValues = z.infer<typeof flagFormSchema>;
 
 export function FlagsComponent() {
-  const [searchQuery, setSearchQuery] = useState('')
-  const [environmentFilter, setEnvironmentFilter] = useState<'all' | 'production' | 'staging' | 'development'>('all')
-  const [statusFilter, setStatusFilter] = useState<'all' | 'enabled' | 'disabled'>('all')
-  const [flags, setFlags] = useState(generateSampleFlags())
-  const [isDialogOpen, setIsDialogOpen] = useState(false)
-  const [selectedResources, setSelectedResources] = useState<string[]>([])
+  const [searchQuery, setSearchQuery] = useState("");
+  const [environmentFilter, setEnvironmentFilter] = useState<
+    "all" | "production" | "staging" | "development"
+  >("all");
+  const [statusFilter, setStatusFilter] = useState<
+    "all" | "enabled" | "disabled"
+  >("all");
+  const [flags, setFlags] = useState(generateSampleFlags());
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [selectedResources, setSelectedResources] = useState<string[]>([]);
 
   const form = useForm<FlagFormValues>({
     resolver: zodResolver(flagFormSchema),
     defaultValues: {
-      key: '',
-      name: '',
-      description: '',
-      environment: 'development',
+      key: "",
+      name: "",
+      description: "",
+      environment: "development",
       enabled: false,
       enabledPercentage: 100,
       resources: [],
     },
-  })
+  });
 
   const availableResources = [
-    { id: 'api-users', name: 'API Users Endpoint', type: 'endpoint' },
-    { id: 'api-payments', name: 'API Payments Endpoint', type: 'endpoint' },
-    { id: 'rate-limiter', name: 'Rate Limiter Service', type: 'service' },
-    { id: 'cache-layer', name: 'Cache Layer', type: 'service' },
-    { id: 'webhook-service', name: 'Webhook Service', type: 'service' },
-    { id: 'analytics-db', name: 'Analytics Database', type: 'database' },
-  ]
+    { id: "api-users", name: "API Users Endpoint", type: "endpoint" },
+    { id: "api-payments", name: "API Payments Endpoint", type: "endpoint" },
+    { id: "rate-limiter", name: "Rate Limiter Service", type: "service" },
+    { id: "cache-layer", name: "Cache Layer", type: "service" },
+    { id: "webhook-service", name: "Webhook Service", type: "service" },
+    { id: "analytics-db", name: "Analytics Database", type: "database" },
+  ];
 
   const onSubmit = (values: FlagFormValues) => {
     const newFlag: FeatureFlag = {
@@ -215,48 +232,49 @@ export function FlagsComponent() {
       updatedAt: new Date(),
       enabledPercentage: values.enabledPercentage,
       targetUsers: values.resources,
-    }
-    setFlags((prev) => [newFlag, ...prev])
-    form.reset()
-    setIsDialogOpen(false)
-    setSelectedResources([])
-  }
+    };
+    setFlags((prev) => [newFlag, ...prev]);
+    form.reset();
+    setIsDialogOpen(false);
+    setSelectedResources([]);
+  };
 
   const filteredFlags = useMemo(() => {
     return flags.filter((flag) => {
-      const matchesSearch = 
+      const matchesSearch =
         flag.key.toLowerCase().includes(searchQuery.toLowerCase()) ||
         flag.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        flag.description.toLowerCase().includes(searchQuery.toLowerCase())
-      
-      const matchesEnvironment = 
-        environmentFilter === 'all' || flag.environment === environmentFilter
-      
-      const matchesStatus = 
-        statusFilter === 'all' ||
-        (statusFilter === 'enabled' && flag.enabled) ||
-        (statusFilter === 'disabled' && !flag.enabled)
-      
-      return matchesSearch && matchesEnvironment && matchesStatus
-    })
-  }, [flags, searchQuery, environmentFilter, statusFilter])
+        flag.description.toLowerCase().includes(searchQuery.toLowerCase());
+
+      const matchesEnvironment = environmentFilter === "all" ||
+        flag.environment === environmentFilter;
+
+      const matchesStatus = statusFilter === "all" ||
+        (statusFilter === "enabled" && flag.enabled) ||
+        (statusFilter === "disabled" && !flag.enabled);
+
+      return matchesSearch && matchesEnvironment && matchesStatus;
+    });
+  }, [flags, searchQuery, environmentFilter, statusFilter]);
 
   const toggleFlag = (id: string) => {
     setFlags((prev) =>
       prev.map((flag) =>
-        flag.id === id ? { ...flag, enabled: !flag.enabled, updatedAt: new Date() } : flag
+        flag.id === id
+          ? { ...flag, enabled: !flag.enabled, updatedAt: new Date() }
+          : flag
       )
-    )
-  }
+    );
+  };
 
   const formatDate = (date: Date) => {
-    return new Intl.DateTimeFormat('en-US', {
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    }).format(date)
-  }
+    return new Intl.DateTimeFormat("en-US", {
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    }).format(date);
+  };
 
   return (
     <div className="space-y-6">
@@ -278,11 +296,15 @@ export function FlagsComponent() {
             <DialogHeader>
               <DialogTitle>Create New Feature Flag</DialogTitle>
               <DialogDescription>
-                Configure a new feature flag to control API behavior. Connect resources to associate endpoints, services, or databases.
+                Configure a new feature flag to control API behavior. Connect
+                resources to associate endpoints, services, or databases.
               </DialogDescription>
             </DialogHeader>
             <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+              <form
+                onSubmit={form.handleSubmit(onSubmit)}
+                className="space-y-6"
+              >
                 <div className="grid gap-4 py-4">
                   <FormField
                     control={form.control}
@@ -365,7 +387,8 @@ export function FlagsComponent() {
                               max="100"
                               placeholder="100"
                               {...field}
-                              onChange={(e) => field.onChange(Number(e.target.value))}
+                              onChange={(e) =>
+                                field.onChange(Number(e.target.value))}
                             />
                           </FormControl>
                           <FormDescription>
@@ -394,14 +417,14 @@ export function FlagsComponent() {
                             type="button"
                             onClick={() => field.onChange(!field.value)}
                             className={cn(
-                              'relative inline-flex h-6 w-11 items-center rounded-full transition-colors',
-                              field.value ? 'bg-primary' : 'bg-muted'
+                              "relative inline-flex h-6 w-11 items-center rounded-full transition-colors",
+                              field.value ? "bg-primary" : "bg-muted",
                             )}
                           >
                             <span
                               className={cn(
-                                'inline-block h-4 w-4 transform rounded-full bg-white transition-transform',
-                                field.value ? 'translate-x-6' : 'translate-x-1'
+                                "inline-block h-4 w-4 transform rounded-full bg-white transition-transform",
+                                field.value ? "translate-x-6" : "translate-x-1",
                               )}
                             />
                           </button>
@@ -412,7 +435,8 @@ export function FlagsComponent() {
                   <div className="space-y-3">
                     <FormLabel>Connect Resources</FormLabel>
                     <FormDescription>
-                      Associate this flag with API endpoints, services, or databases
+                      Associate this flag with API endpoints, services, or
+                      databases
                     </FormDescription>
                     <div className="grid gap-2 border rounded-md p-4 max-h-48 overflow-y-auto">
                       {availableResources.map((resource) => (
@@ -426,20 +450,43 @@ export function FlagsComponent() {
                             checked={selectedResources.includes(resource.id)}
                             onChange={(e) => {
                               if (e.target.checked) {
-                                setSelectedResources([...selectedResources, resource.id])
-                                form.setValue('resources', [...(form.getValues('resources') || []), resource.id])
+                                setSelectedResources([
+                                  ...selectedResources,
+                                  resource.id,
+                                ]);
+                                form.setValue("resources", [
+                                  ...(form.getValues("resources") || []),
+                                  resource.id,
+                                ]);
                               } else {
-                                setSelectedResources(selectedResources.filter((id) => id !== resource.id))
-                                form.setValue('resources', form.getValues('resources')?.filter((id) => id !== resource.id) || [])
+                                setSelectedResources(
+                                  selectedResources.filter((id) =>
+                                    id !== resource.id
+                                  ),
+                                );
+                                form.setValue(
+                                  "resources",
+                                  form.getValues("resources")?.filter((id) =>
+                                    id !== resource.id
+                                  ) || [],
+                                );
                               }
                             }}
                             className="rounded border-gray-300"
                           />
-                          <label htmlFor={resource.id} className="flex-1 cursor-pointer">
+                          <label
+                            htmlFor={resource.id}
+                            className="flex-1 cursor-pointer"
+                          >
                             <div className="flex items-center gap-2">
                               <LinkIcon className="w-4 h-4 text-muted-foreground" />
-                              <span className="text-sm font-medium">{resource.name}</span>
-                              <Badge variant="outline" className="ml-auto text-xs">
+                              <span className="text-sm font-medium">
+                                {resource.name}
+                              </span>
+                              <Badge
+                                variant="outline"
+                                className="ml-auto text-xs"
+                              >
                                 {resource.type}
                               </Badge>
                             </div>
@@ -454,9 +501,9 @@ export function FlagsComponent() {
                     type="button"
                     variant="outline"
                     onClick={() => {
-                      setIsDialogOpen(false)
-                      form.reset()
-                      setSelectedResources([])
+                      setIsDialogOpen(false);
+                      form.reset();
+                      setSelectedResources([]);
                     }}
                   >
                     Cancel
@@ -485,53 +532,59 @@ export function FlagsComponent() {
               </div>
               <div className="flex gap-1">
                 <Button
-                  variant={statusFilter === 'all' ? 'default' : 'outline'}
+                  variant={statusFilter === "all" ? "default" : "outline"}
                   size="sm"
-                  onClick={() => setStatusFilter('all')}
+                  onClick={() => setStatusFilter("all")}
                 >
                   All
                 </Button>
                 <Button
-                  variant={statusFilter === 'enabled' ? 'default' : 'outline'}
+                  variant={statusFilter === "enabled" ? "default" : "outline"}
                   size="sm"
-                  onClick={() => setStatusFilter('enabled')}
+                  onClick={() => setStatusFilter("enabled")}
                 >
                   Enabled
                 </Button>
                 <Button
-                  variant={statusFilter === 'disabled' ? 'default' : 'outline'}
+                  variant={statusFilter === "disabled" ? "default" : "outline"}
                   size="sm"
-                  onClick={() => setStatusFilter('disabled')}
+                  onClick={() => setStatusFilter("disabled")}
                 >
                   Disabled
                 </Button>
               </div>
               <div className="flex gap-1">
                 <Button
-                  variant={environmentFilter === 'all' ? 'default' : 'outline'}
+                  variant={environmentFilter === "all" ? "default" : "outline"}
                   size="sm"
-                  onClick={() => setEnvironmentFilter('all')}
+                  onClick={() => setEnvironmentFilter("all")}
                 >
                   All Env
                 </Button>
                 <Button
-                  variant={environmentFilter === 'production' ? 'default' : 'outline'}
+                  variant={environmentFilter === "production"
+                    ? "default"
+                    : "outline"}
                   size="sm"
-                  onClick={() => setEnvironmentFilter('production')}
+                  onClick={() => setEnvironmentFilter("production")}
                 >
                   Prod
                 </Button>
                 <Button
-                  variant={environmentFilter === 'staging' ? 'default' : 'outline'}
+                  variant={environmentFilter === "staging"
+                    ? "default"
+                    : "outline"}
                   size="sm"
-                  onClick={() => setEnvironmentFilter('staging')}
+                  onClick={() => setEnvironmentFilter("staging")}
                 >
                   Staging
                 </Button>
                 <Button
-                  variant={environmentFilter === 'development' ? 'default' : 'outline'}
+                  variant={environmentFilter === "development"
+                    ? "default"
+                    : "outline"}
                   size="sm"
-                  onClick={() => setEnvironmentFilter('development')}
+                  onClick={() => setEnvironmentFilter("development")}
                 >
                   Dev
                 </Button>
@@ -540,7 +593,7 @@ export function FlagsComponent() {
           </div>
         </CardHeader>
         <CardContent>
-          <div className="rounded-md border">
+          <div className="rounded-md">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -554,89 +607,101 @@ export function FlagsComponent() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredFlags.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
-                      No flags found matching your filters
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  filteredFlags.map((flag) => (
-                    <TableRow
-                      key={flag.id}
-                      className={cn(
-                        flag.enabled && 'bg-green-500/5 hover:bg-green-500/10'
-                      )}
-                    >
-                      <TableCell>
-                        <div className="flex items-center">
-                          {flag.enabled ? (
-                            <Check className="w-5 h-5 text-green-600 dark:text-green-400" />
-                          ) : (
-                            <X className="w-5 h-5 text-muted-foreground" />
-                          )}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="font-mono text-xs text-muted-foreground">
-                          {flag.key}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div>
-                          <div className="font-medium">{flag.name}</div>
-                          <div className="text-xs text-muted-foreground mt-0.5">
-                            {flag.description}
-                          </div>
-                        </div>
-                      </TableCell>
-                      <TableCell>{getEnvironmentBadge(flag.environment)}</TableCell>
-                      <TableCell>
-                        {flag.enabledPercentage !== undefined && (
-                          <div className="flex items-center gap-2">
-                            <div className="w-16 h-2 bg-muted rounded-full overflow-hidden">
-                              <div
-                                className={cn(
-                                  'h-full transition-all',
-                                  flag.enabled
-                                    ? 'bg-green-600 dark:bg-green-400'
-                                    : 'bg-muted-foreground/20'
-                                )}
-                                style={{ width: `${flag.enabledPercentage}%` }}
-                              />
-                            </div>
-                            <span className="text-xs text-muted-foreground">
-                              {flag.enabledPercentage}%
-                            </span>
-                          </div>
-                        )}
-                      </TableCell>
-                      <TableCell className="text-xs text-muted-foreground">
-                        {formatDate(flag.updatedAt)}
-                      </TableCell>
-                      <TableCell>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => toggleFlag(flag.id)}
-                          className="w-full"
-                        >
-                          {flag.enabled ? (
-                            <>
-                              <ToggleRight className="w-4 h-4 mr-1 text-green-600 dark:text-green-400" />
-                              Disable
-                            </>
-                          ) : (
-                            <>
-                              <ToggleLeft className="w-4 h-4 mr-1" />
-                              Enable
-                            </>
-                          )}
-                        </Button>
+                {filteredFlags.length === 0
+                  ? (
+                    <TableRow>
+                      <TableCell
+                        colSpan={7}
+                        className="text-center py-8 text-muted-foreground"
+                      >
+                        No flags found matching your filters
                       </TableCell>
                     </TableRow>
-                  ))
-                )}
+                  )
+                  : (
+                    filteredFlags.map((flag) => (
+                      <TableRow
+                        key={flag.id}
+                        className={cn(
+                          flag.enabled &&
+                            "bg-green-500/5 hover:bg-green-500/10",
+                        )}
+                      >
+                        <TableCell>
+                          <div className="flex items-center">
+                            {flag.enabled
+                              ? (
+                                <Check className="w-5 h-5 text-green-600 dark:text-green-400" />
+                              )
+                              : <X className="w-5 h-5 text-muted-foreground" />}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="font-mono text-xs text-muted-foreground">
+                            {flag.key}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div>
+                            <div className="font-medium">{flag.name}</div>
+                            <div className="text-xs text-muted-foreground mt-0.5">
+                              {flag.description}
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          {getEnvironmentBadge(flag.environment)}
+                        </TableCell>
+                        <TableCell>
+                          {flag.enabledPercentage !== undefined && (
+                            <div className="flex items-center gap-2">
+                              <div className="w-16 h-2 bg-muted rounded-full overflow-hidden">
+                                <div
+                                  className={cn(
+                                    "h-full transition-all",
+                                    flag.enabled
+                                      ? "bg-green-600 dark:bg-green-400"
+                                      : "bg-muted-foreground/20",
+                                  )}
+                                  style={{
+                                    width: `${flag.enabledPercentage}%`,
+                                  }}
+                                />
+                              </div>
+                              <span className="text-xs text-muted-foreground">
+                                {flag.enabledPercentage}%
+                              </span>
+                            </div>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-xs text-muted-foreground">
+                          {formatDate(flag.updatedAt)}
+                        </TableCell>
+                        <TableCell>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => toggleFlag(flag.id)}
+                            className="w-full"
+                          >
+                            {flag.enabled
+                              ? (
+                                <>
+                                  <ToggleRight className="w-4 h-4 mr-1 text-green-600 dark:text-green-400" />
+                                  Disable
+                                </>
+                              )
+                              : (
+                                <>
+                                  <ToggleLeft className="w-4 h-4 mr-1" />
+                                  Enable
+                                </>
+                              )}
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
               </TableBody>
             </Table>
           </div>
@@ -646,6 +711,5 @@ export function FlagsComponent() {
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }
-

@@ -10,12 +10,13 @@ import { Badge } from "@/shared/ui/badge";
 import { Button } from "@/shared/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui/card";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/shared/ui/dialog";
+  Drawer,
+  DrawerClose,
+  DrawerContent,
+  DrawerDescription,
+  DrawerHeader,
+  DrawerTitle,
+} from "@/shared/ui/drawer";
 import { Input } from "@/shared/ui/input";
 import {
   Table,
@@ -29,11 +30,10 @@ import { cn } from "@/shared/utils/shadcn.utils";
 import {
   AlertCircle,
   CheckCircle2,
-  ChevronDown,
-  ChevronRight,
   Clock,
   Copy,
   Search,
+  X,
   XCircle,
 } from "lucide-react";
 import { useMemo, useState } from "react";
@@ -197,7 +197,6 @@ export function RecordingsComponent() {
   const [statusFilter, setStatusFilter] = useState<"all" | "success" | "error">(
     "all",
   );
-  const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
   const [selectedLog, setSelectedLog] = useState<ApiLog | null>(null);
   const logs = useMemo(() => generateSampleLogs(), []);
 
@@ -305,16 +304,6 @@ export function RecordingsComponent() {
       return matchesSearch && matchesStatus;
     });
   }, [logs, searchQuery, statusFilter]);
-
-  const toggleRow = (id: string) => {
-    const newExpanded = new Set(expandedRows);
-    if (newExpanded.has(id)) {
-      newExpanded.delete(id);
-    } else {
-      newExpanded.add(id);
-    }
-    setExpandedRows(newExpanded);
-  };
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
@@ -515,7 +504,6 @@ export function RecordingsComponent() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="w-[40px]"></TableHead>
                   <TableHead className="w-[140px]">Timestamp</TableHead>
                   <TableHead className="w-[100px]">Method</TableHead>
                   <TableHead>Endpoint</TableHead>
@@ -531,7 +519,7 @@ export function RecordingsComponent() {
                   ? (
                     <TableRow>
                       <TableCell
-                        colSpan={9}
+                        colSpan={8}
                         className="text-center py-8 text-muted-foreground"
                       >
                         No logs found matching your filters
@@ -539,223 +527,76 @@ export function RecordingsComponent() {
                     </TableRow>
                   )
                   : (
-                    filteredLogs.map((log) => {
-                      const isExpanded = expandedRows.has(log.id);
-                      return (
-                        <>
-                          <TableRow
-                            key={log.id}
-                            className={cn(
-                              log.statusCode >= 400 &&
-                                "bg-destructive/5 hover:bg-destructive/10",
-                              "cursor-pointer",
-                            )}
-                            onClick={() => toggleRow(log.id)}
-                          >
-                            <TableCell className="w-[40px]">
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  toggleRow(log.id);
-                                }}
-                                className="p-1 hover:bg-muted rounded"
-                              >
-                                {isExpanded
-                                  ? <ChevronDown className="w-4 h-4" />
-                                  : <ChevronRight className="w-4 h-4" />}
-                              </button>
-                            </TableCell>
-                            <TableCell className="font-mono text-xs">
-                              {formatTime(log.timestamp)}
-                            </TableCell>
-                            <TableCell>{getMethodBadge(log.method)}</TableCell>
-                            <TableCell className="font-mono text-sm">
-                              {log.endpoint}
-                            </TableCell>
-                            <TableCell>
-                              {getStatusBadge(log.statusCode)}
-                            </TableCell>
-                            <TableCell>
-                              <div className="flex items-center gap-1">
-                                <Clock className="w-3 h-3 text-muted-foreground" />
-                                <span
-                                  className={cn(
-                                    log.responseTime > 1000 &&
-                                      "text-yellow-600 dark:text-yellow-400",
-                                    log.responseTime > 2000 &&
-                                      "text-red-600 dark:text-red-400",
-                                  )}
-                                >
-                                  {log.responseTime}ms
-                                </span>
-                              </div>
-                            </TableCell>
-                            <TableCell className="font-mono text-xs text-muted-foreground">
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  copyToClipboard(log.traceId);
-                                }}
-                                className="hover:underline flex items-center gap-1"
-                                title="Copy trace ID"
-                              >
-                                {log.traceId}
-                                <Copy className="w-3 h-3" />
-                              </button>
-                            </TableCell>
-                            <TableCell>
-                              {log.error && (
-                                <div className="flex items-center gap-1 text-xs text-red-600 dark:text-red-400">
-                                  <AlertCircle className="w-3 h-3" />
-                                  {log.error}
-                                </div>
+                    filteredLogs.map((log) => (
+                      <TableRow
+                        key={log.id}
+                        className={cn(
+                          log.statusCode >= 400 &&
+                            "bg-destructive/5 hover:bg-destructive/10",
+                          "cursor-pointer",
+                        )}
+                        onClick={() => setSelectedLog(log)}
+                      >
+                        <TableCell className="font-mono text-xs">
+                          {formatTime(log.timestamp)}
+                        </TableCell>
+                        <TableCell>{getMethodBadge(log.method)}</TableCell>
+                        <TableCell className="font-mono text-sm">
+                          {log.endpoint}
+                        </TableCell>
+                        <TableCell>
+                          {getStatusBadge(log.statusCode)}
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-1">
+                            <Clock className="w-3 h-3 text-muted-foreground" />
+                            <span
+                              className={cn(
+                                log.responseTime > 1000 &&
+                                  "text-yellow-600 dark:text-yellow-400",
+                                log.responseTime > 2000 &&
+                                  "text-red-600 dark:text-red-400",
                               )}
-                            </TableCell>
-                            <TableCell className="w-[80px]">
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setSelectedLog(log);
-                                }}
-                              >
-                                Details
-                              </Button>
-                            </TableCell>
-                          </TableRow>
-                          {isExpanded && (
-                            <TableRow key={`${log.id}-expanded`}>
-                              <TableCell
-                                colSpan={9}
-                                className="bg-muted/30 p-4"
-                              >
-                                <div className="grid gap-4 md:grid-cols-2">
-                                  <div>
-                                    <h4 className="text-sm font-semibold mb-2">
-                                      Request Details
-                                    </h4>
-                                    <div className="space-y-2 text-xs">
-                                      <div className="flex items-center gap-2">
-                                        <span className="text-muted-foreground w-24">
-                                          IP Address:
-                                        </span>
-                                        <span className="font-mono">
-                                          {log.ipAddress}
-                                        </span>
-                                      </div>
-                                      <div className="flex items-center gap-2">
-                                        <span className="text-muted-foreground w-24">
-                                          User Agent:
-                                        </span>
-                                        <span className="text-xs truncate">
-                                          {log.userAgent}
-                                        </span>
-                                      </div>
-                                      <div className="flex items-center gap-2">
-                                        <span className="text-muted-foreground w-24">
-                                          Client ID:
-                                        </span>
-                                        <span className="font-mono">
-                                          {log.clientId}
-                                        </span>
-                                      </div>
-                                    </div>
-                                    {log.requestHeaders && (
-                                      <div className="mt-3">
-                                        <h5 className="text-xs font-semibold mb-1">
-                                          Headers
-                                        </h5>
-                                        <pre className="text-xs bg-background p-2 rounded border overflow-x-auto max-h-32">
-                                        {JSON.stringify(log.requestHeaders, null, 2)}
-                                        </pre>
-                                      </div>
-                                    )}
-                                    {log.requestBody && (
-                                      <div className="mt-3">
-                                        <div className="flex items-center justify-between mb-1">
-                                          <h5 className="text-xs font-semibold">
-                                            Request Body
-                                          </h5>
-                                          <Button
-                                            variant="ghost"
-                                            size="sm"
-                                            className="h-6 text-xs"
-                                            onClick={() =>
-                                              copyToClipboard(
-                                                log.requestBody || "",
-                                              )}
-                                          >
-                                            <Copy className="w-3 h-3 mr-1" />
-                                            Copy
-                                          </Button>
-                                        </div>
-                                        <pre className="text-xs bg-background p-2 rounded border overflow-x-auto max-h-32">
-                                        {log.requestBody}
-                                        </pre>
-                                      </div>
-                                    )}
-                                  </div>
-                                  <div>
-                                    <h4 className="text-sm font-semibold mb-2">
-                                      Response Details
-                                    </h4>
-                                    {log.responseBody && (
-                                      <div className="mb-3">
-                                        <div className="flex items-center justify-between mb-1">
-                                          <h5 className="text-xs font-semibold">
-                                            Response Body
-                                          </h5>
-                                          <Button
-                                            variant="ghost"
-                                            size="sm"
-                                            className="h-6 text-xs"
-                                            onClick={() =>
-                                              copyToClipboard(
-                                                log.responseBody || "",
-                                              )}
-                                          >
-                                            <Copy className="w-3 h-3 mr-1" />
-                                            Copy
-                                          </Button>
-                                        </div>
-                                        <pre className="text-xs bg-background p-2 rounded border overflow-x-auto max-h-32">
-                                        {log.responseBody}
-                                        </pre>
-                                      </div>
-                                    )}
-                                    {log.stackTrace && (
-                                      <div className="mt-3">
-                                        <div className="flex items-center justify-between mb-1">
-                                          <h5 className="text-xs font-semibold text-red-600 dark:text-red-400">
-                                            Stack Trace
-                                          </h5>
-                                          <Button
-                                            variant="ghost"
-                                            size="sm"
-                                            className="h-6 text-xs"
-                                            onClick={() =>
-                                              copyToClipboard(
-                                                log.stackTrace || "",
-                                              )}
-                                          >
-                                            <Copy className="w-3 h-3 mr-1" />
-                                            Copy
-                                          </Button>
-                                        </div>
-                                        <pre className="text-xs bg-destructive/10 text-destructive dark:text-red-400 p-2 rounded border border-destructive/20 overflow-x-auto max-h-48">
-                                        {log.stackTrace}
-                                        </pre>
-                                      </div>
-                                    )}
-                                  </div>
-                                </div>
-                              </TableCell>
-                            </TableRow>
+                            >
+                              {log.responseTime}ms
+                            </span>
+                          </div>
+                        </TableCell>
+                        <TableCell className="font-mono text-xs text-muted-foreground">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              copyToClipboard(log.traceId);
+                            }}
+                            className="hover:underline flex items-center gap-1"
+                            title="Copy trace ID"
+                          >
+                            {log.traceId}
+                            <Copy className="w-3 h-3" />
+                          </button>
+                        </TableCell>
+                        <TableCell>
+                          {log.error && (
+                            <div className="flex items-center gap-1 text-xs text-red-600 dark:text-red-400">
+                              <AlertCircle className="w-3 h-3" />
+                              {log.error}
+                            </div>
                           )}
-                        </>
-                      );
-                    })
+                        </TableCell>
+                        <TableCell className="w-[80px]">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setSelectedLog(log);
+                            }}
+                          >
+                            Details
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))
                   )}
               </TableBody>
             </Table>
@@ -766,207 +607,261 @@ export function RecordingsComponent() {
         </CardContent>
       </Card>
 
-      {/* Detailed View Dialog */}
-      {selectedLog && (
-        <Dialog
-          open={!!selectedLog}
-          onOpenChange={() => setSelectedLog(null)}
-        >
-          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>Request Details</DialogTitle>
-              <DialogDescription>
-                Full request and response information for debugging
-              </DialogDescription>
-            </DialogHeader>
-            <div className="space-y-4">
-              <div className="grid gap-4 md:grid-cols-2">
-                <div>
-                  <h4 className="text-sm font-semibold mb-2">
-                    Basic Information
-                  </h4>
-                  <div className="space-y-2 text-sm">
-                    <div className="flex items-center justify-between">
-                      <span className="text-muted-foreground">Method:</span>
-                      {getMethodBadge(selectedLog.method)}
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-muted-foreground">Endpoint:</span>
-                      <span className="font-mono text-xs">
-                        {selectedLog.endpoint}
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-muted-foreground">Status:</span>
+      {/* Detailed View Drawer */}
+      <Drawer
+        open={!!selectedLog}
+        onOpenChange={(open) => {
+          if (!open) {
+            setSelectedLog(null);
+          }
+        }}
+        direction="right"
+      >
+        <DrawerContent className="h-full w-full max-w-5xl border-l border-muted bg-background p-0 sm:max-w-4xl lg:max-w-5xl">
+          {selectedLog && (
+            <div className="flex h-full flex-col">
+              <DrawerHeader className="border-b border-muted px-6 pb-4 pt-6">
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <DrawerTitle className="text-lg font-semibold">
+                      Request Details
+                    </DrawerTitle>
+                    <DrawerDescription className="mt-1 text-sm">
+                      Full request and response information for debugging
+                    </DrawerDescription>
+                  </div>
+                  <DrawerClose asChild>
+                    <Button variant="outline" size="icon">
+                      <X className="h-4 w-4" />
+                      <span className="sr-only">Close drawer</span>
+                    </Button>
+                  </DrawerClose>
+                </div>
+                <div className="mt-4 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                  <span>{formatTime(selectedLog.timestamp)}</span>
+                  <span className="h-1 w-1 rounded-full bg-muted-foreground/60" />
+                  <button
+                    className="flex items-center gap-1 font-mono underline-offset-4 hover:underline"
+                    onClick={() => copyToClipboard(selectedLog.traceId)}
+                  >
+                    {selectedLog.traceId}
+                    <Copy className="h-3 w-3" />
+                  </button>
+                </div>
+              </DrawerHeader>
+
+              <div className="flex-1 space-y-6 overflow-y-auto px-6 py-6">
+                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                  <div className="rounded-lg border border-muted bg-muted/30 p-4">
+                    <p className="text-xs font-medium text-muted-foreground">
+                      Status
+                    </p>
+                    <div className="mt-3 flex items-center gap-2">
                       {getStatusBadge(selectedLog.statusCode)}
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-muted-foreground">
-                        Response Time:
-                      </span>
-                      <span>{selectedLog.responseTime}ms</span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-muted-foreground">Timestamp:</span>
-                      <span className="font-mono text-xs">
-                        {formatTime(selectedLog.timestamp)}
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-muted-foreground">Trace ID:</span>
-                      <div className="flex items-center gap-1">
-                        <span className="font-mono text-xs">
-                          {selectedLog.traceId}
+                      {selectedLog.error && (
+                        <span className="text-xs text-destructive">
+                          {selectedLog.error}
                         </span>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-6 w-6 p-0"
-                          onClick={() => copyToClipboard(selectedLog.traceId)}
-                        >
-                          <Copy className="w-3 h-3" />
-                        </Button>
-                      </div>
+                      )}
                     </div>
                   </div>
+                  <div className="rounded-lg border border-muted bg-muted/30 p-4">
+                    <p className="text-xs font-medium text-muted-foreground">
+                      Response Time
+                    </p>
+                    <div className="mt-3 flex items-end gap-2">
+                      <span className="text-2xl font-semibold">
+                        {selectedLog.responseTime}
+                      </span>
+                      <span className="text-xs text-muted-foreground">ms</span>
+                    </div>
+                  </div>
+                  <div className="rounded-lg border border-muted bg-muted/30 p-4">
+                    <p className="text-xs font-medium text-muted-foreground">
+                      Method
+                    </p>
+                    <div className="mt-3">
+                      {getMethodBadge(selectedLog.method)}
+                    </div>
+                  </div>
+                  <div className="rounded-lg border border-muted bg-muted/30 p-4">
+                    <p className="text-xs font-medium text-muted-foreground">
+                      IP Address
+                    </p>
+                    <span className="mt-3 block font-mono text-xs">
+                      {selectedLog.ipAddress}
+                    </span>
+                  </div>
                 </div>
-                <div>
-                  <h4 className="text-sm font-semibold mb-2">
-                    Client Information
-                  </h4>
-                  <div className="space-y-2 text-sm">
-                    <div className="flex items-center justify-between">
-                      <span className="text-muted-foreground">IP Address:</span>
-                      <span className="font-mono text-xs">
-                        {selectedLog.ipAddress}
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-muted-foreground">Client ID:</span>
-                      <span className="font-mono text-xs">
-                        {selectedLog.clientId}
-                      </span>
-                    </div>
-                    <div>
-                      <span className="text-muted-foreground text-xs">
-                        User Agent:
-                      </span>
-                      <p className="text-xs font-mono mt-1 break-all">
-                        {selectedLog.userAgent}
-                      </p>
-                    </div>
+
+                <div className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
+                  <div className="space-y-6">
+                    <section className="rounded-lg border border-muted p-5">
+                      <h3 className="text-sm font-semibold">
+                        Request Overview
+                      </h3>
+                      <div className="mt-4 grid gap-4 sm:grid-cols-2">
+                        <div>
+                          <p className="text-xs text-muted-foreground">
+                            Endpoint
+                          </p>
+                          <p className="mt-1 font-mono text-xs">
+                            {selectedLog.endpoint}
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-muted-foreground">
+                            Timestamp
+                          </p>
+                          <p className="mt-1 font-mono text-xs">
+                            {formatTime(selectedLog.timestamp)}
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-muted-foreground">
+                            Client ID
+                          </p>
+                          <p className="mt-1 font-mono text-xs">
+                            {selectedLog.clientId}
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-muted-foreground">
+                            User Agent
+                          </p>
+                          <p className="mt-1 text-xs text-muted-foreground">
+                            {selectedLog.userAgent}
+                          </p>
+                        </div>
+                      </div>
+                    </section>
+
+                    {selectedLog.requestBody && (
+                      <section className="rounded-lg border border-muted p-5">
+                        <div className="mb-3 flex items-center justify-between">
+                          <h3 className="text-sm font-semibold">
+                            Request Body
+                          </h3>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-7 text-xs"
+                            onClick={() =>
+                              copyToClipboard(selectedLog.requestBody || "")}
+                          >
+                            <Copy className="mr-1 h-3 w-3" />
+                            Copy
+                          </Button>
+                        </div>
+                        <pre className="max-h-64 overflow-x-auto rounded-md border bg-muted/50 p-3 text-xs">
+                          {selectedLog.requestBody}
+                        </pre>
+                      </section>
+                    )}
+
+                    {selectedLog.requestHeaders && (
+                      <section className="rounded-lg border border-muted p-5">
+                        <div className="mb-3 flex items-center justify-between">
+                          <h3 className="text-sm font-semibold">
+                            Request Headers
+                          </h3>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-7 text-xs"
+                            onClick={() =>
+                              copyToClipboard(
+                                JSON.stringify(
+                                  selectedLog.requestHeaders,
+                                  null,
+                                  2,
+                                ),
+                              )}
+                          >
+                            <Copy className="mr-1 h-3 w-3" />
+                            Copy
+                          </Button>
+                        </div>
+                        <pre className="max-h-64 overflow-x-auto rounded-md border bg-muted/50 p-3 text-xs">
+                          {JSON.stringify(selectedLog.requestHeaders, null, 2)}
+                        </pre>
+                      </section>
+                    )}
+                  </div>
+
+                  <div className="space-y-6">
+                    {selectedLog.responseBody && (
+                      <section className="rounded-lg border border-muted p-5">
+                        <div className="mb-3 flex items-center justify-between">
+                          <h3 className="text-sm font-semibold">
+                            Response Body
+                          </h3>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-7 text-xs"
+                            onClick={() =>
+                              copyToClipboard(selectedLog.responseBody || "")}
+                          >
+                            <Copy className="mr-1 h-3 w-3" />
+                            Copy
+                          </Button>
+                        </div>
+                        <pre
+                          className={cn(
+                            "max-h-64 overflow-x-auto rounded-md border p-3 text-xs",
+                            selectedLog.statusCode >= 400
+                              ? "border-destructive/20 bg-destructive/10 text-destructive dark:text-red-400"
+                              : "bg-muted/50",
+                          )}
+                        >
+                          {selectedLog.responseBody}
+                        </pre>
+                      </section>
+                    )}
+
+                    {selectedLog.stackTrace && (
+                      <section className="rounded-lg border border-destructive/30 bg-destructive/10 p-5">
+                        <div className="mb-3 flex items-center justify-between">
+                          <h3 className="text-sm font-semibold text-destructive dark:text-red-400">
+                            Stack Trace
+                          </h3>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-7 text-xs"
+                            onClick={() =>
+                              copyToClipboard(selectedLog.stackTrace || "")}
+                          >
+                            <Copy className="mr-1 h-3 w-3" />
+                            Copy
+                          </Button>
+                        </div>
+                        <pre className="max-h-64 overflow-x-auto text-xs text-destructive dark:text-red-400">
+                          {selectedLog.stackTrace}
+                        </pre>
+                      </section>
+                    )}
+
+                    {selectedLog.error && (
+                      <section className="rounded-lg border border-destructive/30 bg-destructive/10 p-5">
+                        <div className="flex items-center gap-2 text-sm font-semibold text-destructive dark:text-red-400">
+                          <AlertCircle className="h-4 w-4" />
+                          {selectedLog.error}
+                        </div>
+                        <p className="mt-2 text-xs text-destructive/80">
+                          Investigate the response payload and stack trace for
+                          additional context.
+                        </p>
+                      </section>
+                    )}
                   </div>
                 </div>
               </div>
-
-              {selectedLog.requestHeaders && (
-                <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <h4 className="text-sm font-semibold">Request Headers</h4>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-6 text-xs"
-                      onClick={() =>
-                        copyToClipboard(
-                          JSON.stringify(selectedLog.requestHeaders, null, 2),
-                        )}
-                    >
-                      <Copy className="w-3 h-3 mr-1" />
-                      Copy
-                    </Button>
-                  </div>
-                  <pre className="text-xs bg-muted/50 p-3 rounded border overflow-x-auto">
-                    {JSON.stringify(selectedLog.requestHeaders, null, 2)}
-                  </pre>
-                </div>
-              )}
-
-              {selectedLog.requestBody && (
-                <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <h4 className="text-sm font-semibold">Request Body</h4>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-6 text-xs"
-                      onClick={() =>
-                        copyToClipboard(selectedLog.requestBody || "")}
-                    >
-                      <Copy className="w-3 h-3 mr-1" />
-                      Copy
-                    </Button>
-                  </div>
-                  <pre className="text-xs bg-muted/50 p-3 rounded border overflow-x-auto max-h-48">
-                    {selectedLog.requestBody}
-                  </pre>
-                </div>
-              )}
-
-              {selectedLog.responseBody && (
-                <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <h4 className="text-sm font-semibold">Response Body</h4>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-6 text-xs"
-                      onClick={() =>
-                        copyToClipboard(selectedLog.responseBody || "")}
-                    >
-                      <Copy className="w-3 h-3 mr-1" />
-                      Copy
-                    </Button>
-                  </div>
-                  <pre
-                    className={cn(
-                      "text-xs p-3 rounded border overflow-x-auto max-h-48",
-                      selectedLog.statusCode >= 400
-                        ? "bg-destructive/10 text-destructive dark:text-red-400 border-destructive/20"
-                        : "bg-muted/50",
-                    )}
-                  >
-                    {selectedLog.responseBody}
-                  </pre>
-                </div>
-              )}
-
-              {selectedLog.stackTrace && (
-                <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <h4 className="text-sm font-semibold text-red-600 dark:text-red-400">
-                      Stack Trace
-                    </h4>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-6 text-xs"
-                      onClick={() =>
-                        copyToClipboard(selectedLog.stackTrace || "")}
-                    >
-                      <Copy className="w-3 h-3 mr-1" />
-                      Copy
-                    </Button>
-                  </div>
-                  <pre className="text-xs bg-destructive/10 text-destructive dark:text-red-400 p-3 rounded border border-destructive/20 overflow-x-auto max-h-64 font-mono">
-                    {selectedLog.stackTrace}
-                  </pre>
-                </div>
-              )}
-
-              {selectedLog.error && (
-                <div className="p-3 bg-destructive/10 border border-destructive/20 rounded">
-                  <div className="flex items-center gap-2 text-sm font-semibold text-destructive dark:text-red-400 mb-1">
-                    <AlertCircle className="w-4 h-4" />
-                    Error Message
-                  </div>
-                  <p className="text-sm">{selectedLog.error}</p>
-                </div>
-              )}
             </div>
-          </DialogContent>
-        </Dialog>
-      )}
+          )}
+        </DrawerContent>
+      </Drawer>
     </div>
   );
 }
