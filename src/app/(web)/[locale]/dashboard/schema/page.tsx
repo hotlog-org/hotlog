@@ -1,16 +1,10 @@
 import { ERoutes } from '@/config/routes'
 import { auth } from '@/lib/better-auth/auth'
-import { IdentitiesComponent, getGroups } from '@/modules/identities'
+import { SchemaListComponent } from '@/modules/schema-builder'
 import { headers } from 'next/headers'
 import { redirect } from 'next/navigation'
 
-interface IdentityPageProps {
-  params: Promise<{
-    id: string
-  }>
-}
-
-export default async function IdentityPage({ params }: IdentityPageProps) {
+export default async function SchemaListPage() {
   const session = await auth.api.getSession({
     headers: await headers(),
   })
@@ -19,7 +13,9 @@ export default async function IdentityPage({ params }: IdentityPageProps) {
     redirect(ERoutes.SIGN_IN)
   }
 
-  const groups = await getGroups()
-
-  return <IdentitiesComponent groups={groups} />
+  return (
+    <div className='mx-auto max-w-6xl'>
+      <SchemaListComponent />
+    </div>
+  )
 }

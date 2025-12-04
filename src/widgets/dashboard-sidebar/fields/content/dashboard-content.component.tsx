@@ -42,7 +42,7 @@ const DashboardSidebarContentComponent = () => {
                       tooltip={service.t(`navigation.${item.key}`)}
                       className={cn(
                         service.sidebarState == 'collapsed' &&
-                          'flex items-center justify-center',
+                        'flex items-center justify-center',
                       )}
                     >
                       {service.sidebarState === 'collapsed' ? (
@@ -76,12 +76,12 @@ const DashboardSidebarContentComponent = () => {
             <SidebarMenu>
               {service.dashboards.map((dashboard) => (
                 <SidebarMenuItem key={dashboard.id}>
-                  <Link href={`${ERoutes.DASHBOARD_GROUP}/${dashboard.id}`}>
+                  <Link href={`${ERoutes.DASHBOARD_MODULES}/${dashboard.id}`}>
                     <SidebarMenuButton
                       tooltip={dashboard.name}
                       className={cn(
                         service.sidebarState == 'collapsed' &&
-                          'flex items-center justify-center',
+                        'flex items-center justify-center',
                       )}
                     >
                       {service.sidebarState === 'collapsed' ? (
@@ -109,7 +109,7 @@ const DashboardSidebarContentComponent = () => {
                   className={cn(
                     'text-muted-foreground',
                     service.sidebarState == 'collapsed' &&
-                      'flex items-center justify-center',
+                    'flex items-center justify-center',
                   )}
                   tooltip={service.t('groups.addNew')}
                 >

@@ -1,18 +1,16 @@
 import { ERoutes } from '@/config/routes'
-import { Link } from '@/i18n/navigation'
 import { auth } from '@/lib/better-auth/auth'
-import { GroupComponent } from '@/modules/group'
-
+import { SchemaBuilderComponent } from '@/modules/schema-builder'
 import { headers } from 'next/headers'
 import { redirect } from 'next/navigation'
 
-interface GroupPageProps {
-  params: Promise<{
-    id: string
-  }>
+interface SchemaDetailPageProps {
+  params: Promise<{ id: string }>
 }
 
-export default async function GroupPage({ params }: GroupPageProps) {
+export default async function SchemaDetailPage({
+  params,
+}: SchemaDetailPageProps) {
   const session = await auth.api.getSession({
     headers: await headers(),
   })
@@ -24,9 +22,8 @@ export default async function GroupPage({ params }: GroupPageProps) {
   const { id } = await params
 
   return (
-    <div className='container mx-auto p-6'>
-      <Link href={'vova/12'}>asdasd</Link>
-      <GroupComponent groupId={id} />
+    <div className='mx-auto max-w-5xl'>
+      <SchemaBuilderComponent schemaId={id} />
     </div>
   )
 }

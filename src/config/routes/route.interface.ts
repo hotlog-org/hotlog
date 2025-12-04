@@ -3,9 +3,6 @@ export enum ERoutes {
   SIGN_IN = '/sign-in',
   SIGN_UP = '/sign-up',
   DASHBOARD = '/dashboard',
-  DASHBOARD_RECORDINGS = '/dashboard/recordings',
-  DASHBOARD_IDENTITIES = '/dashboard/identities',
+  DASHBOARD_EVENTS = '/dashboard/events',
   DASHBOARD_MODULES = '/dashboard/modules',
-  DASHBOARD_FLAGS = '/dashboard/flags',
-  DASHBOARD_GROUP = '/dashboard/group',
 }

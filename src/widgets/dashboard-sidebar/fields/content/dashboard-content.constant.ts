@@ -1,10 +1,5 @@
 import { ERoutes } from '@/config/routes'
-import {
-  Flag03Icon,
-  FolderViewIcon,
-  Home04Icon,
-  UserIcon,
-} from '@hugeicons/core-free-icons'
+import { FolderViewIcon, Home04Icon } from '@hugeicons/core-free-icons'
 
 const DashboardSidebarContentConstants = [
   {
@@ -13,19 +8,9 @@ const DashboardSidebarContentConstants = [
     icon: Home04Icon,
   },
   {
-    href: ERoutes.DASHBOARD_RECORDINGS,
-    key: 'recordings',
+    href: ERoutes.DASHBOARD_EVENTS,
+    key: 'events',
     icon: FolderViewIcon,
-  },
-  {
-    href: ERoutes.DASHBOARD_IDENTITIES,
-    key: 'identities',
-    icon: UserIcon,
-  },
-  {
-    href: ERoutes.DASHBOARD_FLAGS,
-    key: 'flags',
-    icon: Flag03Icon,
   },
 ]
 

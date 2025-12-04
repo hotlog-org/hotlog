@@ -86,13 +86,11 @@
       }
     },
     "dashboard": {
+      "events": {},
       "sidebar": {
         "navigation": {
           "overview": "Overview",
-          "group": "Group",
-          "recordings": "Recordings",
-          "identities": "Identities",
-          "flags": "Flags"
+          "events": "Events"
         },
         "groups": {
           "label": "Layouts",
