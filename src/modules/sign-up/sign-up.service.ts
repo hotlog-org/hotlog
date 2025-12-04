@@ -7,6 +7,7 @@ import z from 'zod'
 import { ERoutes } from '@/config/routes'
 
 import { useRouter } from '@/i18n/navigation'
+import { authClient } from '@/lib/better-auth'
 import { signUpAction } from './sign-up.action'
 
 export const useSignUpService = () => {
@@ -57,10 +58,23 @@ export const useSignUpService = () => {
     }
   }
 
+  const handleGoogleSignIn = async () => {
+    setIsLoading(true)
+    setError(null)
+    try {
+      await authClient.signIn.social({ provider: 'google', callbackURL: ERoutes.DASHBOARD })
+    } catch {
+      setError(t('messages.error'))
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
   return {
     t,
     form,
     onSubmit,
+    handleGoogleSignIn,
     isLoading,
     error,
     success,

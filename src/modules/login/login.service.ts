@@ -8,6 +8,7 @@ import { loginAction } from './login.action'
 
 import { ERoutes } from '@/config/routes'
 import { useRouter } from '@/i18n/navigation'
+import { authClient } from '@/lib/better-auth'
 
 export const useLoginService = () => {
   const t = useTranslations('modules.login')
@@ -58,10 +59,23 @@ export const useLoginService = () => {
     }
   }
 
+  const handleGoogleSignIn = async () => {
+    setIsLoading(true)
+    setError(null)
+    try {
+      await authClient.signIn.social({ provider: 'google', callbackURL: ERoutes.DASHBOARD })
+    } catch {
+      setError(t('messages.error'))
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
   return {
     t,
     form,
     onSubmit,
+    handleGoogleSignIn,
     isLoading,
     error,
     success,
