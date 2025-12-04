@@ -18,7 +18,7 @@ const DashboardSidebarNavbarComponent = () => {
   const service = useDashboardSidebarNavbarService()
 
   return (
-    <div className='p-2 h-16 flex justify-between'>
+    <div className='px-4 p-2 h-16 flex justify-between'>
       <div className='w-full flex items-center justify-between'>
         <div className='flex items-center gap-4'>
           <SidebarTrigger />

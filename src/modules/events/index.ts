@@ -1,1 +1,1 @@
-export { RecordingsComponent } from './events.component.tsx'
+export { EventsComponent } from './events.component'

@@ -86,7 +86,61 @@
       }
     },
     "dashboard": {
-      "events": {},
+      "events": {
+        "title": "Events",
+        "description": "Inspect ingested events, filter by schema, and open a rich detail view.",
+        "stats": "{filtered} of {total} displayed",
+        "unknownSchema": "Unknown schema",
+        "search": {
+          "placeholder": "Search events, schemas, or payloads",
+          "showing": "Showing {filtered} of {total} events",
+          "clear": "Clear search"
+        },
+        "filter": {
+          "button": "Filters",
+          "schema": "Schema",
+          "allSchemas": "All schemas",
+          "selectSchema": "Select a schema",
+          "selectField": "Select a field",
+          "enterValue": "Enter a value",
+          "back": "Back",
+          "apply": "Apply filter",
+          "clearAll": "Clear all",
+          "valuePlaceholder": "Type to filter",
+          "hasFilter": "Filter applied",
+          "reset": "Reset filters"
+        },
+        "table": {
+          "event": "Event",
+          "schema": "Schema",
+          "date": "Date",
+          "open": "Open",
+          "noResults": "No results.",
+          "pagination": "Page {page} of {pages}",
+          "rowCount": "Showing {count} rows"
+        },
+        "detail": {
+          "close": "Close",
+          "eventId": "Event ID",
+          "schema": "Schema",
+          "copyPayload": "Copy payload",
+          "createdAt": "Created at"
+        },
+        "extra": {
+          "schemas": "{count} schemas",
+          "events": "{count} events",
+          "filters": "Filters",
+          "reset": "Reset",
+          "searchPlaceholder": "Search…"
+        },
+        "fields": {
+          "notProvided": "Not provided",
+          "empty": "—",
+          "invalidDate": "Invalid date",
+          "true": "True",
+          "false": "False"
+        }
+      },
       "sidebar": {
         "navigation": {
           "overview": "Overview",
