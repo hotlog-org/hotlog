@@ -1,6 +1,9 @@
 'use client'
 
-import type { NumberFieldProps } from './number-field.interface'
+export interface NumberFieldProps {
+  value: unknown
+  t: (key: string, params?: Record<string, unknown>) => string
+}
 
 export function NumberField({ value, t }: NumberFieldProps) {
   if (typeof value !== 'number') {

@@ -2,7 +2,10 @@
 
 import { format, formatDistanceToNow } from 'date-fns'
 
-import type { DateTimeFieldProps } from './datetime-field.interface'
+export interface DateTimeFieldProps {
+  value: unknown
+  t: (key: string, params?: Record<string, unknown>) => string
+}
 
 export function DateTimeField({ value, t }: DateTimeFieldProps) {
   if (!value) {

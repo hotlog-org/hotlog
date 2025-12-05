@@ -15,12 +15,20 @@ import {
   ArrowRightDoubleIcon,
 } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
-import { flexRender } from '@tanstack/react-table'
+import { flexRender, type ColumnDef } from '@tanstack/react-table'
 import { Button } from '@/shared/ui/button'
 import { cn } from '@/shared/utils'
 
-import type { DataTableProps } from './data-table.interface'
 import { useDataTableService } from './data-table.service'
+
+export interface DataTableProps<TData, TValue> {
+  columns: ColumnDef<TData, TValue>[]
+  data: TData[]
+  onRowClick?: (row: TData) => void
+  t: (key: string, params?: Record<string, unknown>) => string
+  rowCountLabel: string
+  className?: string
+}
 
 export function DataTable<TData, TValue>(props: DataTableProps<TData, TValue>) {
   const service = useDataTableService(props)

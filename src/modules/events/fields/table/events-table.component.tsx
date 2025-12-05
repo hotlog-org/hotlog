@@ -1,9 +1,15 @@
 'use client'
 
 import { DataTable } from './data-table'
+import type { EventRow } from '../../mock-data'
 
-import type { EventsTableProps } from './events-table.interface'
 import { useEventsTableService } from './events-table.service'
+
+export interface EventsTableProps {
+  rows: EventRow[]
+  onOpen: (rowId: string) => void
+  t: (key: string, params?: Record<string, unknown>) => string
+}
 
 export function EventsTable(props: EventsTableProps) {
   const service = useEventsTableService(props)

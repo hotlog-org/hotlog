@@ -2,7 +2,10 @@
 
 import { Badge } from '@/shared/ui/badge'
 
-import type { EnumFieldProps } from './enum-field.interface'
+export interface EnumFieldProps {
+  value: unknown
+  t: (key: string, params?: Record<string, unknown>) => string
+}
 
 const colorMap: Record<string, string> = {
   critical: 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-200',

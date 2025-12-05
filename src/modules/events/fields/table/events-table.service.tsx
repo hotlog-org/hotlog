@@ -10,7 +10,7 @@ import {
 import { HugeiconsIcon } from '@hugeicons/react'
 
 import type { EventRow } from '../../mock-data'
-import type { EventsTableProps } from './events-table.interface'
+import type { EventsTableProps } from './events-table.component'
 
 export const useEventsTableService = ({
   rows,

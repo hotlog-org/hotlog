@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import { z } from 'zod'
 
-import type { EventsExtraComponentProps } from './events-extra.interface'
+import type { EventsExtraComponentProps } from './events-extra.component'
 
 export const useEventsExtraService = (
   props: EventsExtraComponentProps,

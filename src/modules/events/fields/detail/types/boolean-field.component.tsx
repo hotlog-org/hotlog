@@ -2,7 +2,10 @@
 
 import { Badge } from '@/shared/ui/badge'
 
-import type { BooleanFieldProps } from './boolean-field.interface'
+export interface BooleanFieldProps {
+  value: unknown
+  t: (key: string, params?: Record<string, unknown>) => string
+}
 
 export function BooleanField({ value, t }: BooleanFieldProps) {
   if (typeof value !== 'boolean') {

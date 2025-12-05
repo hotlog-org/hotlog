@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
 
-import type { FilterBarProps } from './filter-bar.interface'
+import type { FilterBarProps } from './filter-bar.component'
 
 export const useFilterBarService = (props: FilterBarProps) => {
   const activeSchemaLabel = useMemo(() => {

@@ -14,9 +14,21 @@ import { ScrollArea } from '@/shared/ui/scroll-area'
 import { Separator } from '@/shared/ui/separator'
 import { Info } from 'lucide-react'
 
-import type { DetailDrawerProps } from './detail-drawer.interface'
-import type { SchemaField } from '../../mock-data'
+import type {
+  EventRecord,
+  EventSchema,
+  SchemaField,
+} from '../../mock-data'
+import type { TFunction } from '../../events.service'
 import { useDetailDrawerService, renderers } from './detail-drawer.service'
+
+export interface DetailDrawerProps {
+  open: boolean
+  onClose: () => void
+  event: EventRecord | null
+  schema: EventSchema | null
+  t: TFunction
+}
 
 const FieldRow = ({
   field,

@@ -7,7 +7,7 @@ import {
 } from '@tanstack/react-table'
 import { useState } from 'react'
 
-import type { DataTableProps } from './data-table.interface'
+import type { DataTableProps } from './data-table.component'
 
 export const useDataTableService = <TData, TValue>(
   props: DataTableProps<TData, TValue>,

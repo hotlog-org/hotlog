@@ -1,12 +1,13 @@
 # Codex Agent Playbook
 
-Practical conventions for contributing code in this repo with Codex.
+Practical conventions for contributing code in this repo with Codex. Always use reactive pattern for writin react.
 
 ## File & folder structure
 - **Split by responsibility:**
   - UI markup lives in `*.component.tsx` (no business logic beyond rendering).
   - State/logic/hooks live in matching `*.service.ts` exported as `useXService` and consumed via `const service = useXService(...)`.
   - Interfaces/types live in matching `*.interface.ts` files; never declare component-local types in JSX files.
+  - For props interface use the component file
 - **Nested features:** place submodules under `src/modules/<feature>/fields/<submodule>` (e.g. `table`, `detail`, `searchbar`). Detail type renderers go in `fields/detail/types/*`.
 - **Mock data:** keep temporary mocks in a single `mock-data.ts` inside the module root to keep services type-safe until real APIs land.
 

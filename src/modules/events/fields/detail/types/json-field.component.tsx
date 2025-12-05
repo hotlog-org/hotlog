@@ -2,7 +2,10 @@
 
 import { ScrollArea } from '@/shared/ui/scroll-area'
 
-import type { JsonFieldProps } from './json-field.interface'
+export interface JsonFieldProps {
+  value: unknown
+  t: (key: string, params?: Record<string, unknown>) => string
+}
 
 export function JsonField({ value, t }: JsonFieldProps) {
   if (!value || typeof value !== 'object') {

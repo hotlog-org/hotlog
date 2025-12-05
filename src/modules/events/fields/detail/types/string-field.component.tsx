@@ -1,6 +1,9 @@
 'use client'
 
-import type { StringFieldProps } from './string-field.interface'
+export interface StringFieldProps {
+  value: unknown
+  t: (key: string, params?: Record<string, unknown>) => string
+}
 
 export function StringField({ value, t }: StringFieldProps) {
   if (value === null || value === undefined || value === '') {

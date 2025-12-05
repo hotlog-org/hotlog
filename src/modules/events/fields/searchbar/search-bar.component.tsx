@@ -6,8 +6,15 @@ import { Button } from '@/shared/ui/button'
 import { Input } from '@/shared/ui/input'
 import { Badge } from '@/shared/ui/badge'
 
-import type { EventsSearchBarProps } from './search-bar.interface'
 import { useSearchBarService } from './search-bar.service'
+
+export interface EventsSearchBarProps {
+  query: string
+  onQueryChange: (value: string) => void
+  filteredCount: number
+  totalCount: number
+  t: (key: string, params?: Record<string, unknown>) => string
+}
 
 export function EventsSearchBar(props: EventsSearchBarProps) {
   const service = useSearchBarService(props)

@@ -2,7 +2,10 @@
 
 import { Badge } from '@/shared/ui/badge'
 
-import type { ArrayFieldProps } from './array-field.interface'
+export interface ArrayFieldProps {
+  value: unknown
+  t: (key: string, params?: Record<string, unknown>) => string
+}
 
 export function ArrayField({ value, t }: ArrayFieldProps) {
   if (!Array.isArray(value) || value.length === 0) {
