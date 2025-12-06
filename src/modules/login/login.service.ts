@@ -1,0 +1,83 @@
+import { zodResolver } from '@hookform/resolvers/zod'
+import { useTranslations } from 'next-intl'
+import { useState } from 'react'
+import { useForm } from 'react-hook-form'
+import z from 'zod'
+
+import { loginAction } from './login.action'
+
+import { ERoutes } from '@/config/routes'
+import { useRouter } from '@/i18n/navigation'
+import { authClient } from '@/lib/better-auth'
+
+export const useLoginService = () => {
+  const t = useTranslations('modules.login')
+  const tErrors = useTranslations('errors.auth')
+
+  const router = useRouter()
+  const [isLoading, setIsLoading] = useState(false)
+  const [success, setSuccess] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  const loginSchema = z.object({
+    email: z.email(t('validation.email.invalid')),
+    password: z.string().min(1, t('validation.password.required')),
+  })
+
+  type LoginInputs = z.infer<typeof loginSchema>
+
+  const form = useForm<LoginInputs>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: {
+      email: '',
+      password: '',
+    },
+  })
+
+  const onSubmit = async (data: LoginInputs) => {
+    setIsLoading(true)
+    setSuccess(false)
+    setError(null)
+
+    try {
+      const result = await loginAction(data, tErrors)
+
+      if (result.success) {
+        router.push(ERoutes.DASHBOARD)
+        setSuccess(true)
+        setError(null)
+        form.reset()
+      } else {
+        setError(result.error || t('messages.error'))
+        setSuccess(false)
+      }
+    } catch {
+      setError(t('messages.error'))
+      setSuccess(false)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleGoogleSignIn = async () => {
+    setIsLoading(true)
+    setError(null)
+    try {
+      await authClient.signIn.social({ provider: 'google', callbackURL: ERoutes.DASHBOARD })
+    } catch {
+      setError(t('messages.error'))
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  return {
+    t,
+    form,
+    onSubmit,
+    handleGoogleSignIn,
+    isLoading,
+    error,
+    success,
+  }
+}

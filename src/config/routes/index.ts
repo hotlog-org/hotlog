@@ -1,1 +1,2 @@
-export { ESiteRoute } from './route.interface'
+export { ERoutes } from './route.interface';
+
