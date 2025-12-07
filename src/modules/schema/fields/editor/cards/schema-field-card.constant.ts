@@ -3,7 +3,6 @@ import type { SchemaFieldRendererProps } from '../../types/schema-field-renderer
 import { SchemaFieldEnum } from '../../types/schema-field-enum.component'
 import { SchemaFieldNumber } from '../../types/schema-field-number.component'
 import { SchemaFieldArray } from '../../types/schema-field-array.component'
-import { SchemaFieldObject } from '../../types/schema-field-object.component'
 import { SchemaFieldString } from '../../types/schema-field-string.component'
 import { SchemaFieldBoolean } from '../../types/schema-field-boolean.component'
 import { SchemaFieldDatetime } from '../../types/schema-field-datetime.component'
@@ -41,5 +40,4 @@ export const rendererMap: Partial<
   enum: SchemaFieldEnum,
   number: SchemaFieldNumber,
   array: SchemaFieldArray,
-  object: SchemaFieldObject,
 }
