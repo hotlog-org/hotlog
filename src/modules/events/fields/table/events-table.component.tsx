@@ -22,8 +22,6 @@ export function EventsTable(props: EventsTableProps) {
         props.onOpen((row as (typeof props.rows)[number]).id)
       }
       t={props.t}
-      rowCountLabel={service.rowCountLabel}
-      className='h-full flex-1'
     />
   )
 }

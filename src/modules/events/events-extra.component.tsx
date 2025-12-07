@@ -61,31 +61,11 @@ export function EventsExtraComponent(props: EventsExtraComponentProps) {
   const service = useEventsExtraService(props)
 
   return (
-    <div className=' space-y-2'>
-      <div className='flex flex-wrap items-center gap-3'>
-        <div className='relative w-64'>
-          <LucideSearch className='text-muted-foreground absolute left-2 top-1/2 size-4 -translate-y-1/2' />
-          <Input
-            value={service.query}
-            onChange={(e) => service.onQueryChange(e.target.value)}
-            placeholder={service.t('extra.searchPlaceholder')}
-            className='h-9 pl-8 pr-2'
-          />
-          {service.query ? (
-            <button
-              type='button'
-              className='text-muted-foreground absolute right-2 top-1/2 -translate-y-1/2'
-              onClick={() => service.onQueryChange('')}
-            >
-              <LucideX className='size-4' />
-              <span className='sr-only'>{service.t('search.clear')}</span>
-            </button>
-          ) : null}
-        </div>
-
+    <div className='space-y-2'>
+      <div className='flex flex-wrap items-end gap-3'>
         <Menubar className='h-9 border-border'>
           <MenubarMenu>
-            <MenubarTrigger className='gap-2'>
+            <MenubarTrigger className='gap-2 hover:bg-transparent focus:bg-transparent'>
               <HugeiconsIcon icon={FilterAddIcon} className='size-4' />
               {service.t('filter.button')}
             </MenubarTrigger>
@@ -210,41 +190,31 @@ export function EventsExtraComponent(props: EventsExtraComponentProps) {
             </MenubarContent>
           </MenubarMenu>
         </Menubar>
+
+        <div className='relative w-64 sm:ml-auto sm:min-w-[240px]'>
+          <LucideSearch className='text-muted-foreground absolute left-2 top-1/2 size-4 -translate-y-1/2' />
+          <Input
+            value={service.query}
+            onChange={(e) => service.onQueryChange(e.target.value)}
+            placeholder={service.t('extra.searchPlaceholder')}
+            className='h-9 pl-8 pr-2'
+          />
+          {service.query ? (
+            <button
+              type='button'
+              className='text-muted-foreground absolute right-2 top-1/2 -translate-y-1/2'
+              onClick={() => service.onQueryChange('')}
+            >
+              <LucideX className='size-4' />
+              <span className='sr-only'>{service.t('search.clear')}</span>
+            </button>
+          ) : null}
+        </div>
       </div>
 
-      {service.appliedFilters.length > 0 && (
-        <div className='flex flex-wrap items-center gap-2'>
-          {service.appliedFilters.map((filter) => {
-            const schema = service.filterMenu.schemas.find(
-              (s) => s.id === filter.schemaId,
-            )
-            const field = schema?.fields.find((f) => f.key === filter.fieldKey)
-            return (
-              <span
-                key={`${filter.schemaId}-${filter.fieldKey}`}
-                className='border-border text-muted-foreground inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs'
-              >
-                <span className='font-medium text-foreground'>
-                  {schema?.name ?? filter.schemaId}
-                </span>
-                <span className='text-border'>/</span>
-                <span>{field?.label ?? filter.fieldKey}</span>
-                <span className='text-border'>=</span>
-                <span className='text-foreground'>{filter.value}</span>
-                <button
-                  type='button'
-                  onClick={() =>
-                    service.removeFieldFilter(filter.schemaId, filter.fieldKey)
-                  }
-                  className='hover:text-foreground'
-                >
-                  <LucideX className='size-3.5' />
-                </button>
-              </span>
-            )
-          })}
-        </div>
-      )}
+      {/* {service.appliedFilters.length > 0 && ( */}
+      {/*   <div className='flex flex-wrap items-center gap-2'></div> */}
+      {/* )} */}
     </div>
   )
 }

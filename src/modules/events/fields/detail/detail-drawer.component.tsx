@@ -14,11 +14,7 @@ import { ScrollArea } from '@/shared/ui/scroll-area'
 import { Separator } from '@/shared/ui/separator'
 import { Info } from 'lucide-react'
 
-import type {
-  EventRecord,
-  EventSchema,
-  SchemaField,
-} from '../../mock-data'
+import type { EventRecord, EventSchema, SchemaField } from '../../mock-data'
 import type { TFunction } from '../../events.service'
 import { useDetailDrawerService, renderers } from './detail-drawer.service'
 

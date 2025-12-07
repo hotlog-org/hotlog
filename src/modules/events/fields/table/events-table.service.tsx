@@ -5,7 +5,6 @@ import {
   Calendar03Icon,
   Heading01Icon,
   SchemeIcon,
-  SquareArrowRight02Icon,
 } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
 
@@ -30,7 +29,7 @@ export const useEventsTableService = ({
         cell: ({ row }) => {
           const createdAt = new Date(row.original.createdAt)
           return (
-            <div className='space-y-1'>
+            <div className='h-auto space-y-1'>
               <div className='flex items-center gap-2'>
                 <span className='font-medium text-foreground'>
                   {row.original.title}
