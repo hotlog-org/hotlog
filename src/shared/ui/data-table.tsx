@@ -57,9 +57,6 @@ export function DataTable<TData, TValue>({
 
   return (
     <div className='h-full w-full space-y-3'>
-      {/*<div className='flex items-center justify-end text-xs text-muted-foreground'>
-        {rowCountLabel}
-      </div>*/}
       <div className='h-full rounded-xl border border-border bg-card shadow-sm'>
         <Table className='h-full'>
           <TableHeader>
