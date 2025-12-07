@@ -2,13 +2,14 @@
 
 import { DataTable } from './data-table'
 import type { EventRow } from '../../mock-data'
+import type { TFunction } from '../../events.service'
 
 import { useEventsTableService } from './events-table.service'
 
 export interface EventsTableProps {
   rows: EventRow[]
   onOpen: (rowId: string) => void
-  t: (key: string, params?: Record<string, unknown>) => string
+  t: TFunction
 }
 
 export function EventsTable(props: EventsTableProps) {

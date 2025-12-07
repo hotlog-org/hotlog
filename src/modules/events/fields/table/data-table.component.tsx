@@ -18,6 +18,7 @@ import { HugeiconsIcon } from '@hugeicons/react'
 import { flexRender, type ColumnDef } from '@tanstack/react-table'
 import { Button } from '@/shared/ui/button'
 import { cn } from '@/shared/utils'
+import type { TFunction } from '../../events.service'
 
 import { useDataTableService } from './data-table.service'
 
@@ -25,7 +26,7 @@ export interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[]
   data: TData[]
   onRowClick?: (row: TData) => void
-  t: (key: string, params?: Record<string, unknown>) => string
+  t: TFunction
   rowCountLabel: string
   className?: string
 }
@@ -60,9 +61,9 @@ export function DataTable<TData, TValue>(props: DataTableProps<TData, TValue>) {
                         {header.isPlaceholder
                           ? null
                           : flexRender(
-                            header.column.columnDef.header,
-                            header.getContext(),
-                          )}
+                              header.column.columnDef.header,
+                              header.getContext(),
+                            )}
                         {{ asc: '↑', desc: '↓' }[
                           header.column.getIsSorted() as string
                         ] ?? null}
