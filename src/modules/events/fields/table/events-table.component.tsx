@@ -1,6 +1,6 @@
 'use client'
 
-import { DataTable } from './data-table'
+import { DataTable } from '@/shared/ui/data-table'
 import type { EventRow } from '../../mock-data'
 import type { TFunction } from '../../events.service'
 

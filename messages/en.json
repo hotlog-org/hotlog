@@ -141,10 +141,64 @@
           "false": "False"
         }
       },
+      "schema": {
+        "title": "Schema builder",
+        "subtitle": "Design event schemas and share deep links to fields.",
+        "search": {
+          "placeholder": "Search..."
+        },
+        "actions": {
+          "addSchema": "Add schema",
+          "newSchemaName": "Untitled schema {index}"
+        },
+        "table": {
+          "schema": "Name",
+          "fields": "Fields",
+          "open": "Open",
+          "noResults": "No schemas yet.",
+          "pagination": "Page {page} of {pages}"
+        },
+        "editor": {
+          "title": "Schema builder",
+          "subtitle": "Draft field types, nesting, and constraints. State is saved to the URL for sharing.",
+          "schemaName": "Schema name",
+          "schemaNamePlaceholder": "Name this schema",
+          "fieldName": "Field name",
+          "fieldType": "Field type",
+          "types": {
+            "string": "String",
+            "number": "Number",
+            "boolean": "Boolean",
+            "datetime": "Date & time",
+            "enum": "Enum",
+            "array": "Array",
+            "json": "JSON",
+            "object": "Object"
+          },
+          "enumValues": "Allowed values",
+          "enumPlaceholder": "value1, value2, value3",
+          "enumHelp": "Separate values with commas.",
+          "min": "Min",
+          "max": "Max",
+          "arrayOf": "Array of",
+          "objectFields": "Nested fields",
+          "depth": "Level {level}",
+          "noNested": "No nested fields yet.",
+          "maxDepth": "Max depth reached",
+          "addNested": "Add nested field",
+          "addField": "Add field",
+          "fieldSingular": "field",
+          "fieldPlural": "fields",
+          "shareable": "State saved in the URL for quick sharing.",
+          "depthLimit": "Max depth {depth}",
+          "defaultFieldName": "New field"
+        }
+      },
       "sidebar": {
         "navigation": {
           "overview": "Overview",
-          "events": "Events"
+          "events": "Events",
+          "schema": "Schema"
         },
         "groups": {
           "label": "Layouts",
