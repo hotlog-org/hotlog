@@ -3,7 +3,7 @@
 import { createElement, useCallback, useEffect, useMemo, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { useDashboardNavbarExtra } from '@/shared/store/dashboard-navbar-extra.store'
-import { SchemaExtraComponent } from './schema-extra.component'
+import { SchemaExtraComponent } from './extra/schema-extra.component'
 
 import { MAX_SCHEMA_DEPTH, schemaDefinitions } from './mock-data'
 import type {

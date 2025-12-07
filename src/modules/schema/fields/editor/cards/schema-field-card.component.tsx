@@ -1,9 +1,6 @@
 'use client'
 
-import {
-  MoreVertical as LucideMoreVertical,
-  Trash2 as LucideTrash,
-} from 'lucide-react'
+import { MoreVertical as LucideMoreVertical } from 'lucide-react'
 import { Delete02FreeIcons } from '@hugeicons/core-free-icons'
 import {
   DropdownMenu,
@@ -17,12 +14,15 @@ import { Button } from '@/shared/ui/button'
 import { Badge } from '@/shared/ui/badge'
 import { cn } from '@/shared/utils'
 
-import type { SchemaFieldRendererProps } from '../types/schema-field-renderer.interface'
-import type { FieldWithMeta } from '../../schema.service'
-import { typeOptions, typeStyles, rendererMap } from './field-card.constant'
-import type { FieldCardProps } from './field-card.interface'
+import type { SchemaFieldRendererProps } from '../../types/schema-field-renderer.interface'
+import type { FieldWithMeta } from '../../../schema.service'
+import {
+  typeOptions,
+  typeStyles,
+  rendererMap,
+} from './schema-field-card.constant'
+import type { FieldCardProps } from './schema-field-card.interface'
 import { HugeiconsIcon } from '@hugeicons/react'
-import { Separator } from '@radix-ui/react-menubar'
 
 export function FieldCard(props: FieldCardProps) {
   const {
@@ -128,7 +128,7 @@ export function FieldCard(props: FieldCardProps) {
                         onFieldTypeChange(field.id, option)
                       }}
                     >
-                      <span className='flex items-center justify-between gap-3'>
+                      <span className='w-full flex items-center justify-between gap-3'>
                         <span className='capitalize'>
                           {t(`editor.types.${option}`)}
                         </span>
@@ -160,10 +160,7 @@ export function FieldCard(props: FieldCardProps) {
           >
             <HugeiconsIcon icon={Delete02FreeIcons} color='white' />
           </Button>
-
-          <Separator className='my-3' />
         </div>
-
         {Renderer ? <Renderer {...rendererProps} /> : null}
       </div>
     </div>

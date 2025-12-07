@@ -1,5 +1,5 @@
-import type { FieldWithMeta, TFunction } from '../../schema.service'
-import type { SchemaFieldType } from '../../schema.interface'
+import type { FieldWithMeta, TFunction } from '../../../schema.service'
+import type { SchemaFieldType } from '../../../schema.interface'
 
 export type FieldCardProps = {
   field: FieldWithMeta

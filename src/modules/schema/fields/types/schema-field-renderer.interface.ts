@@ -1,5 +1,6 @@
 import type { FieldWithMeta, TFunction } from '../../schema.service'
 import type { SchemaFieldType } from '../../schema.interface'
+import React from 'react'
 
 export interface SchemaFieldRendererProps {
   field: FieldWithMeta
@@ -18,5 +19,5 @@ export interface SchemaFieldRendererProps {
   ) => void
   onItemTypeChange: (fieldId: string, type: SchemaFieldType) => void
   onSelectField: (fieldId: string) => void
-  renderChild: (child: FieldWithMeta) => JSX.Element
+  renderChild: (child: FieldWithMeta) => React.JSX.Element
 }

@@ -18,7 +18,7 @@ import type {
   SchemaDefinition,
   TFunction,
 } from '../../schema.service'
-import { FieldCard } from './field-card.component'
+import { FieldCard } from './cards/schema-field-card.component'
 import { Delete02FreeIcons } from '@hugeicons/core-free-icons'
 
 export interface SchemaEditorProps {

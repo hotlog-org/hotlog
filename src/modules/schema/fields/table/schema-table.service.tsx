@@ -49,7 +49,7 @@ export const useSchemaTableService = ({ onOpen, t }: SchemaTableProps) => {
           <button
             type='button'
             aria-label={t('table.open')}
-            className='text-primary inline-flex items-center justify-center gap-1 text-sm'
+            className='inline-flex items-center justify-center gap-1 text-sm underline opacity-60'
             onClick={(e) => {
               e.stopPropagation()
               onOpen(row.original.id)

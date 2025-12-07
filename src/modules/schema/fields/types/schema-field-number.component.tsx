@@ -1,14 +1,21 @@
 'use client'
 
-import type { SchemaFieldRendererProps } from '../schema-field-renderer.interface'
-import { Field, FieldControl, FieldLabel } from '@/shared/ui/field'
+import type { SchemaFieldRendererProps } from './schema-field-renderer.interface'
+import {
+  Field,
+  FieldControl,
+  FieldLabel,
+  FieldMessage,
+} from '@/shared/ui/field'
 import { Input } from '@/shared/ui/input'
 
 export function SchemaFieldNumber(props: SchemaFieldRendererProps) {
   return (
     <div className='grid grid-cols-2 gap-3'>
       <Field>
-        <FieldLabel>{props.t('editor.min')}</FieldLabel>
+        <FieldLabel className='text-[11px] uppercase tracking-wide text-muted-foreground'>
+          {props.t('editor.min')}
+        </FieldLabel>
         <FieldControl>
           <Input
             type='number'
@@ -24,7 +31,9 @@ export function SchemaFieldNumber(props: SchemaFieldRendererProps) {
         </FieldControl>
       </Field>
       <Field>
-        <FieldLabel>{props.t('editor.max')}</FieldLabel>
+        <FieldLabel className='text-[11px] uppercase tracking-wide text-muted-foreground'>
+          {props.t('editor.max')}
+        </FieldLabel>
         <FieldControl>
           <Input
             type='number'
@@ -39,6 +48,9 @@ export function SchemaFieldNumber(props: SchemaFieldRendererProps) {
           />
         </FieldControl>
       </Field>
+      <FieldMessage className='col-span-2 text-xs text-muted-foreground'>
+        {props.t('editor.numberHelp')}
+      </FieldMessage>
     </div>
   )
 }

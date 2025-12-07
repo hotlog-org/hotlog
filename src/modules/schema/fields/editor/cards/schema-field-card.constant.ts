@@ -1,13 +1,13 @@
-import type { SchemaFieldType } from '../../schema.interface'
-import type { SchemaFieldRendererProps } from '../types/schema-field-renderer.interface'
-import { SchemaFieldEnum } from '../types/enum/schema-field.enum.component'
-import { SchemaFieldNumber } from '../types/number/schema-field.number.component'
-import { SchemaFieldArray } from '../types/array/schema-field.array.component'
-import { SchemaFieldObject } from '../types/object/schema-field.object.component'
-import { SchemaFieldString } from '../types/string/schema-field.string.component'
-import { SchemaFieldBoolean } from '../types/boolean/schema-field.boolean.component'
-import { SchemaFieldDatetime } from '../types/datetime/schema-field.datetime.component'
-import { SchemaFieldJson } from '../types/json/schema-field.json.component'
+import type { SchemaFieldType } from '../../../schema.interface'
+import type { SchemaFieldRendererProps } from '../../types/schema-field-renderer.interface'
+import { SchemaFieldEnum } from '../../types/schema-field-enum.component'
+import { SchemaFieldNumber } from '../../types/schema-field-number.component'
+import { SchemaFieldArray } from '../../types/schema-field-array.component'
+import { SchemaFieldObject } from '../../types/schema-field-object.component'
+import { SchemaFieldString } from '../../types/schema-field-string.component'
+import { SchemaFieldBoolean } from '../../types/schema-field-boolean.component'
+import { SchemaFieldDatetime } from '../../types/schema-field-datetime.component'
+import { SchemaFieldJson } from '../../types/schema-field-json.component'
 
 export const typeOptions: SchemaFieldType[] = [
   'string',
