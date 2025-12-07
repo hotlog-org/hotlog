@@ -1,10 +1,12 @@
-import type { SchemaFieldType } from '../../schema.interface'
 import type { FieldWithMeta, TFunction } from '../../schema.service'
+import type { SchemaFieldType } from '../../schema.interface'
 
-export interface FieldCardProps {
+export interface SchemaFieldRendererProps {
   field: FieldWithMeta
   t: TFunction
   maxDepth: number
+  typeOptions: SchemaFieldType[]
+  typeStyles: Record<SchemaFieldType, string>
   onAddField: (parentId?: string) => void
   onDeleteField: (fieldId: string) => void
   onFieldNameChange: (fieldId: string, name: string) => void
@@ -16,4 +18,5 @@ export interface FieldCardProps {
   ) => void
   onItemTypeChange: (fieldId: string, type: SchemaFieldType) => void
   onSelectField: (fieldId: string) => void
+  renderChild: (child: FieldWithMeta) => JSX.Element
 }
