@@ -25,12 +25,14 @@ export default async function LocaleLayout({
     notFound()
   }
 
+  const messages = (await import(`../../../../messages/${locale}.json`)).default
+
   return (
     <html lang={locale} suppressHydrationWarning className={cn(geist.variable)}>
       <body>
         <AuthProvider>
           <ApiProvider>
-            <NextIntlClientProvider>
+            <NextIntlClientProvider locale={locale} messages={messages}>
               <ThemeProvider
                 attribute={'class'}
                 defaultTheme={'system'}

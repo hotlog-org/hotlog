@@ -4,11 +4,14 @@ import type { FilterBarProps } from './filter-bar.component'
 
 export const useFilterBarService = (props: FilterBarProps) => {
   const activeSchemaLabel = useMemo(() => {
-    if (props.activeSchemaId === 'all') return props.t('filter.allSchemas')
-    return (
-      props.schemas.find((schema) => schema.id === props.activeSchemaId)
-        ?.name ?? props.t('filter.schema')
-    )
+    if (!props.activeSchemas.length) return props.t('filter.allSchemas')
+    if (props.activeSchemas.length === 1) {
+      return (
+        props.schemas.find((schema) => schema.id === props.activeSchemas[0])
+          ?.name ?? props.t('filter.schema')
+      )
+    }
+    return props.t('filter.schema')
   }, [props])
 
   return {

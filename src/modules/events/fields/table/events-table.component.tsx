@@ -1,14 +1,15 @@
 'use client'
 
-import { DataTable } from './data-table'
+import { DataTable } from '@/shared/ui/data-table'
 import type { EventRow } from '../../mock-data'
+import type { TFunction } from '../../events.service'
 
 import { useEventsTableService } from './events-table.service'
 
 export interface EventsTableProps {
   rows: EventRow[]
   onOpen: (rowId: string) => void
-  t: (key: string, params?: Record<string, unknown>) => string
+  t: TFunction
 }
 
 export function EventsTable(props: EventsTableProps) {
@@ -22,8 +23,6 @@ export function EventsTable(props: EventsTableProps) {
         props.onOpen((row as (typeof props.rows)[number]).id)
       }
       t={props.t}
-      rowCountLabel={service.rowCountLabel}
-      className='h-full flex-1'
     />
   )
 }

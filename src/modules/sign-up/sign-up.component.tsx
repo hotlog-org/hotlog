@@ -3,19 +3,19 @@
 import AuthHeader from '@/modules/auth-shared/auth-header'
 import { Button } from '@/shared/ui/button'
 import {
-    Card,
-    CardContent,
-    CardDescription,
-    CardHeader,
-    CardTitle,
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
 } from '@/shared/ui/card'
 import {
-    Form,
-    FormControl,
-    FormField,
-    FormItem,
-    FormLabel,
-    FormMessage,
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
 } from '@/shared/ui/form'
 import { Input } from '@/shared/ui/input'
 import { CircleCheck, CircleX, Lock, Mail, User } from 'lucide-react'
@@ -57,7 +57,9 @@ const SignUpComponent = () => {
                             <User className='absolute left-3 top-2.5 h-5 w-5 text-neutral-500' />
                             <Input
                               className='pl-10 bg-neutral-800/50 border-neutral-700 focus:border-blue-400 transition-colors'
-                              placeholder={service.t('fields.username.placeholder')}
+                              placeholder={service.t(
+                                'fields.username.placeholder',
+                              )}
                               {...field}
                             />
                           </div>
@@ -80,7 +82,9 @@ const SignUpComponent = () => {
                             <Input
                               className='pl-10 bg-neutral-800/50 border-neutral-700 focus:border-blue-400 transition-colors'
                               type='email'
-                              placeholder={service.t('fields.email.placeholder')}
+                              placeholder={service.t(
+                                'fields.email.placeholder',
+                              )}
                               {...field}
                             />
                           </div>
@@ -103,7 +107,9 @@ const SignUpComponent = () => {
                             <Input
                               className='pl-10 bg-neutral-800/50 border-neutral-700 focus:border-blue-400 transition-colors'
                               type='password'
-                              placeholder={service.t('fields.password.placeholder')}
+                              placeholder={service.t(
+                                'fields.password.placeholder',
+                              )}
                               {...field}
                             />
                           </div>
@@ -147,11 +153,18 @@ const SignUpComponent = () => {
                   disabled={service.isLoading}
                 >
                   <span className='mr-2 inline-block h-4 w-4 rounded-sm bg-foreground/60 opacity-80 group-hover:opacity-100 transition-opacity' />
-                  <span className='transition-transform group-hover:translate-x-0.5'>Continue with Google</span>
+                  <span className='transition-transform group-hover:translate-x-0.5'>
+                    Continue with Google
+                  </span>
                 </Button>
                 <div className='text-center text-sm text-muted-foreground'>
                   <span>Already have an account? </span>
-                  <a href='/sign-in' className='font-medium text-foreground hover:underline underline-offset-4'>Sign in</a>
+                  <a
+                    href='/sign-in'
+                    className='font-medium text-foreground hover:underline underline-offset-4'
+                  >
+                    Sign in
+                  </a>
                 </div>
               </form>
             </Form>

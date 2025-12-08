@@ -29,8 +29,12 @@ const LoginComponent = () => {
       <AuthHeader />
       <Card className='w-full max-w-md border border-border/60 bg-background/70 backdrop-blur-sm shadow-sm transition-all duration-300 group hover:shadow-md hover:ring-1 hover:ring-foreground/10 motion-safe:hover:-translate-y-0.5'>
         <CardHeader className='space-y-2'>
-          <CardTitle className='text-2xl font-semibold tracking-tight'>{service.t('title')}</CardTitle>
-          <CardDescription className='text-muted-foreground'>{service.t('description')}</CardDescription>
+          <CardTitle className='text-2xl font-semibold tracking-tight'>
+            {service.t('title')}
+          </CardTitle>
+          <CardDescription className='text-muted-foreground'>
+            {service.t('description')}
+          </CardDescription>
         </CardHeader>
         <CardContent className='space-y-6'>
           <Form {...service.form}>
@@ -88,7 +92,11 @@ const LoginComponent = () => {
                   {service.t('messages.success')}
                 </div>
               )}
-              <Button className='w-full transition-all duration-200 hover:shadow-sm focus-visible:ring-2 focus-visible:ring-foreground/10' type='submit' disabled={service.isLoading}>
+              <Button
+                className='w-full transition-all duration-200 hover:shadow-sm focus-visible:ring-2 focus-visible:ring-foreground/10'
+                type='submit'
+                disabled={service.isLoading}
+              >
                 {service.isLoading
                   ? service.t('actions.submitting')
                   : service.t('actions.submit')}
@@ -106,16 +114,26 @@ const LoginComponent = () => {
                 disabled={service.isLoading}
               >
                 <span className='mr-2 inline-block h-4 w-4 rounded-sm bg-foreground/60 opacity-80 group-hover:opacity-100 transition-opacity' />
-                <span className='transition-transform group-hover:translate-x-0.5'>Continue with Google</span>
+                <span className='transition-transform group-hover:translate-x-0.5'>
+                  Continue with Google
+                </span>
               </Button>
               <div className='text-right'>
-                <a href='/forgot-password' className='text-xs text-muted-foreground hover:text-foreground'>
+                <a
+                  href='/forgot-password'
+                  className='text-xs text-muted-foreground hover:text-foreground'
+                >
                   Forgot password?
                 </a>
               </div>
               <div className='text-center text-sm text-muted-foreground'>
                 <span>Don\'t have an account? </span>
-                <a href='/sign-up' className='font-medium text-foreground hover:underline underline-offset-4'>Sign up</a>
+                <a
+                  href='/sign-up'
+                  className='font-medium text-foreground hover:underline underline-offset-4'
+                >
+                  Sign up
+                </a>
               </div>
             </form>
           </Form>

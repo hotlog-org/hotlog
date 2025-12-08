@@ -133,7 +133,6 @@ export function ChartsExample() {
           title='Revenue Over Time'
           xAxisLabel='Date'
           yAxisLabel='Revenue ($)'
-          showDatePicker
           smooth
         />
       </div>
@@ -146,7 +145,6 @@ export function ChartsExample() {
           xAxisLabel='Date'
           yAxisLabel='Sales'
           smooth
-          showDatePicker
         />
       </div>
 
@@ -232,7 +230,6 @@ export function ChartsExample() {
           data={timelineData}
           title='Project Timeline'
           height={400}
-          showDatePicker
         />
       </div>
     </div>

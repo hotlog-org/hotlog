@@ -63,7 +63,10 @@ export const useLoginService = () => {
     setIsLoading(true)
     setError(null)
     try {
-      await authClient.signIn.social({ provider: 'google', callbackURL: ERoutes.DASHBOARD })
+      await authClient.signIn.social({
+        provider: 'google',
+        callbackURL: ERoutes.DASHBOARD,
+      })
     } catch {
       setError(t('messages.error'))
     } finally {

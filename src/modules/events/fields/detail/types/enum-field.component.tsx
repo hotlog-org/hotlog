@@ -4,7 +4,7 @@ import { Badge } from '@/shared/ui/badge'
 
 export interface EnumFieldProps {
   value: unknown
-  t: (key: string, params?: Record<string, unknown>) => string
+  t: (key: string, params?: Record<string, string | number | Date>) => string
 }
 
 const colorMap: Record<string, string> = {

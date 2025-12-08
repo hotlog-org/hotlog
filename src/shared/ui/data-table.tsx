@@ -31,8 +31,7 @@ interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[]
   data: TData[]
   onRowClick?: (row: TData) => void
-  t: (key: string, params?: Record<string, unknown>) => string
-  rowCountLabel: string
+  t: (key: string, params?: Record<string, string | number | Date>) => string
 }
 
 export function DataTable<TData, TValue>({
@@ -40,7 +39,6 @@ export function DataTable<TData, TValue>({
   data,
   onRowClick,
   t,
-  rowCountLabel,
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = useState<SortingState>([])
 
@@ -58,12 +56,9 @@ export function DataTable<TData, TValue>({
   })
 
   return (
-    <div className='space-y-3 min-h-full'>
-      {/*<div className='flex items-center justify-end text-xs text-muted-foreground'>
-        {rowCountLabel}
-      </div>*/}
-      <div className='min-h-full rounded-xl border border-border bg-card shadow-sm'>
-        <Table>
+    <div className='h-full w-full space-y-3'>
+      <div className='h-full rounded-xl border border-border bg-card shadow-sm'>
+        <Table className='h-full'>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
@@ -126,7 +121,7 @@ export function DataTable<TData, TValue>({
         </Table>
       </div>
 
-      <div className='flex flex-wrap items-center justify-between gap-3 text-sm text-muted-foreground'>
+      <div className='pl-4 flex flex-wrap items-start justify-between gap-3 text-sm text-muted-foreground'>
         <div>
           {t('table.pagination', {
             page: table.getState().pagination.pageIndex + 1,

@@ -1,10 +1,10 @@
 'use client'
 
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
-import { localizeHref } from '../utils/localize-href.utils'
+import { routing } from '@/i18n/routing'
 
 export const useQuerySearchParams = () => {
-  const { push } = useRouter()
+  const { replace } = useRouter()
 
   const pathname = usePathname()
   const searchParams = useSearchParams()
@@ -27,12 +27,29 @@ export const useQuerySearchParams = () => {
     }
 
     const queryString = params.toString()
-    push(localizeHref(pathname + (queryString ? '?' + queryString : '')), {
+
+    const segments = pathname.split('/').filter(Boolean)
+    const firstSegment = segments[0]
+    const isLocalized = routing.locales.includes(
+      firstSegment as (typeof routing.locales)[number],
+    )
+
+    const basePath = isLocalized
+      ? pathname
+      : `/${routing.defaultLocale}${pathname}`
+    const nextHref = basePath + (queryString ? `?${queryString}` : '')
+    const currentHref = `${pathname}${
+      searchParams.toString() ? `?${searchParams.toString()}` : ''
+    }`
+
+    if (nextHref === currentHref) return
+
+    replace(nextHref, {
       scroll: !scroll,
     })
   }
 
   const allQueriesParams = String(new URLSearchParams(searchParams))
 
-  return { push, searchParams, allQueriesParams, changeQuery, hashParams }
+  return { replace, searchParams, allQueriesParams, changeQuery, hashParams }
 }

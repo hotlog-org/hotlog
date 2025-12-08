@@ -23,6 +23,10 @@ export default [
       semi: ['error', 'never'],
       quotes: ['error', 'single'],
       'prettier/prettier': 'error',
+      indent: 'off',
+      '@typescript-eslint/indent': 'off',
+      'react/jsx-indent': 'off',
+      'react/jsx-indent-props': 'off'
     },
   },
   {
