@@ -1,6 +1,6 @@
 import { ERoutes } from '@/config/routes'
 import { auth } from '@/lib/better-auth/auth'
-import { SchemaBuilderComponent } from '@/modules/schema-builder'
+import { SchemaComponent } from '@/modules/schema'
 import { headers } from 'next/headers'
 import { redirect } from 'next/navigation'
 
@@ -19,11 +19,9 @@ export default async function SchemaDetailPage({
     redirect(ERoutes.SIGN_IN)
   }
 
-  const { id } = await params
-
   return (
     <div className='mx-auto max-w-5xl'>
-      <SchemaBuilderComponent schemaId={id} />
+      <SchemaComponent />
     </div>
   )
 }

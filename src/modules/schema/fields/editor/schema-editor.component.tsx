@@ -13,13 +13,10 @@ import { Field, FieldControl, FieldLabel } from '@/shared/ui/field'
 import { Input } from '@/shared/ui/input'
 import { HugeiconsIcon } from '@hugeicons/react'
 
-import type {
-  FieldWithMeta,
-  SchemaDefinition,
-  TFunction,
-} from '../../schema.service'
 import { FieldCard } from './cards/schema-field-card.component'
 import { Delete02FreeIcons } from '@hugeicons/core-free-icons'
+import { SchemaDefinition } from '../../schema.interface'
+import { FieldWithMeta, TFunction } from '../../schema.service'
 
 export interface SchemaEditorProps {
   open: boolean

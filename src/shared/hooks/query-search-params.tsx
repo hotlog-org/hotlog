@@ -30,7 +30,9 @@ export const useQuerySearchParams = () => {
 
     const segments = pathname.split('/').filter(Boolean)
     const firstSegment = segments[0]
-    const isLocalized = routing.locales.includes(firstSegment)
+    const isLocalized = routing.locales.includes(
+      firstSegment as (typeof routing.locales)[number],
+    )
 
     const basePath = isLocalized
       ? pathname

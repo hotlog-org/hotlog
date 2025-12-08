@@ -1,6 +1,6 @@
 'use client'
 
-import type { SchemaFieldRendererProps } from '../schema-field-renderer.interface'
+import { SchemaFieldRendererProps } from './schema-field-renderer.interface'
 
 export function SchemaFieldDatetime(props: SchemaFieldRendererProps) {
   void props

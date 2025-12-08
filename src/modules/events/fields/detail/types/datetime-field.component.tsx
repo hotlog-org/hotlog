@@ -4,7 +4,7 @@ import { format, formatDistanceToNow } from 'date-fns'
 
 export interface DateTimeFieldProps {
   value: unknown
-  t: (key: string, params?: Record<string, unknown>) => string
+  t: (key: string, params?: Record<string, string | number | Date>) => string
 }
 
 export function DateTimeField({ value, t }: DateTimeFieldProps) {

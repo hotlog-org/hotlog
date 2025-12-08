@@ -4,7 +4,7 @@ import { ScrollArea } from '@/shared/ui/scroll-area'
 
 export interface JsonFieldProps {
   value: unknown
-  t: (key: string, params?: Record<string, unknown>) => string
+  t: (key: string, params?: Record<string, string | number | Date>) => string
 }
 
 export function JsonField({ value, t }: JsonFieldProps) {

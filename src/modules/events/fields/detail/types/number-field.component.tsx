@@ -2,7 +2,7 @@
 
 export interface NumberFieldProps {
   value: unknown
-  t: (key: string, params?: Record<string, unknown>) => string
+  t: (key: string, params?: Record<string, string | number | Date>) => string
 }
 
 export function NumberField({ value, t }: NumberFieldProps) {

@@ -7,6 +7,7 @@ import { SchemaFieldString } from '../../types/schema-field-string.component'
 import { SchemaFieldBoolean } from '../../types/schema-field-boolean.component'
 import { SchemaFieldDatetime } from '../../types/schema-field-datetime.component'
 import { SchemaFieldJson } from '../../types/schema-field-json.component'
+import { ReactNode } from 'react'
 
 export const typeOptions: SchemaFieldType[] = [
   'string',
@@ -31,7 +32,7 @@ export const typeStyles: Record<SchemaFieldType, string> = {
 }
 
 export const rendererMap: Partial<
-  Record<SchemaFieldType, React.FC<SchemaFieldRendererProps>>
+  Record<SchemaFieldType, (props: SchemaFieldRendererProps) => ReactNode>
 > = {
   string: SchemaFieldString,
   boolean: SchemaFieldBoolean,

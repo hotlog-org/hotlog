@@ -4,7 +4,7 @@ import { Search as LucideSearch, Plus as LucidePlus } from 'lucide-react'
 
 import { Input } from '@/shared/ui/input'
 import { Button } from '@/shared/ui/button'
-import type { TFunction } from './schema.service'
+import { TFunction } from '../schema.service'
 
 export interface SchemaExtraComponentProps {
   t: TFunction

@@ -12,6 +12,9 @@ import type { BaseChartProps, TimeSeriesData, DateRange } from './chart.types'
 
 export interface StackedBarChartProps extends BaseChartProps {
   data: TimeSeriesData[]
+  showDatePicker?: boolean
+  dateRange?: DateRange
+  onDateRangeChange?: (range: DateRange) => void
   title?: string
   xAxisLabel?: string
   yAxisLabel?: string
