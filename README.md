@@ -1,6 +1,6 @@
 # Hotlog
 
-Modern Next.js 15 application with Turbopack, TypeScript, Tailwind CSS v4, `next-intl` i18n, React Query, shadcn-inspired UI components, and a lightweight REST API layer built around `ky` + provider pattern.
+Modern Next.js 16 application with Turbopack, TypeScript, Tailwind CSS v4, `next-intl` i18n, React Query, shadcn-inspired UI components, and a lightweight REST API layer built around `ky` + provider pattern.
 
 ## Getting Started
 
@@ -9,9 +9,9 @@ Modern Next.js 15 application with Turbopack, TypeScript, Tailwind CSS v4, `next
 ```bash
 git clone https://github.com/hotlog-org/hotlog hotlog
 cd hotlog
+nvm use || nvm install 22
+yarn install
 ```
-
-- [Install bun here](https://bun.com/docs/installation)
 
 - Create `.env` for environmental variables:
 
@@ -24,7 +24,7 @@ Then fill in the required variables (see below). Next.js automatically loads `.e
 - Run the development server (Turbopack):
 
 ```bash
-bun dev
+yarn dev
 ```
 
 - Open `http://localhost:3000` in the browser.
