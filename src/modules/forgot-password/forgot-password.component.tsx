@@ -2,8 +2,21 @@
 
 import AuthHeader from '@/modules/auth-shared/auth-header'
 import { Button } from '@/shared/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/ui/card'
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/shared/ui/form'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/shared/ui/card'
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/shared/ui/form'
 import { Input } from '@/shared/ui/input'
 import { CircleCheck, CircleX, Mail } from 'lucide-react'
 import { useForgotPasswordService } from './forgot-password.service'
@@ -16,12 +29,19 @@ const ForgotPasswordComponent = () => {
       <AuthHeader />
       <Card className='w-full max-w-md border shadow-sm'>
         <CardHeader className='space-y-2'>
-          <CardTitle className='text-2xl font-semibold tracking-tight'>Forgot password</CardTitle>
-          <CardDescription className='text-muted-foreground'>Enter your email to receive a reset link.</CardDescription>
+          <CardTitle className='text-2xl font-semibold tracking-tight'>
+            Forgot password
+          </CardTitle>
+          <CardDescription className='text-muted-foreground'>
+            Enter your email to receive a reset link.
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <Form {...service.form}>
-            <form onSubmit={service.form.handleSubmit(service.onSubmit)} className='space-y-5'>
+            <form
+              onSubmit={service.form.handleSubmit(service.onSubmit)}
+              className='space-y-5'
+            >
               <FormField
                 control={service.form.control}
                 name='email'
@@ -31,7 +51,12 @@ const ForgotPasswordComponent = () => {
                     <FormControl>
                       <div className='relative'>
                         <Mail className='absolute left-3 top-2.5 h-4 w-4 text-muted-foreground' />
-                        <Input type='email' className='pl-9' placeholder='you@example.com' {...field} />
+                        <Input
+                          type='email'
+                          className='pl-9'
+                          placeholder='you@example.com'
+                          {...field}
+                        />
                       </div>
                     </FormControl>
                     <FormMessage />
@@ -50,13 +75,27 @@ const ForgotPasswordComponent = () => {
                   Check your inbox for the reset link.
                 </div>
               )}
-              <Button type='submit' className='w-full' disabled={service.isLoading}>
+              <Button
+                type='submit'
+                className='w-full'
+                disabled={service.isLoading}
+              >
                 {service.isLoading ? 'Sending…' : 'Send reset link'}
               </Button>
               <div className='text-center text-sm text-muted-foreground'>
-                <a href='/sign-in' className='hover:underline underline-offset-4'>Back to sign in</a>
+                <a
+                  href='/sign-in'
+                  className='hover:underline underline-offset-4'
+                >
+                  Back to sign in
+                </a>
                 <span className='px-2'>·</span>
-                <a href='/sign-up' className='hover:underline underline-offset-4'>Create account</a>
+                <a
+                  href='/sign-up'
+                  className='hover:underline underline-offset-4'
+                >
+                  Create account
+                </a>
               </div>
             </form>
           </Form>
@@ -67,5 +106,3 @@ const ForgotPasswordComponent = () => {
 }
 
 export default ForgotPasswordComponent
-
-

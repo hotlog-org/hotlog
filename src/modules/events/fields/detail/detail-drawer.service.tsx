@@ -10,13 +10,14 @@ import { EnumField } from './types/enum-field.component'
 import { JsonField } from './types/json-field.component'
 import { NumberField } from './types/number-field.component'
 import { StringField } from './types/string-field.component'
+import React from 'react'
 
 export interface FieldRowConfig {
   field: SchemaField
   value: unknown
 }
 
-export type FieldRenderer = (value: unknown, t: TFunction) => JSX.Element
+export type FieldRenderer = (value: unknown, t: TFunction) => React.JSX.Element
 
 export type RenderersMap = Record<FieldType, FieldRenderer>
 

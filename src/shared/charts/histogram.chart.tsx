@@ -4,9 +4,9 @@ import ReactECharts from 'echarts-for-react'
 import { useEffect, useMemo, useState } from 'react'
 import type { BaseChartProps, TimeSeriesData } from './chart.types'
 import {
-    filterDataByDateRange,
-    getChartColors,
-    getThemeColors,
+  filterDataByDateRange,
+  getChartColors,
+  getThemeColors,
 } from './chart.utils'
 
 export interface HistogramChartProps extends BaseChartProps {

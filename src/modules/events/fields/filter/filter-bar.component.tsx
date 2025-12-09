@@ -5,12 +5,11 @@ import { Filter, RefreshCcw } from 'lucide-react'
 import { Button } from '@/shared/ui/button'
 
 import { useFilterBarService } from './filter-bar.service'
-import type { EventFilters, SchemaOption } from '../../events.service'
+import type { SchemaOption } from '../../events.service'
 
 export interface FilterBarProps {
   schemas: SchemaOption[]
-  activeSchemaId: EventFilters['schemaId']
-  onSchemaChange: (schemaId: EventFilters['schemaId']) => void
+  activeSchemas: string[]
   onReset: () => void
   t: (key: string, params?: Record<string, unknown>) => string
 }

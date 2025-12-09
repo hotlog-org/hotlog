@@ -1,2 +1,1 @@
-export { ERoutes } from './route.interface';
-
+export { ERoutes } from './route.interface'

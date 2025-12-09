@@ -4,15 +4,11 @@ import { Calendar03Icon } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { format } from 'date-fns'
 import * as React from 'react'
+import { type DateRange } from 'react-day-picker'
 import { cn } from '../utils'
 import { Button } from './button'
 import CalendarRangeSingleMonthDemo from './calendar2'
 import { Popover, PopoverContent, PopoverTrigger } from './popover'
-
-export interface DateRange {
-  from: Date | undefined
-  to: Date | undefined
-}
 
 interface DateRangePickerProps {
   value?: DateRange
@@ -75,3 +71,5 @@ export function DateRangePicker({
     </div>
   )
 }
+
+export type { DateRange }

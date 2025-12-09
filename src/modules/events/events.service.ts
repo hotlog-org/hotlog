@@ -23,7 +23,7 @@ export interface FieldFilter {
 
 export interface EventFilters {
   query: string
-  schemaId: 'all' | string
+  selectedSchemas: string[]
   fieldFilters: FieldFilter[]
 }
 
@@ -31,7 +31,9 @@ export interface EventsService {
   t: TFunction
   filters: EventFilters
   setQuery: (value: string) => void
-  setSchemaId: (schemaId: EventFilters['schemaId']) => void
+  addSchema: (schemaId: string) => void
+  removeSchema: (schemaId: string) => void
+  selectedSchemas: string[]
   upsertFieldFilter: (schemaId: string, fieldKey: string, value: string) => void
   removeFieldFilter: (schemaId: string, fieldKey: string) => void
   resetFilters: () => void
@@ -70,7 +72,7 @@ export interface EventsService {
 const useEventsService = (): EventsService => {
   const t = useTranslations('modules.dashboard.events')
   const [query, setQuery] = useState('')
-  const [schemaId, setSchemaId] = useState<EventFilters['schemaId']>('all')
+  const [selectedSchemas, setSelectedSchemas] = useState<string[]>([])
   const [fieldFilters, setFieldFilters] = useState<FieldFilter[]>([])
   const [selectedId, setSelectedId] = useState<string | null>(null)
 
@@ -84,8 +86,6 @@ const useEventsService = (): EventsService => {
 
     return eventRecords
       .filter((event) => {
-        if (schemaId !== 'all' && event.schemaId !== schemaId) return false
-
         const matchingSchemaFilters = fieldFilters.filter(
           (f) => f.schemaId === event.schemaId,
         )
@@ -100,6 +100,13 @@ const useEventsService = (): EventsService => {
         })
 
         if (!matchesFieldFilters) return false
+
+        if (
+          selectedSchemas.length > 0 &&
+          !selectedSchemas.includes(event.schemaId)
+        ) {
+          return false
+        }
 
         if (!normalizedQuery) return true
 
@@ -118,7 +125,7 @@ const useEventsService = (): EventsService => {
         (a, b) =>
           new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
       )
-  }, [fieldFilters, query, schemaId, schemaMap])
+  }, [fieldFilters, query, selectedSchemas, schemaMap])
 
   const rows: EventRow[] = useMemo(
     () =>
@@ -149,7 +156,7 @@ const useEventsService = (): EventsService => {
 
   const resetFilters = useCallback(() => {
     setQuery('')
-    setSchemaId('all')
+    setSelectedSchemas([])
     setFieldFilters([])
   }, [])
 
@@ -178,6 +185,7 @@ const useEventsService = (): EventsService => {
         return [...prev, { schemaId: schema, fieldKey, value }]
       })
     },
+    [],
   )
 
   const removeFieldFilter = useCallback((schema: string, fieldKey: string) => {
@@ -218,7 +226,6 @@ const useEventsService = (): EventsService => {
   const selectSchema = useCallback((id: string) => {
     setDraftSchemaId(id)
     setFilterStep('field')
-    setSchemaId(id)
   }, [])
 
   const selectField = useCallback(
@@ -240,6 +247,15 @@ const useEventsService = (): EventsService => {
     setFilterStep('field')
   }, [draftFieldKey, draftSchemaId, draftValue, upsertFieldFilter])
 
+  const addSchema = useCallback((id: string) => {
+    setSelectedSchemas((prev) => (prev.includes(id) ? prev : [...prev, id]))
+  }, [])
+
+  const removeSchema = useCallback((id: string) => {
+    setSelectedSchemas((prev) => prev.filter((s) => s !== id))
+    setFieldFilters((prev) => prev.filter((f) => f.schemaId !== id))
+  }, [])
+
   const back = useCallback(() => {
     if (filterStep === 'value') {
       setFilterStep('field')
@@ -251,7 +267,7 @@ const useEventsService = (): EventsService => {
 
   const clearAll = useCallback(() => {
     setFieldFilters([])
-    setSchemaId('all')
+    setSelectedSchemas([])
     resetDraft()
   }, [resetDraft])
 
@@ -272,7 +288,7 @@ const useEventsService = (): EventsService => {
 
   const filters: EventFilters = {
     query,
-    schemaId,
+    selectedSchemas,
     fieldFilters,
   }
 
@@ -294,7 +310,10 @@ const useEventsService = (): EventsService => {
           schemaHasFilters,
           fields: fieldsForDraftSchema,
           openChange,
-          selectSchema,
+          selectSchema: (id: string) => {
+            addSchema(id)
+            selectSchema(id)
+          },
           selectField,
           setDraftValue,
           back,
@@ -319,6 +338,7 @@ const useEventsService = (): EventsService => {
     query,
     removeFieldFilter,
     schemaHasFilters,
+    addSchema,
     draftSchemaId,
     draftFieldKey,
     draftValue,
@@ -335,12 +355,14 @@ const useEventsService = (): EventsService => {
     t,
     filters,
     setQuery,
-    setSchemaId,
     upsertFieldFilter,
     removeFieldFilter,
     resetFilters,
     rows,
     schemas: eventSchemas,
+    addSchema,
+    removeSchema,
+    selectedSchemas,
     selectedEvent,
     selectedSchema,
     openEvent,

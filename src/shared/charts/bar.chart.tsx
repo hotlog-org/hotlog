@@ -3,15 +3,15 @@
 import ReactECharts from 'echarts-for-react'
 import { useEffect, useMemo, useState } from 'react'
 import type {
-    BaseChartData,
-    BaseChartProps,
-    TimeSeriesData,
+  BaseChartData,
+  BaseChartProps,
+  TimeSeriesData,
 } from './chart.types'
 import {
-    filterDataByDateRange,
-    getBorderRadius,
-    getChartColors,
-    getThemeColors,
+  filterDataByDateRange,
+  getBorderRadius,
+  getChartColors,
+  getThemeColors,
 } from './chart.utils'
 
 export interface BarChartProps extends BaseChartProps {

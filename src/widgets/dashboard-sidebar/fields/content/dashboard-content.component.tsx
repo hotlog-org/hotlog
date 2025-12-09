@@ -42,7 +42,7 @@ const DashboardSidebarContentComponent = () => {
                       tooltip={service.t(`navigation.${item.key}`)}
                       className={cn(
                         service.sidebarState == 'collapsed' &&
-                        'flex items-center justify-center',
+                          'flex items-center justify-center',
                       )}
                     >
                       {service.sidebarState === 'collapsed' ? (
@@ -81,7 +81,7 @@ const DashboardSidebarContentComponent = () => {
                       tooltip={dashboard.name}
                       className={cn(
                         service.sidebarState == 'collapsed' &&
-                        'flex items-center justify-center',
+                          'flex items-center justify-center',
                       )}
                     >
                       {service.sidebarState === 'collapsed' ? (
@@ -109,7 +109,7 @@ const DashboardSidebarContentComponent = () => {
                   className={cn(
                     'text-muted-foreground',
                     service.sidebarState == 'collapsed' &&
-                    'flex items-center justify-center',
+                      'flex items-center justify-center',
                   )}
                   tooltip={service.t('groups.addNew')}
                 >

@@ -1,2 +1,1 @@
-export { default as HomeComponent } from './home.client';
-
+export { default as HomeComponent } from './home.client'
