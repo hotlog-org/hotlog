@@ -134,7 +134,7 @@ export const useRolesTableService = ({
                 <div className='flex items-center gap-2'>
                   <Button
                     variant='outline'
-                    size='xs'
+                    size='sm'
                     className='border-dashed text-xs'
                     onClick={() => toggleExpanded(row.original.id)}
                   >
@@ -147,7 +147,7 @@ export const useRolesTableService = ({
                   {expandedRoleIds[row.original.id] && (
                     <Button
                       variant='ghost'
-                      size='xs'
+                      size='sm'
                       className='text-xs'
                       onClick={() => toggleExpanded(row.original.id)}
                     >
