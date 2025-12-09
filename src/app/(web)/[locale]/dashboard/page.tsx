@@ -1,6 +1,6 @@
 import { ERoutes } from '@/config/routes'
 import { auth } from '@/lib/better-auth/auth'
-import { DashboardOverviewComponent } from '@/modules/dashboard-overview'
+import { OverviewComponent } from '@/modules/overview'
 
 import { headers } from 'next/headers'
 import { redirect } from 'next/navigation'
@@ -14,5 +14,5 @@ export default async function DashboardPage() {
     redirect(ERoutes.SIGN_IN)
   }
 
-  return <DashboardOverviewComponent />
+  return <OverviewComponent />
 }

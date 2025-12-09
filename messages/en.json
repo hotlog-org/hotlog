@@ -141,6 +141,88 @@
           "false": "False"
         }
       },
+      "overview": {
+        "title": "Overview",
+        "tabs": {
+          "users": "Users",
+          "roles": "Roles"
+        },
+        "table": {
+          "noResults": "Nothing to show.",
+          "pagination": "Page {page} of {pages}"
+        },
+        "apiRequests": {
+          "title": "API requests",
+          "subtitle": "Requests in the last 30 days"
+        },
+        "apiKey": {
+          "title": "API Key",
+          "subtitle": "Keep it secret. Rotate and share only when needed.",
+          "label": "API key",
+          "copy": "Copy",
+          "copied": "Copied to clipboard",
+          "reveal": "Show",
+          "hide": "Hide",
+          "generate": "Generate new",
+          "hint": "Use this key for SDKs. Rotate before sharing."
+        },
+        "users": {
+          "invite": "Invite member",
+          "searchPlaceholder": "Search name, email, or role",
+          "status": {
+            "active": "Active",
+            "pending": "Pending"
+          },
+          "table": {
+            "name": "Name",
+            "email": "Email",
+            "role": "Role",
+            "status": "Status",
+            "remove": "Remove",
+            "revoke": "Revoke invite"
+          },
+          "inviteModal": {
+            "title": "Invite member",
+            "description": "Send a workspace invite to a teammate.",
+            "emailLabel": "Work email",
+            "placeholder": "name@company.com",
+            "help": "Pending invites can be revoked anytime.",
+            "cancel": "Cancel",
+            "submit": "Send invite"
+          }
+        },
+        "roles": {
+          "add": "Add role",
+          "searchPlaceholder": "Search roles or permissions",
+          "table": {
+            "name": "Name",
+          "permissions": "Permissions",
+          "addPermission": "Add permission",
+          "searchPermissions": "Search permissions...",
+          "noPermissionResults": "No permissions match your search.",
+          "add": "Add",
+          "delete": "Delete role",
+          "expand": "Show {count} more",
+          "collapse": "Show less",
+          "hide": "Hide"
+        },
+          "modal": {
+            "title": "Add role",
+            "description": "Create a role and preselect its permissions.",
+            "nameLabel": "Role name",
+            "namePlaceholder": "Support",
+            "selected": "Selected permissions",
+            "empty": "No permissions selected yet.",
+            "permissionsLabel": "Permissions",
+            "searchPermissions": "Search permissions...",
+            "removePermission": "Remove permission",
+            "added": "Selected",
+            "addPermission": "Add",
+            "cancel": "Cancel",
+            "submit": "Create role"
+          }
+        }
+      },
       "schema": {
         "title": "Schema builder",
         "subtitle": "Design event schemas and share deep links to fields.",
