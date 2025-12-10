@@ -1,6 +1,5 @@
 'use client'
 
-import { ERoutes } from '@/config/routes'
 import { Link } from '@/i18n/navigation'
 import {
   Sidebar,
@@ -15,10 +14,11 @@ import {
   SidebarMenuItem,
 } from '@/shared/ui/sidebar'
 import { cn } from '@/shared/utils/shadcn.utils'
-import { CircleIcon, PlusSignIcon } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { DashboardSidebarFooterComponent } from '../footer'
 import { DashboardSidebarHeaderComponent } from '../header'
+import { DashboardSidebarCreateModuleComponent } from './create-module/create-module.component'
+import { ModuleRow } from './create-module/module-row.component'
 import { DashboardSidebarContentConstants } from './dashboard-content.constant'
 import { useDashboardSidebarContentService } from './dashboard-content.service'
 
@@ -74,55 +74,19 @@ const DashboardSidebarContentComponent = () => {
           <SidebarGroupContent>
             <SidebarGroupLabel>{service.t('groups.label')}</SidebarGroupLabel>
             <SidebarMenu>
-              {service.dashboards.map((dashboard) => (
-                <SidebarMenuItem key={dashboard.id}>
-                  <Link href={`${ERoutes.DASHBOARD_MODULES}/${dashboard.id}`}>
-                    <SidebarMenuButton
-                      tooltip={dashboard.name}
-                      className={cn(
-                        service.sidebarState == 'collapsed' &&
-                          'flex items-center justify-center',
-                      )}
-                    >
-                      {service.sidebarState === 'collapsed' ? (
-                        <HugeiconsIcon
-                          icon={CircleIcon}
-                          size={16}
-                          color={dashboard.color}
-                        />
-                      ) : (
-                        <>
-                          <HugeiconsIcon
-                            icon={CircleIcon}
-                            size={16}
-                            color={dashboard.color}
-                          />
-                          <span>{dashboard.name}</span>
-                        </>
-                      )}
-                    </SidebarMenuButton>
-                  </Link>
-                </SidebarMenuItem>
+              {service.modules.map((module) => (
+                <ModuleRow
+                  key={module.id}
+                  module={module}
+                  sidebarState={service.sidebarState}
+                  selectedModuleId={service.selectedModuleId}
+                  onDelete={service.deleteModule}
+                  onSelect={service.setSelectedModuleId}
+                />
               ))}
-              <SidebarMenuItem>
-                <SidebarMenuButton
-                  className={cn(
-                    'text-muted-foreground',
-                    service.sidebarState == 'collapsed' &&
-                      'flex items-center justify-center',
-                  )}
-                  tooltip={service.t('groups.addNew')}
-                >
-                  {service.sidebarState === 'collapsed' ? (
-                    <HugeiconsIcon icon={PlusSignIcon} size={16} />
-                  ) : (
-                    <>
-                      <HugeiconsIcon icon={PlusSignIcon} size={16} />
-                      <span>{service.t('groups.addNew')}</span>
-                    </>
-                  )}
-                </SidebarMenuButton>
-              </SidebarMenuItem>
+              <DashboardSidebarCreateModuleComponent
+                sidebarState={service.sidebarState}
+              />
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
