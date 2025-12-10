@@ -168,7 +168,9 @@ const DashboardSidebarHeaderComponent = () => {
             />
 
             <DialogFooter>
-              <Button type='submit'>{service.t('create')}</Button>
+              <Button variant='outline' type='submit'>
+                {service.t('create')}
+              </Button>
             </DialogFooter>
           </form>
         </DialogContent>

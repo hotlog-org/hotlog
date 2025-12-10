@@ -1,6 +1,7 @@
 'use client'
 import { useState } from 'react'
-import { Project, useCreateProjectService } from './create-project.service'
+import { useCreateProjectService } from './create-project.service'
+import { Project } from './create-project.interface'
 
 export const createProjectComponent = (initialProjects: Project[]) => {
   const { createProject } = useCreateProjectService()

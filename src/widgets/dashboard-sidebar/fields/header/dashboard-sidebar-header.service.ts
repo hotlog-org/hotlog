@@ -7,7 +7,7 @@ import {
   ThreeDRotateIcon,
 } from '@hugeicons/core-free-icons'
 import { createProjectComponent } from '@/modules/create-project/create-project.component'
-import { Project } from '@/modules/create-project/create-project.service'
+import { Project } from '@/modules/create-project/create-project.interface'
 import { useState } from 'react'
 
 const initialProjects: Project[] = [
@@ -24,16 +24,16 @@ const initialProjects: Project[] = [
 export const useDashboardSidebarHeaderService = () => {
   const t = useTranslations('modules.dashboard.sidebar.projects')
 
-  const projectManager = createProjectComponent(initialProjects)
+  const createProject = createProjectComponent(initialProjects)
   const [createDialogOpen, setCreateDialogOpen] = useState(false)
 
   return {
     t,
-    projects: projectManager.projects,
-    selectedProject: projectManager.selectedProject,
-    setSelectedProject: projectManager.setSelectedProject,
+    projects: createProject.projects,
+    selectedProject: createProject.selectedProject,
+    setSelectedProject: createProject.setSelectedProject,
     createDialogOpen,
     setCreateDialogOpen,
-    handleCreateProject: projectManager.handleCreateProject,
+    handleCreateProject: createProject.handleCreateProject,
   }
 }
