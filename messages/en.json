@@ -223,6 +223,86 @@
           }
         }
       },
+      "modules": {
+        "title": "Modules",
+        "empty": "No components yet. Add a visualization to start.",
+        "emptyModule": "No module found. Create one from the sidebar.",
+        "placeholders": {
+          "moduleName": "Untitled module",
+          "heading": "Add a heading",
+          "description": "Click to describe this layout"
+        },
+        "actions": {
+          "addComponent": "Add component",
+          "edit": "Edit component",
+          "delete": "Delete component"
+        },
+        "controls": {
+          "dragOn": "Reorder enabled",
+          "dragOff": "Enable reorder",
+          "reorderHint": "Drag the cards to change the layout order.",
+          "save": "Save",
+          "cancel": "Cancel"
+        },
+        "types": {
+          "chart": "Chart",
+          "heading1": "Heading 1",
+          "heading2": "Heading 2",
+          "heading3": "Heading 3",
+          "description": "Description"
+        },
+        "visualizations": {
+          "line": "Line",
+          "area": "Area",
+          "bar": "Bar",
+          "stackedBar": "Stacked bar",
+          "pie": "Pie",
+          "donut": "Donut",
+          "scatter": "Scatter",
+          "heatmap": "Heatmap",
+          "histogram": "Histogram",
+          "timeline": "Timeline"
+        },
+        "inputs": {
+          "timestamp": "Timestamp",
+          "value": "Value",
+          "category": "Category",
+          "x": "X axis",
+          "y": "Y axis",
+          "size": "Size",
+          "name": "Name",
+          "start": "Start",
+          "end": "End"
+        },
+        "drawer": {
+          "addTitle": "Add component",
+          "editTitle": "Edit component",
+          "subtitle": "Choose a visualization, schema, and map inputs.",
+          "type": "Component type",
+          "titleLabel": "Title",
+          "visualization": "Visualization",
+          "inputs": "Inputs",
+          "optional": "Optional",
+          "selectField": "Select field",
+          "textLabel": "Text",
+          "descriptionLabel": "Description",
+          "textPlaceholder": "Add headline text",
+          "descriptionPlaceholder": "Add supporting description",
+          "schema": "Schema",
+          "fieldsFrom": "Fields from {schema}",
+          "cancel": "Cancel",
+          "save": "Save component"
+        },
+        "create": {
+          "title": "Create module",
+          "subtitle": "Name and color for the new layout.",
+          "name": "Name",
+          "namePlaceholder": "API Monitoring",
+          "color": "Color",
+          "cancel": "Cancel",
+          "submit": "Create"
+        }
+      },
       "schema": {
         "title": "Schema builder",
         "subtitle": "Design event schemas and share deep links to fields.",
@@ -283,11 +363,12 @@
         "navigation": {
           "overview": "Overview",
           "events": "Events",
+          "modules": "Modules",
           "schema": "Schema"
         },
         "groups": {
           "label": "Layouts",
-          "addNew": "Create layout"
+          "addNew": "Create module"
         },
         "projects": {
           "label": "Project",

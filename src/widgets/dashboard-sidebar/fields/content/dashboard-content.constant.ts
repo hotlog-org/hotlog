@@ -12,14 +12,14 @@ const DashboardSidebarContentConstants = [
     icon: Home04Icon,
   },
   {
-    href: ERoutes.DASHBOARD_EVENTS,
-    key: 'events',
-    icon: FolderViewIcon,
-  },
-  {
     href: ERoutes.DASHBOARD_SCHEMA,
     key: 'schema',
     icon: SchemeIcon,
+  },
+  {
+    href: ERoutes.DASHBOARD_EVENTS,
+    key: 'events',
+    icon: FolderViewIcon,
   },
 ]
 
