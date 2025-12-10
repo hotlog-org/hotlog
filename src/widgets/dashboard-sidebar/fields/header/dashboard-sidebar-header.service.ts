@@ -6,7 +6,7 @@ import {
   TestTube02Icon,
   ThreeDRotateIcon,
 } from '@hugeicons/core-free-icons'
-import { useProjectManager } from '@/modules/create-project/create-project.component'
+import { createProjectComponent } from '@/modules/create-project/create-project.component'
 import { Project } from '@/modules/create-project/create-project.service'
 import { useState } from 'react'
 
@@ -24,7 +24,7 @@ const initialProjects: Project[] = [
 export const useDashboardSidebarHeaderService = () => {
   const t = useTranslations('modules.dashboard.sidebar.projects')
 
-  const projectManager = useProjectManager(initialProjects)
+  const projectManager = createProjectComponent(initialProjects)
   const [createDialogOpen, setCreateDialogOpen] = useState(false)
 
   return {

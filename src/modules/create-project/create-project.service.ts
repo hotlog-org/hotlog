@@ -1,16 +1,9 @@
 'use client'
 
 import { Rocket02Icon } from '@hugeicons/core-free-icons'
-import { IconSvgElement } from '@hugeicons/react'
+import { Project } from './create-project.interface'
 
-export interface Project {
-  id: string
-  name: string
-  icon: IconSvgElement
-  color: string
-}
-
-export const useProjectManagerService = () => {
+export const useCreateProjectService = () => {
   const createProject = (projects: Project[], name: string) => {
     const newProject: Project = {
       id: crypto.randomUUID(),
