@@ -373,7 +373,11 @@
         "projects": {
           "label": "Project",
           "select": "Select Project",
-          "create": "Create Project"
+          "create": "Create Project",
+          "createProject": "Create a new project",
+          "placeholder": {
+            "name": "Enter project name"
+          }
         },
         "footer": {
           "logout": "Log out"
