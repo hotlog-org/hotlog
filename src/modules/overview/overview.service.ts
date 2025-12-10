@@ -132,9 +132,7 @@ const useOverviewService = (): OverviewService => {
 
   const updateUserRole = useCallback((userId: string, roleId: string) => {
     setUsers((current) =>
-      current.map((user) =>
-        user.id === userId ? { ...user, roleId } : user,
-      ),
+      current.map((user) => (user.id === userId ? { ...user, roleId } : user)),
     )
   }, [])
 
@@ -182,24 +180,21 @@ const useOverviewService = (): OverviewService => {
     [],
   )
 
-  const deleteRole = useCallback(
-    (roleId: string) => {
-      setRoles((current) => {
-        if (current.length <= 1) return current
-        const nextRoles = current.filter((role) => role.id !== roleId)
-        const fallbackRoleId = nextRoles[0]?.id ?? current[0]?.id ?? ''
+  const deleteRole = useCallback((roleId: string) => {
+    setRoles((current) => {
+      if (current.length <= 1) return current
+      const nextRoles = current.filter((role) => role.id !== roleId)
+      const fallbackRoleId = nextRoles[0]?.id ?? current[0]?.id ?? ''
 
-        setUsers((userState) =>
-          userState.map((user) =>
-            user.roleId === roleId ? { ...user, roleId: fallbackRoleId } : user,
-          ),
-        )
+      setUsers((userState) =>
+        userState.map((user) =>
+          user.roleId === roleId ? { ...user, roleId: fallbackRoleId } : user,
+        ),
+      )
 
-        return nextRoles
-      })
-    },
-    [],
-  )
+      return nextRoles
+    })
+  }, [])
 
   const addPermissionToRole = useCallback(
     (roleId: string, permissionId: string) => {
@@ -208,7 +203,10 @@ const useOverviewService = (): OverviewService => {
           role.id === roleId
             ? role.permissionIds.includes(permissionId)
               ? role
-              : { ...role, permissionIds: [...role.permissionIds, permissionId] }
+              : {
+                  ...role,
+                  permissionIds: [...role.permissionIds, permissionId],
+                }
             : role,
         ),
       )

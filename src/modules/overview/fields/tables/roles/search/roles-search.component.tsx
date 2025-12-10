@@ -6,7 +6,6 @@ import { HugeiconsIcon } from '@hugeicons/react'
 import { Input } from '@/shared/ui/input'
 
 import type { TFunction } from '../../../../overview.service'
-import { useRolesSearchService } from './roles-search.service'
 
 export interface RolesSearchProps {
   value: string
@@ -15,13 +14,11 @@ export interface RolesSearchProps {
 }
 
 export function RolesSearch(props: RolesSearchProps) {
-  const service = useRolesSearchService(props)
-
   return (
     <div className='relative'>
       <Input
-        value={service.search}
-        onChange={(event) => service.handleChange(event.target.value)}
+        value={props.value}
+        onChange={(event) => props.onChange(event.target.value)}
         placeholder={props.t('roles.searchPlaceholder')}
         className='pl-9'
       />

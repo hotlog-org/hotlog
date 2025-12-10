@@ -13,6 +13,7 @@ import { UsersAction } from './fields/tables/users/action/users-action.component
 import { UsersSearch } from './fields/tables/users/search/users-search.component'
 import { UsersTable } from './fields/tables/users/table/users-table.component'
 import { Button } from '@/shared/ui/button'
+import { Card, CardHeader } from '@/shared/ui/card'
 
 export function OverviewComponent() {
   const service = useOverviewService()
@@ -21,98 +22,108 @@ export function OverviewComponent() {
     <div className='flex min-h-0 flex-1 flex-col gap-4'>
       <ApiRequestsGraph data={service.apiRequests} t={service.t} />
 
-      <div className='space-y-3'>
-        <div className='flex flex-wrap items-center justify-between gap-3'>
-          <div className='flex items-center gap-2'>
-            <Button
-              size='sm'
-              variant={service.tab === 'users' ? 'secondary' : 'outline'}
-              onClick={() => service.setTab('users')}
-            >
-              {service.t('tabs.users')}
-            </Button>
-            <Button
-              size='sm'
-              variant={service.tab === 'roles' ? 'secondary' : 'outline'}
-              onClick={() => service.setTab('roles')}
-            >
-              {service.t('tabs.roles')}
-            </Button>
-          </div>
-
-          <div className='flex flex-wrap items-center gap-2'>
-            {service.tab === 'users' ? (
-              <>
-                <UsersAction onInvite={service.openInviteModal} t={service.t} />
-                <UsersSearch
-                  value={service.userSearch}
-                  onChange={service.setUserSearch}
-                  t={service.t}
-                />
-              </>
-            ) : (
-              <>
-                <RolesAction onAdd={service.openAddRoleModal} t={service.t} />
-                <RolesSearch
-                  value={service.roleSearch}
-                  onChange={service.setRoleSearch}
-                  t={service.t}
-                />
-              </>
-            )}
-          </div>
-        </div>
-
-        {service.tab === 'users' ? (
-          <UsersTable
-            rows={service.filteredUsers}
-            roles={service.roles}
-            roleOptions={service.roleOptions}
-            onChangeRole={service.updateUserRole}
-            onRemove={service.removeUser}
-            onRevoke={service.revokeInvite}
-            t={service.t}
-          />
-        ) : (
-          <RolesTable
-            rows={service.filteredRoles}
-            permissions={service.permissions}
-            permissionColors={service.permissionColors}
-            onAddPermission={service.addPermissionToRole}
-            onRemovePermission={service.removePermissionFromRole}
-            onDelete={service.deleteRole}
-            t={service.t}
-          />
-        )}
-      </div>
-
       <ApiKeyCard
         keyValue={service.apiKey}
         onRegenerate={service.regenerateApiKey}
         t={service.t}
       />
 
-      <InviteMemberModal
-        open={service.inviteModalOpen}
-        onClose={service.closeInviteModal}
-        onSubmit={(email) => {
-          service.inviteMember(email)
-          service.closeInviteModal()
-        }}
-        t={service.t}
-      />
+      <Card>
+        <CardHeader>
+          <div className='space-y-3'>
+            <div className='flex flex-wrap items-center justify-between gap-3'>
+              <div className='flex items-center gap-2'>
+                <Button
+                  size='sm'
+                  variant={service.tab === 'users' ? 'secondary' : 'ghost'}
+                  onClick={() => service.setTab('users')}
+                >
+                  {service.t('tabs.users')}
+                </Button>
+                <Button
+                  size='sm'
+                  variant={service.tab === 'roles' ? 'secondary' : 'ghost'}
+                  onClick={() => service.setTab('roles')}
+                >
+                  {service.t('tabs.roles')}
+                </Button>
+              </div>
 
-      <AddRoleModal
-        open={service.addRoleModalOpen}
-        onClose={service.closeAddRoleModal}
-        onSubmit={(payload) => {
-          service.addRole(payload)
-          service.closeAddRoleModal()
-        }}
-        permissions={service.permissions}
-        permissionColors={service.permissionColors}
-        t={service.t}
-      />
+              <div className='flex flex-wrap items-center gap-2'>
+                {service.tab === 'users' ? (
+                  <>
+                    <UsersAction
+                      onInvite={service.openInviteModal}
+                      t={service.t}
+                    />
+                    <UsersSearch
+                      value={service.userSearch}
+                      onChange={service.setUserSearch}
+                      t={service.t}
+                    />
+                  </>
+                ) : (
+                  <>
+                    <RolesAction
+                      onAdd={service.openAddRoleModal}
+                      t={service.t}
+                    />
+                    <RolesSearch
+                      value={service.roleSearch}
+                      onChange={service.setRoleSearch}
+                      t={service.t}
+                    />
+                  </>
+                )}
+              </div>
+            </div>
+
+            {service.tab === 'users' ? (
+              <UsersTable
+                rows={service.filteredUsers}
+                roles={service.roles}
+                roleOptions={service.roleOptions}
+                onChangeRole={service.updateUserRole}
+                onRemove={service.removeUser}
+                onRevoke={service.revokeInvite}
+                t={service.t}
+              />
+            ) : (
+              <RolesTable
+                rows={service.filteredRoles}
+                permissions={service.permissions}
+                permissionColors={service.permissionColors}
+                onAddPermission={service.addPermissionToRole}
+                onRemovePermission={service.removePermissionFromRole}
+                onDelete={service.deleteRole}
+                t={service.t}
+              />
+            )}
+          </div>
+
+          <InviteMemberModal
+            open={service.inviteModalOpen}
+            onClose={service.closeInviteModal}
+            onSubmit={(email) => {
+              service.inviteMember(email)
+              service.closeInviteModal()
+            }}
+            t={service.t}
+          />
+
+          <AddRoleModal
+            open={service.addRoleModalOpen}
+            onClose={service.closeAddRoleModal}
+            onSubmit={(payload) => {
+              service.addRole(payload)
+              service.closeAddRoleModal()
+            }}
+            permissions={service.permissions}
+            permissionColors={service.permissionColors}
+            t={service.t}
+          />
+        </CardHeader>
+      </Card>
     </div>
   )
 }

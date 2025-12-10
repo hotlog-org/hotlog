@@ -96,35 +96,6 @@ export const useUsersTableService = ({
   const columns: ColumnDef<OverviewUser>[] = useMemo(
     () => [
       {
-        id: 'actions',
-        header: '',
-        cell: ({ row }) => {
-          const isPending = row.original.status === 'pending'
-          return (
-            <div className='flex items-center'>
-              <Button
-                variant='ghost'
-                size='icon'
-                className='text-destructive hover:text-destructive'
-                onClick={(event) => {
-                  event.stopPropagation()
-                  if (isPending) onRevoke(row.original.id)
-                  else onRemove(row.original.id)
-                }}
-                aria-label={
-                  isPending ? t('users.table.revoke') : t('users.table.remove')
-                }
-              >
-                <HugeiconsIcon
-                  icon={isPending ? UserBlock01Icon : Delete02Icon}
-                  className='size-5'
-                />
-              </Button>
-            </div>
-          )
-        },
-      },
-      {
         accessorKey: 'name',
         header: t('users.table.name'),
         cell: ({ row }) => (
@@ -163,6 +134,35 @@ export const useUsersTableService = ({
             {t(`users.status.${row.original.status}`)}
           </Badge>
         ),
+      },
+      {
+        id: 'actions',
+        header: '',
+        cell: ({ row }) => {
+          const isPending = row.original.status === 'pending'
+          return (
+            <div className='flex items-center'>
+              <Button
+                variant='ghost'
+                size='icon'
+                className='text-destructive hover:text-destructive'
+                onClick={(event) => {
+                  event.stopPropagation()
+                  if (isPending) onRevoke(row.original.id)
+                  else onRemove(row.original.id)
+                }}
+                aria-label={
+                  isPending ? t('users.table.revoke') : t('users.table.remove')
+                }
+              >
+                <HugeiconsIcon
+                  icon={isPending ? UserBlock01Icon : Delete02Icon}
+                  className='size-5'
+                />
+              </Button>
+            </div>
+          )
+        },
       },
     ],
     [onChangeRole, onRemove, onRevoke, roleLookup, roleOptions, t],

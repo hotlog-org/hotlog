@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { type ColumnDef } from '@tanstack/react-table'
 import {
   AddCircleIcon,
@@ -63,6 +63,7 @@ export const useRolesTableService = ({
   const [expandedRoleIds, setExpandedRoleIds] = useState<
     Record<string, boolean>
   >({})
+  const searchInputRef = useRef<HTMLInputElement | null>(null)
 
   const permissionLookup = useMemo(
     () =>
@@ -79,6 +80,12 @@ export const useRolesTableService = ({
       [roleId]: !current[roleId],
     }))
   }
+
+  useEffect(() => {
+    if (openRoleId && searchInputRef.current) {
+      searchInputRef.current.focus()
+    }
+  }, [openRoleId])
 
   const columns: ColumnDef<OverviewRole>[] = useMemo(
     () => [
@@ -134,7 +141,7 @@ export const useRolesTableService = ({
                 <div className='flex items-center gap-2'>
                   <Button
                     variant='outline'
-                    size='sm'
+                    size='xs'
                     className='border-dashed text-xs'
                     onClick={() => toggleExpanded(row.original.id)}
                   >
@@ -147,7 +154,7 @@ export const useRolesTableService = ({
                   {expandedRoleIds[row.original.id] && (
                     <Button
                       variant='ghost'
-                      size='sm'
+                      size='xs'
                       className='text-xs'
                       onClick={() => toggleExpanded(row.original.id)}
                     >
@@ -174,17 +181,21 @@ export const useRolesTableService = ({
                     <HugeiconsIcon icon={AddCircleIcon} className='size-5' />
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent className='w-72 space-y-2 border-border/80 bg-card p-3'>
+                <PopoverContent
+                  className='w-80 space-y-2 border-border/80 bg-card p-3'
+                  onFocusOutside={(event) => event.preventDefault()}
+                  onPointerDownOutside={(event) => event.preventDefault()}
+                >
                   <Input
+                    ref={searchInputRef}
                     value={permissionSearch}
                     onChange={(event) =>
                       setPermissionSearch(event.target.value)
                     }
                     placeholder={t('roles.table.searchPermissions')}
-                    onClick={(event) => event.stopPropagation()}
                     onKeyDown={(event) => event.stopPropagation()}
                   />
-                  <ScrollArea className='max-h-60 rounded-md border border-border/60'>
+                  <ScrollArea className='max-h-72 overflow-y-auto rounded-md border border-border/60'>
                     <div className='divide-y divide-border/70'>
                       {availablePermissions.length === 0 ? (
                         <p className='px-3 py-2 text-sm text-muted-foreground'>
@@ -201,12 +212,14 @@ export const useRolesTableService = ({
                               setPermissionSearch('')
                               setOpenRoleId(row.original.id)
                             }}
-                            className='flex w-full items-center justify-between px-3 py-2 text-left text-sm transition hover:bg-accent/40'
+                            className='flex w-full items-center justify-between px-3 py-2 text-left text-sm transition hover:bg-accent/20'
                           >
-                            {renderPermissionBadge(
-                              permission,
-                              permissionColors,
-                            )}
+                            <div className='flex items-center gap-2'>
+                              {renderPermissionBadge(
+                                permission,
+                                permissionColors,
+                              )}
+                            </div>
                             <span className='text-xs text-muted-foreground'>
                               {t('roles.table.add')}
                             </span>
