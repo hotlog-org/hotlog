@@ -379,6 +379,71 @@
           "logout": "Log out"
         }
       }
+    },
+    "landing": {
+      "hero": {
+        "title": "API Monitoring & Version Management",
+        "description": "A centralized platform to track performance, visualize usage, manage versions, and keep production systems stable."
+      },
+      "features": {
+        "title": "Powerful Features for Modern API Management",
+        "description": "Everything you need to monitor, analyze, and optimize your API performance in one place.",
+        "realTimeMonitoring": {
+          "title": "Real-time Monitoring",
+          "description": "Track API performance, response times, and error rates in real-time with comprehensive dashboards."
+        },
+        "advancedAnalytics": {
+          "title": "Advanced Analytics",
+          "description": "Gain insights with detailed analytics, custom reports, and intelligent alerting systems."
+        },
+        "visualDashboards": {
+          "title": "Visual Dashboards",
+          "description": "Beautiful, customizable dashboards that make complex data easy to understand at a glance."
+        },
+        "easyIntegration": {
+          "title": "Easy Integration",
+          "description": "Simple setup with comprehensive APIs and SDKs for seamless integration with your stack."
+        }
+      },
+      "howItWorks": {
+        "title": "How It Works",
+        "description": "Get started in minutes and see immediate results with our intuitive platform.",
+        "step1": {
+          "title": "Connect Your APIs",
+          "description": "Integrate HotLog with your existing APIs using our simple SDK or webhook endpoints. No complex setup required."
+        },
+        "step2": {
+          "title": "Monitor & Analyze",
+          "description": "Watch real-time performance metrics, error rates, and usage patterns with our comprehensive dashboard."
+        },
+        "step3": {
+          "title": "Optimize & Scale",
+          "description": "Use insights to optimize performance, prevent issues, and scale your APIs confidently with data-driven decisions."
+        }
+      },
+      "visualizations": {
+        "title": "Beautiful Visualizations",
+        "description": "Transform complex data into actionable insights with our comprehensive charting library."
+      },
+      "stats": {
+        "title": "Trusted by Developers Worldwide",
+        "description": "Join thousands of developers who rely on HotLog for their API monitoring needs.",
+        "uptime": "Uptime",
+        "requestsMonitored": "Requests Monitored",
+        "averageResponse": "Average Response",
+        "monitoring": "Monitoring"
+      },
+      "cta": {
+        "getStarted": "Get Started",
+        "signIn": "Sign In",
+        "band": {
+          "title": "Start observing what matters",
+          "desc": "See requests, spot errors, and ship fixes faster with confidence."
+        }
+      },
+      "dashboard": {
+        "goTo": "My Dashboard"
+      }
     }
   },
   "errors": {
