@@ -12,6 +12,7 @@ import type {
   ModuleVisualizationDefinition,
   ModuleVisualizationInput,
   ModuleVisualizationType,
+  TFunction,
 } from './modules.interface'
 import { useModulesStore } from './modules.store'
 
@@ -71,23 +72,21 @@ export const useModulesService = (
   )
   const [isDirty, setIsDirty] = useState(false)
   const [reorderEnabled, setReorderEnabled] = useState(false)
-  const [editingField, setEditingField] = useState<'name' | 'heroDescription' | null>(
-    null,
-  )
+  const [editingField, setEditingField] = useState<
+    'name' | 'heroDescription' | null
+  >(null)
   const [editor, setEditor] = useState<ModulesService['editor']>({
     open: false,
     mode: 'create',
     component: null,
   })
 
-  const {
-    modules,
-    selectedModuleId,
-    setSelectedModuleId,
-    updateModule,
-  } = useModulesStore()
+  const { modules, selectedModuleId, setSelectedModuleId, updateModule } =
+    useModulesStore()
 
-  const visualizationInputs = useMemo<Record<ModuleVisualizationType, ModuleVisualizationInput[]>>(
+  const visualizationInputs = useMemo<
+    Record<ModuleVisualizationType, ModuleVisualizationInput[]>
+  >(
     () => ({
       line: [
         { id: 'timestamp', label: t('inputs.timestamp'), type: 'datetime' },
@@ -159,16 +158,36 @@ export const useModulesService = (
 
   const visualizations = useMemo<ModuleVisualizationDefinition[]>(
     () => [
-      { id: 'line', label: t('visualizations.line'), inputs: visualizationInputs.line },
-      { id: 'area', label: t('visualizations.area'), inputs: visualizationInputs.area },
-      { id: 'bar', label: t('visualizations.bar'), inputs: visualizationInputs.bar },
+      {
+        id: 'line',
+        label: t('visualizations.line'),
+        inputs: visualizationInputs.line,
+      },
+      {
+        id: 'area',
+        label: t('visualizations.area'),
+        inputs: visualizationInputs.area,
+      },
+      {
+        id: 'bar',
+        label: t('visualizations.bar'),
+        inputs: visualizationInputs.bar,
+      },
       {
         id: 'stackedBar',
         label: t('visualizations.stackedBar'),
         inputs: visualizationInputs.stackedBar,
       },
-      { id: 'pie', label: t('visualizations.pie'), inputs: visualizationInputs.pie },
-      { id: 'donut', label: t('visualizations.donut'), inputs: visualizationInputs.donut },
+      {
+        id: 'pie',
+        label: t('visualizations.pie'),
+        inputs: visualizationInputs.pie,
+      },
+      {
+        id: 'donut',
+        label: t('visualizations.donut'),
+        inputs: visualizationInputs.donut,
+      },
       {
         id: 'scatter',
         label: t('visualizations.scatter'),
@@ -221,7 +240,9 @@ export const useModulesService = (
     setSelectedModuleId(id)
   }
 
-  const setDirtyModule = (updater: (module: ModuleDefinition) => ModuleDefinition) => {
+  const setDirtyModule = (
+    updater: (module: ModuleDefinition) => ModuleDefinition,
+  ) => {
     setDraftModule((current) => {
       if (!current) return current
       const next = updater(current)
@@ -281,7 +302,8 @@ export const useModulesService = (
     })
   }
 
-  const closeEditor = () => setEditor({ open: false, mode: 'create', component: null })
+  const closeEditor = () =>
+    setEditor({ open: false, mode: 'create', component: null })
 
   const submitComponent = (component: ModuleComponent) => {
     setDraftModule((current) => {

@@ -56,7 +56,7 @@ export const useModulesStore = create<ModulesStoreState>((set) => ({
       }
     })
 
-    return createdModule as ModuleDefinition
+    return createdModule as unknown as ModuleDefinition
   },
   updateModule: (module) =>
     set((state) => ({
@@ -73,5 +73,6 @@ export const useModulesStore = create<ModulesStoreState>((set) => ({
       }
     }),
   setModules: (modules) => set({ modules }),
-  reset: () => set({ modules: modulesMock, selectedModuleId: modulesMock[0]?.id ?? null }),
+  reset: () =>
+    set({ modules: modulesMock, selectedModuleId: modulesMock[0]?.id ?? null }),
 }))

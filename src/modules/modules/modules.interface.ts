@@ -46,7 +46,7 @@ export interface ModuleSchemaDefinition {
 
 export interface ModuleBinding {
   inputId: string
-  fieldKey: string | null
+  fieldKey: string | null | undefined
 }
 
 export interface ModuleComponent {

@@ -12,8 +12,11 @@ import type { ModulesViewProps } from './modules-view.component'
 const seededNumber = (seed: string, index: number) => {
   const hash = seed
     .split('')
-    .reduce((acc, char, position) => acc + char.charCodeAt(0) * (position + 1), 0)
-  return (hash * (index + 3)) % 60 + 8
+    .reduce(
+      (acc, char, position) => acc + char.charCodeAt(0) * (position + 1),
+      0,
+    )
+  return ((hash * (index + 3)) % 60) + 8
 }
 
 const buildDate = (index: number) => {
@@ -21,11 +24,7 @@ const buildDate = (index: number) => {
   return new Date(now - index * 1000 * 60 * 180)
 }
 
-const buildTimeSeries = (
-  seed: string,
-  withCategory?: string,
-  points = 10,
-) =>
+const buildTimeSeries = (seed: string, withCategory?: string, points = 10) =>
   Array.from({ length: points }).map((_, index) => ({
     date: buildDate(points - index),
     value: seededNumber(seed, index),
@@ -52,7 +51,9 @@ const buildScatter = (seed: string, label?: string) =>
   }))
 
 const buildHeatmap = (seed: string, label?: string) => {
-  const xBuckets = label ? [label, `${label} B`, `${label} C`] : ['North', 'West', 'East']
+  const xBuckets = label
+    ? [label, `${label} B`, `${label} C`]
+    : ['North', 'West', 'East']
   const yBuckets = ['Morning', 'Afternoon', 'Evening', 'Night']
 
   return xBuckets.flatMap((x, xIndex) =>
@@ -81,12 +82,10 @@ export interface ViewItem {
   component: ModuleComponent
   schemaName?: string
   visualizationLabel?: string
-  preview:
-    | {
-        kind: ModuleVisualizationType
-        payload: unknown
-      }
-    | null
+  preview: {
+    kind: ModuleVisualizationType
+    payload: unknown
+  } | null
 }
 
 const getFieldLabel = (
@@ -99,7 +98,7 @@ const buildPreviewPayload = (
   component: ModuleComponent,
   schemas: Record<string, ModuleSchemaDefinition>,
 ): ViewItem['preview'] => {
-  const fieldLabel = (key: string | null) =>
+  const fieldLabel = (key: string | null | undefined) =>
     key && component.schemaId
       ? getFieldLabel(schemas, component.schemaId, key)
       : undefined
@@ -171,13 +170,12 @@ export const useModulesViewService = (
 
   const visualizationLookup = useMemo(
     () =>
-      props.visualizations.reduce<Record<string, ModuleVisualizationDefinition>>(
-        (acc, item) => {
-          acc[item.id] = item
-          return acc
-        },
-        {},
-      ),
+      props.visualizations.reduce<
+        Record<string, ModuleVisualizationDefinition>
+      >((acc, item) => {
+        acc[item.id] = item
+        return acc
+      }, {}),
     [props.visualizations],
   )
 

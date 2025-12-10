@@ -18,6 +18,7 @@ import type {
   ModuleComponent,
   ModuleSchemaDefinition,
   ModuleVisualizationDefinition,
+  ModuleVisualizationType,
   TFunction,
 } from '../../modules.interface'
 import { useModulesEditorService } from './modules-editor.service'
@@ -104,7 +105,9 @@ export const ModulesEditor = (props: ModulesEditorProps) => {
                     <select
                       value={draft.visualization}
                       onChange={(event) =>
-                        service.handleVisualizationChange(event.target.value)
+                        service.handleVisualizationChange(
+                          event.target.value as ModuleVisualizationType,
+                        )
                       }
                       className='w-full rounded-md border border-border bg-background px-3 py-2 text-sm'
                     >

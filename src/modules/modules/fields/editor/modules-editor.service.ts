@@ -4,6 +4,7 @@ import type {
   ModuleComponent,
   ModuleSchemaDefinition,
   ModuleVisualizationInput,
+  ModuleVisualizationType,
 } from '../../modules.interface'
 import type { ModulesEditorProps } from './modules-editor.component'
 
@@ -71,12 +72,14 @@ export const useModulesEditorService = (props: ModulesEditorProps) => {
     setDraft(next)
   }
 
-  const handleVisualizationChange = (visualization: string) => {
+  const handleVisualizationChange = (
+    visualization: ModuleVisualizationType,
+  ) => {
     if (!draft) return
     const nextInputs =
       props.visualizations.find((item) => item.id === visualization)?.inputs ??
       []
-    const next = {
+    const next: ModuleComponent = {
       ...draft,
       visualization,
       bindings: [],
