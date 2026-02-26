@@ -14,5 +14,20 @@ services:
     volumes:
       - pgdata:/var/lib/postgresql/data
 
+  events-api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: hotlog-events-api
+    restart: unless-stopped
+    depends_on:
+      - db
+    environment:
+      GO_DATABASE_URL: ${GO_DATABASE_URL:-postgres://postgres:postgres@db:5432/hotlog?sslmode=disable}
+      GO_API_ADDR: ${GO_API_ADDR:-:8080}
+      GO_API_INTERNAL_TOKEN: ${GO_API_INTERNAL_TOKEN:-dev-internal-token}
+    ports:
+      - '8080:8080'
+
 volumes:
   pgdata:

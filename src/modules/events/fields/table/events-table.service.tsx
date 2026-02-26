@@ -8,7 +8,7 @@ import {
 } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
 
-import type { EventRow } from '../../mock-data'
+import type { EventRow } from '@/lib/events/events.contract'
 import type { EventsTableProps } from './events-table.component'
 
 export const useEventsTableService = ({

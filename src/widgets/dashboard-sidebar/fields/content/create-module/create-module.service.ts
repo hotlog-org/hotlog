@@ -4,11 +4,8 @@ import { useState } from 'react'
 import { useTranslations } from 'next-intl'
 
 import { useModulesStore } from '@/modules/modules/modules.store'
-import type { DashboardSidebarCreateModuleProps } from './create-module.component'
 
-export const useDashboardSidebarCreateModuleService = (
-  _props: DashboardSidebarCreateModuleProps,
-) => {
+export const useDashboardSidebarCreateModuleService = () => {
   const t = useTranslations('modules.dashboard.modules')
   const sidebarTranslations = useTranslations('modules.dashboard.sidebar')
   const [open, setOpen] = useState(false)
@@ -39,4 +36,3 @@ export const useDashboardSidebarCreateModuleService = (
     handleSubmit,
   }
 }
-

@@ -12,11 +12,19 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/shared/ui/dialog'
-import { Field, FieldControl, FieldLabel, FieldMessage } from '@/shared/ui/field'
+import {
+  Field,
+  FieldControl,
+  FieldLabel,
+  FieldMessage,
+} from '@/shared/ui/field'
 import { Input } from '@/shared/ui/input'
 import { ScrollArea } from '@/shared/ui/scroll-area'
 
-import type { OverviewPermission, PermissionCategory } from '../../../overview.interface'
+import type {
+  OverviewPermission,
+  PermissionCategory,
+} from '../../../overview.interface'
 import type { TFunction } from '../../../overview.service'
 import { useAddRoleModalService } from './add-role.modal.service'
 
@@ -33,7 +41,10 @@ export function AddRoleModal(props: AddRoleModalProps) {
   const service = useAddRoleModalService(props)
 
   return (
-    <Dialog open={props.open} onOpenChange={(state) => !state && props.onClose()}>
+    <Dialog
+      open={props.open}
+      onOpenChange={(state) => !state && props.onClose()}
+    >
       <DialogContent className='max-w-xl'>
         <DialogHeader className='space-y-2'>
           <DialogTitle className='flex items-center gap-2'>
@@ -130,7 +141,10 @@ export function AddRoleModal(props: AddRoleModalProps) {
                         </span>
                       ) : (
                         <span className='inline-flex items-center gap-2 text-xs text-muted-foreground'>
-                          <HugeiconsIcon icon={AddSquareIcon} className='size-4' />
+                          <HugeiconsIcon
+                            icon={AddSquareIcon}
+                            className='size-4'
+                          />
                           {props.t('roles.modal.addPermission')}
                         </span>
                       )}

@@ -1,4 +1,4 @@
-import type { EventSchema } from '@/modules/events/mock-data'
+import type { EventSchema } from '@/lib/events/events.contract'
 import { eventSchemas } from '@/modules/events/mock-data'
 
 import type {

@@ -25,4 +25,3 @@ export const ModulesCancelButton = (props: ModulesCancelButtonProps) => {
     </Button>
   )
 }
-

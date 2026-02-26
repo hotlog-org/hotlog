@@ -12,7 +12,12 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/shared/ui/dialog'
-import { Field, FieldControl, FieldLabel, FieldMessage } from '@/shared/ui/field'
+import {
+  Field,
+  FieldControl,
+  FieldLabel,
+  FieldMessage,
+} from '@/shared/ui/field'
 import { Input } from '@/shared/ui/input'
 
 import type { TFunction } from '../../../overview.service'
@@ -29,7 +34,10 @@ export function InviteMemberModal(props: InviteMemberModalProps) {
   const service = useInviteMemberModalService(props)
 
   return (
-    <Dialog open={props.open} onOpenChange={(state) => !state && props.onClose()}>
+    <Dialog
+      open={props.open}
+      onOpenChange={(state) => !state && props.onClose()}
+    >
       <DialogContent>
         <DialogHeader className='space-y-2'>
           <DialogTitle className='flex items-center gap-2'>

@@ -19,7 +19,7 @@ export const useForgotPasswordService = () => {
     defaultValues: { email: '' },
   })
 
-  const onSubmit = async (data: Inputs) => {
+  const onSubmit = async () => {
     setIsLoading(true)
     setError(null)
     setSuccess(false)

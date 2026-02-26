@@ -1,4 +1,10 @@
-import type { ApiRequestSeriesPoint, OverviewPermission, OverviewRole, OverviewUser, PermissionCategory } from './overview.interface'
+import type {
+  ApiRequestSeriesPoint,
+  OverviewPermission,
+  OverviewRole,
+  OverviewUser,
+  PermissionCategory,
+} from './overview.interface'
 
 const baseKey = 'hl_sk_0123456789abcdef_overview_mock'
 
@@ -85,7 +91,12 @@ export const overviewRolesMock: OverviewRole[] = [
   {
     id: 'viewer',
     name: 'Viewer',
-    permissionIds: ['events/read', 'modules/read', 'schema/read', 'api/read-key'],
+    permissionIds: [
+      'events/read',
+      'modules/read',
+      'schema/read',
+      'api/read-key',
+    ],
   },
 ]
 

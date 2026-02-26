@@ -1,7 +1,7 @@
 'use client'
 
 import { DataTable } from '@/shared/ui/data-table'
-import type { EventRow } from '../../mock-data'
+import type { EventRow } from '@/lib/events/events.contract'
 import type { TFunction } from '../../events.service'
 
 import { useEventsTableService } from './events-table.service'

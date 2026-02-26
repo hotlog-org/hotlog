@@ -1,40 +1,10 @@
 import { formatISO } from 'date-fns'
 
-export type FieldType =
-  | 'string'
-  | 'number'
-  | 'boolean'
-  | 'datetime'
-  | 'enum'
-  | 'json'
-  | 'array'
-
-export interface SchemaField {
-  key: string
-  label: string
-  type: FieldType
-  description?: string
-  enumValues?: string[]
-}
-
-export interface EventSchema {
-  id: string
-  name: string
-  version: string
-  fields: SchemaField[]
-}
-
-export type EventStatus = 'ingested' | 'warning' | 'error' | 'muted'
-
-export interface EventRecord {
-  id: string
-  title: string
-  schemaId: string
-  source: 'api' | 'web' | 'mobile' | 'worker' | 'ingestion'
-  status: EventStatus
-  createdAt: string
-  payload: Record<string, unknown>
-}
+import type {
+  EventRecord,
+  EventSchema,
+  EventStatus,
+} from '@/lib/events/events.contract'
 
 const seedDate = new Date('2025-11-25T12:00:00Z').getTime()
 

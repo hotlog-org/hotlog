@@ -196,16 +196,16 @@
           "searchPlaceholder": "Search roles or permissions",
           "table": {
             "name": "Name",
-          "permissions": "Permissions",
-          "addPermission": "Add permission",
-          "searchPermissions": "Search permissions...",
-          "noPermissionResults": "No permissions match your search.",
-          "add": "Add",
-          "delete": "Delete role",
-          "expand": "Show {count} more",
-          "collapse": "Show less",
-          "hide": "Hide"
-        },
+            "permissions": "Permissions",
+            "addPermission": "Add permission",
+            "searchPermissions": "Search permissions...",
+            "noPermissionResults": "No permissions match your search.",
+            "add": "Add",
+            "delete": "Delete role",
+            "expand": "Show {count} more",
+            "collapse": "Show less",
+            "hide": "Hide"
+          },
           "modal": {
             "title": "Add role",
             "description": "Create a role and preselect its permissions.",

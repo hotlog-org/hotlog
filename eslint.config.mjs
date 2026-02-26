@@ -26,7 +26,7 @@ export default [
       indent: 'off',
       '@typescript-eslint/indent': 'off',
       'react/jsx-indent': 'off',
-      'react/jsx-indent-props': 'off'
+      'react/jsx-indent-props': 'off',
     },
   },
   {
@@ -34,6 +34,7 @@ export default [
       'node_modules',
       'dist',
       '.next',
+      'next-env.d.ts',
       'build',
       'coverage',
       '*.config.js',

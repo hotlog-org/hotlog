@@ -21,7 +21,6 @@ export function TimelineChart({
   endDate,
   autoUpdate = false,
   updateInterval = 5000,
-  showLabels = true,
   className = '',
 }: TimelineChartProps) {
   const [, setUpdateTrigger] = useState(0)

@@ -2,6 +2,7 @@
 
 import { BrushIcon, Delete02Icon } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
+import type { ComponentProps } from 'react'
 
 import {
   AreaChart,
@@ -15,7 +16,6 @@ import {
   StackedBarChart,
   TimelineChart,
 } from '@/shared/charts'
-import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
 import { cn } from '@/shared/utils/shadcn.utils'
 
@@ -38,9 +38,18 @@ export interface ModulesViewProps {
   t: TFunction
 }
 
-const renderText = (value: string | undefined, fallback: string) => (
-  <p className='text-sm text-foreground'>{value || fallback}</p>
-)
+type LineData = ComponentProps<typeof LineChart>['data']
+type AreaData = ComponentProps<typeof AreaChart>['data']
+type BarData = ComponentProps<typeof BarChart>['data']
+type StackedBarData = ComponentProps<typeof StackedBarChart>['data']
+type PieData = ComponentProps<typeof PieChart>['data']
+type DonutData = ComponentProps<typeof DonutChart>['data']
+type ScatterData = ComponentProps<typeof ScatterChart>['data']
+type HeatmapData = ComponentProps<typeof HeatmapChart>['data']
+type HistogramData = ComponentProps<typeof HistogramChart>['data']
+type TimelineData = ComponentProps<typeof TimelineChart>['data']
+
+const toChartData = <T,>(payload: unknown): T => payload as T
 
 const renderChart = (
   component: ModuleComponent,
@@ -55,7 +64,7 @@ const renderChart = (
     case 'line':
       return (
         <LineChart
-          data={preview.payload as any}
+          data={toChartData<LineData>(preview.payload)}
           height={260}
           className='w-full'
         />
@@ -63,7 +72,7 @@ const renderChart = (
     case 'area':
       return (
         <AreaChart
-          data={preview.payload as any}
+          data={toChartData<AreaData>(preview.payload)}
           height={260}
           className='w-full'
         />
@@ -71,7 +80,7 @@ const renderChart = (
     case 'bar':
       return (
         <BarChart
-          data={preview.payload as any}
+          data={toChartData<BarData>(preview.payload)}
           height={260}
           className='w-full'
         />
@@ -79,29 +88,51 @@ const renderChart = (
     case 'stackedBar':
       return (
         <StackedBarChart
-          data={preview.payload as any}
+          data={toChartData<StackedBarData>(preview.payload)}
           height={260}
           className='w-full'
         />
       )
     case 'pie':
-      return <PieChart data={preview.payload as any} height={240} />
+      return (
+        <PieChart data={toChartData<PieData>(preview.payload)} height={240} />
+      )
     case 'donut':
-      return <DonutChart data={preview.payload as any} height={240} />
+      return (
+        <DonutChart
+          data={toChartData<DonutData>(preview.payload)}
+          height={240}
+        />
+      )
     case 'scatter':
       return (
         <ScatterChart
-          data={preview.payload as any}
+          data={toChartData<ScatterData>(preview.payload)}
           height={260}
           className='w-full'
         />
       )
     case 'heatmap':
-      return <HeatmapChart data={preview.payload as any} height={260} />
+      return (
+        <HeatmapChart
+          data={toChartData<HeatmapData>(preview.payload)}
+          height={260}
+        />
+      )
     case 'histogram':
-      return <HistogramChart data={preview.payload as any} height={240} />
+      return (
+        <HistogramChart
+          data={toChartData<HistogramData>(preview.payload)}
+          height={240}
+        />
+      )
     case 'timeline':
-      return <TimelineChart data={preview.payload as any} height={240} />
+      return (
+        <TimelineChart
+          data={toChartData<TimelineData>(preview.payload)}
+          height={240}
+        />
+      )
     default:
       return null
   }

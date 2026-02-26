@@ -9,7 +9,8 @@ type Props = {
 
 export default function LandingClient({ translations }: Props) {
   const service = useLandingService(translations)
-  const t = (key: string) => translations?.[key] ?? (service.t ? service.t(key) : key)
+  const t = (key: string) =>
+    translations?.[key] ?? (service.t ? service.t(key) : key)
 
   return (
     <LandingComponent

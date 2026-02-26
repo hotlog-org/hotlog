@@ -23,7 +23,6 @@ import {
 } from './schema-field-card.constant'
 import type { FieldCardProps } from './schema-field-card.interface'
 import { HugeiconsIcon } from '@hugeicons/react'
-import { Separator } from '@/shared/ui/separator'
 
 export function FieldCard(props: FieldCardProps) {
   const {
@@ -191,7 +190,6 @@ export function FieldCard(props: FieldCardProps) {
                 )}
               </div>
             </div>
-            {/* <Separator className='my-2' /> */}
             {field.children?.length ? (
               <div className='space-y-2'>
                 {field.children?.map(renderChild)}

@@ -1,7 +1,10 @@
 import { useCallback, useMemo, useState } from 'react'
 import type { ApiKeyCardProps } from './api-key-card.component'
 
-export const useApiKeyCardService = ({ keyValue, onRegenerate }: ApiKeyCardProps) => {
+export const useApiKeyCardService = ({
+  keyValue,
+  onRegenerate,
+}: ApiKeyCardProps) => {
   const [visible, setVisible] = useState(false)
   const [copied, setCopied] = useState(false)
 

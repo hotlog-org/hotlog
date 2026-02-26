@@ -94,9 +94,7 @@ export const modulesMock: ModuleDefinition[] = [
         schemaId: 'payment-failed',
         title: 'Attempts distribution',
         description: 'Retry attempts grouped into buckets.',
-        bindings: [
-          { inputId: 'value', fieldKey: 'attempts' },
-        ],
+        bindings: [{ inputId: 'value', fieldKey: 'attempts' }],
       },
     ],
   },

@@ -15,10 +15,7 @@ import {
 } from '@/shared/ui/dialog'
 import { Field, FieldControl, FieldLabel } from '@/shared/ui/field'
 import { Input } from '@/shared/ui/input'
-import {
-  SidebarMenuButton,
-  SidebarMenuItem,
-} from '@/shared/ui/sidebar'
+import { SidebarMenuButton, SidebarMenuItem } from '@/shared/ui/sidebar'
 import { cn } from '@/shared/utils/shadcn.utils'
 import { useDashboardSidebarCreateModuleService } from './create-module.service'
 
@@ -29,7 +26,7 @@ export interface DashboardSidebarCreateModuleProps {
 export const DashboardSidebarCreateModuleComponent = (
   props: DashboardSidebarCreateModuleProps,
 ) => {
-  const service = useDashboardSidebarCreateModuleService(props)
+  const service = useDashboardSidebarCreateModuleService()
 
   return (
     <SidebarMenuItem>
@@ -38,7 +35,8 @@ export const DashboardSidebarCreateModuleComponent = (
           <SidebarMenuButton
             className={cn(
               'text-muted-foreground',
-              props.sidebarState == 'collapsed' && 'flex items-center justify-center',
+              props.sidebarState == 'collapsed' &&
+                'flex items-center justify-center',
             )}
             tooltip={service.buttonLabel}
           >
@@ -56,7 +54,9 @@ export const DashboardSidebarCreateModuleComponent = (
         <DialogContent className='sm:max-w-md'>
           <DialogHeader>
             <DialogTitle>{service.t('create.title')}</DialogTitle>
-            <DialogDescription>{service.t('create.subtitle')}</DialogDescription>
+            <DialogDescription>
+              {service.t('create.subtitle')}
+            </DialogDescription>
           </DialogHeader>
 
           <div className='space-y-4 py-2'>
@@ -94,7 +94,10 @@ export const DashboardSidebarCreateModuleComponent = (
             <Button variant='ghost' onClick={() => service.setOpen(false)}>
               {service.t('create.cancel')}
             </Button>
-            <Button onClick={service.handleSubmit} disabled={!service.name.trim()}>
+            <Button
+              onClick={service.handleSubmit}
+              disabled={!service.name.trim()}
+            >
               {service.t('create.submit')}
             </Button>
           </DialogFooter>
@@ -103,4 +106,3 @@ export const DashboardSidebarCreateModuleComponent = (
     </SidebarMenuItem>
   )
 }
-

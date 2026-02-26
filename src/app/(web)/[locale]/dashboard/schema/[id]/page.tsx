@@ -4,13 +4,7 @@ import { SchemaComponent } from '@/modules/schema'
 import { headers } from 'next/headers'
 import { redirect } from 'next/navigation'
 
-interface SchemaDetailPageProps {
-  params: Promise<{ id: string }>
-}
-
-export default async function SchemaDetailPage({
-  params,
-}: SchemaDetailPageProps) {
+export default async function SchemaDetailPage() {
   const session = await auth.api.getSession({
     headers: await headers(),
   })

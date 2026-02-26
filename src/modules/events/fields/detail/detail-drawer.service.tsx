@@ -1,6 +1,7 @@
 import { format } from 'date-fns'
+import React from 'react'
 
-import type { FieldType, SchemaField } from '../../mock-data'
+import type { FieldType, SchemaField } from '@/lib/events/events.contract'
 import type { TFunction } from '../../events.service'
 import type { DetailDrawerProps } from './detail-drawer.component'
 import { ArrayField } from './types/array-field.component'
@@ -10,7 +11,6 @@ import { EnumField } from './types/enum-field.component'
 import { JsonField } from './types/json-field.component'
 import { NumberField } from './types/number-field.component'
 import { StringField } from './types/string-field.component'
-import React from 'react'
 
 export interface FieldRowConfig {
   field: SchemaField

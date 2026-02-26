@@ -12,13 +12,11 @@ import {
   StackedBarChart,
   TimelineChart,
   type BaseChartData,
-  type DateRange,
   type HeatmapData,
   type ScatterData,
   type TimelineData,
   type TimeSeriesData,
 } from '@/shared/charts'
-import { useState } from 'react'
 
 // Sample data generators
 const generateTimeSeriesData = (days = 30): TimeSeriesData[] => {
@@ -77,7 +75,6 @@ const generateHeatmapData = (): HeatmapData[] => {
 }
 
 const generateTimelineData = (): TimelineData[] => {
-  const startDate = new Date('2024-01-01')
   return [
     {
       name: 'Planning Phase',
@@ -113,11 +110,6 @@ const generateTimelineData = (): TimelineData[] => {
 }
 
 export function ChartsExample() {
-  const [dateRange, setDateRange] = useState<DateRange>({
-    from: undefined,
-    to: undefined,
-  })
-
   const timeSeriesData = generateTimeSeriesData(30)
   const categoricalData = generateCategoricalData()
   const scatterData = generateScatterData()

@@ -8,7 +8,6 @@ import { CircleIcon } from '@hugeicons/core-free-icons'
 import { SidebarMenuButton, SidebarMenuItem } from '@/shared/ui/sidebar'
 import { cn } from '@/shared/utils/shadcn.utils'
 import type { ModuleDefinition } from '@/modules/modules/modules.interface'
-import { Button } from '@/shared/ui/button'
 
 export interface ModuleRowProps {
   module: ModuleDefinition

@@ -1,12 +1,8 @@
 .section {
-  background: radial-gradient(
-      ellipse at bottom,
-      #FF6C40 0%,
-      transparent 70%
-    ),
-    linear-gradient(to top, #2C112B 0%, #FF6C40 50%, #FDE577 100%);
+  background:
+    radial-gradient(ellipse at bottom, #ff6c40 0%, transparent 70%),
+    linear-gradient(to top, #2c112b 0%, #ff6c40 50%, #fde577 100%);
 }
-
 
 .homeTitle {
   font-size: 3.2rem;
@@ -14,23 +10,17 @@
   color: #fff;
   letter-spacing: 1.5px;
   margin-bottom: 16px;
-  background: #2C112B;
+  background: #2c112b;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
 
 .blackSection {
-  background: 
-    radial-gradient(
-      ellipse at top,
-      #FF6C40 0%,
-      transparent 70%
-    ),
-    #2C112B;
+  background:
+    radial-gradient(ellipse at top, #ff6c40 0%, transparent 70%), #2c112b;
   animation: slideDown 0.8s cubic-bezier(0.23, 1, 0.32, 1);
 }
-
 
 @keyframes slideDown {
   from {

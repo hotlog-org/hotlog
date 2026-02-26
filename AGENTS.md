@@ -1,69 +1,160 @@
-# Codex Agent Playbook
+# Hotlog Agent Playbook
 
-Practical conventions for contributing code in this repo with Codex. Always use reactive pattern for writin react.
+This file is the local playbook for agents working in `/home/razmik/hotlog`.
 
-## File & folder structure
-- **Split by responsibility:**
-  - UI markup lives in `*.component.tsx` (no business logic beyond rendering).
-  - State/logic/hooks live in matching `*.service.ts` exported as `useXService` and consumed via `const service = useXService(...)`.
-  - Interfaces/types live in matching `*.interface.ts` files; never declare component-local types in JSX files.
-  - For props interface use the component file
-- **Nested features:** place submodules under `src/modules/<feature>/fields/<submodule>` (e.g. `table`, `detail`, `searchbar`). Detail type renderers go in `fields/detail/types/*`.
-- **Mock data:** keep temporary mocks in a single `mock-data.ts` inside the module root to keep services type-safe until real APIs land.
+It captures conventions for architecture, naming, typing, formatting, and the
+project commands for building, linting, and quality checks.
 
-## Internationalization
-- No hardcoded copy (except mock-data). Pull strings from `messages/en.json` using `useTranslations` and pass the `t` function down through props.
-- Keys follow the scope `modules.dashboard.<feature>.*`.
+No `.cursor/rules`, `.cursorrules`, or `.github/copilot-instructions.md` files
+exist in this snapshot.
 
-## Components vs. services
-- Components only receive props and render; avoid `useMemo`, `useEffect`, data shaping, or translations here.
-- Services own state, derived data, side effects, and third-party hooks. Example pattern:
+## 1) Commands
 
-```ts
-// feature.service.ts
-const useFeatureService = () => {
-  const t = useTranslations('modules.dashboard.feature')
-  const [state, setState] = useState(...)
-  const derived = useMemo(() => ..., [state])
-  return { t, state, derived, setState }
-}
+Run from repo root.
 
-// feature.component.tsx
-export function FeatureComponent() {
-  const service = useFeatureService()
-  return <UI t={service.t} data={service.derived} />
-}
-```
+- `yarn install`
+- `yarn dev`
+  start dev server.
+- `yarn build`
+  - run full Next.js build + route compilation.
+- `yarn start`
+  - run production server.
 
-## UI libraries
-- Prefer shared shadcn-style wrappers under `src/shared/ui` (e.g. `button`, `card`, `menubar`, `field`, `data-table`). If a shadcn primitive is missing, add it to `src/shared/ui` instead of importing directly in modules.
-- Inputs use the `Field` pattern: `<Field><FieldLabel /><FieldControl><Input ... /></FieldControl><FieldMessage /></Field>`.
-- Menus: use `Menubar`, `MenubarMenu`, `MenubarTrigger`, `MenubarContent`, `MenubarItem`, `MenubarSeparator` from `src/shared/ui/menubar`. Keep menus open during multi-step flows by handling `onSelect={e => { e.preventDefault(); ... }}` and controlling `open` in the service.
-- Tables: use the shadcn data-table wrapper. Columns are defined in a dedicated service (`events-table.service.tsx`) and consumed by `DataTable` in `fields/table/data-table.component.tsx`. Keep containers flex so tables can stretch to full height.
+### Lint/format
 
-## Icons
-- Use Hugeicons: `import { Heading01Icon } from '@hugeicons/core-free-icons'` and render with `<HugeiconsIcon icon={Heading01Icon} className='size-4' />`.
-- Lucide remains acceptable for simple line icons already in use.
+- `yarn lint` (Next lint)
+- `yarn eslint-check`
+- `yarn eslint-fix`
+- `yarn prettier`
+- `yarn prettier-check`
 
-## Validation
-- Use `zod` for input/filter validation inside services. Surface errors through `FieldMessage` components.
+### Single file checks
 
-## Navbar extras
-- Extra controls (search, filters, chips) mount into the dashboard navbar via the Zustand store `useDashboardNavbarExtra`. Services create the element with `createElement(FeatureExtraComponent, {...})` and clean up on unmount.
+- `yarn eslint-check src/modules/events/events.service.ts`
+- `yarn prettier-check src/modules/events/events.service.ts`
+- `yarn exec tsc --noEmit`
 
-## Filtering UX (Events example)
-- Single filter entry point (menubar) with multi-step flow: select schema ➜ select field ➜ enter value. Use draft state in the service and keep menu open between steps.
-- Show applied filters as chips; indicate per-field filters with a small amber dot in menu lists.
+### Tests
 
-## General styling
-- Tailwind utility classes; prefer `className` overrides instead of new bespoke CSS.
-- Keep layouts responsive: containers usually `flex flex-col` with `gap-*`; cards stretch with `flex-1`/`h-full` to fill available space.
+- No `test` script is currently defined in `package.json`.
+- There is no committed app test suite yet.
+- If a runner is added, keep commands as:
+  - `yarn test src/modules/<feature>/xxx.test.ts`
+  - `yarn vitest path/to/file.test.ts` / `yarn jest path/to/file.test.ts`
+  - `yarn playwright test path/to/spec.ts` (e2e)
 
-## How to add a new feature
-1) Create `feature.component.tsx`, `feature.service.ts`, `feature.interface.ts` under the module (plus `fields/*` directories as needed).
-2) Put all logic, translations, and validation in the service; keep the component purely presentational.
-3) Add mock data to `mock-data.ts` if the API is not ready.
-4) Use shared shadcn UI parts and Hugeicons for visuals; add new primitives to `src/shared/ui` when necessary.
-5) Add copy to `messages/en.json` under `modules.dashboard.<feature>`.
+## 2) Code organization
 
-Use these patterns to keep the codebase consistent, testable, and easy to refactor when real data sources arrive.
+- `src/modules/*` contains feature modules.
+- `src/shared/*` contains cross-module UI/hooks/utils.
+- `src/widgets/*` contains composed product-level pieces.
+
+Feature split:
+
+- `*.component.tsx` = presentational UI.
+- `*.service.ts` = state + side effects + derived data.
+- `*.interface.ts` = shared contracts and exported models.
+- `mock-data.ts` = local temporary test data.
+
+Preferred pattern:
+
+- component consumes service via `const service = useXService()`.
+- component passes service data/callbacks down, no business logic.
+
+## 3) Imports and module boundaries
+
+- Import order: external, alias (`@/...`), local sibling.
+- Prefer named exports; use default only when conventions already use it.
+- Use `import type` for type-only usage.
+- Avoid cyclic barrel chains and mixing client and server concerns in same module.
+
+## 4) Formatting and lint rules
+
+- Follow `.prettierrc.json`:
+  - no semicolons
+  - single quotes
+  - print width 80
+  - trailing commas
+  - 2-space indent
+- ESLint config enforces:
+  - `quotes: single`
+  - `semi: never`
+  - `prettier/prettier: error`
+  - `@typescript-eslint/no-unused-vars` warning
+  - `no-console` warning
+
+Keep one export style per file where possible.
+
+## 5) Types and naming
+
+- Prefer strict types and explicit return contracts.
+- Use domain interfaces/enums for data shapes and feature contracts.
+- Use `z.infer` for zod form payloads.
+- Services should expose a typed interface in the same file when shared.
+
+Naming:
+
+- Components: PascalCase (`SchemaComponent`).
+- Service hooks: `useXService`.
+- Functions: verb-first (`addField`, `removeSchema`, `openEvent`).
+- Props: descriptive names (`value`, `onChange`, `onSubmit`) and object keys consistent
+  with domain vocabulary.
+
+## 6) Error handling
+
+- Wrap async work in `try / catch / finally`.
+- Clear `isLoading` in `finally`.
+- Keep user-facing text from stable message keys, not raw exceptions.
+- Map transport errors through existing helpers (e.g. `mapErrorToCode`) before surfacing.
+- Prefer returning structured result objects in actions:
+  - `success: true/false`
+  - `error?`
+  - `errorCode?`
+
+## 7) i18n and copy
+
+- Use `useTranslations` / translation services for any visible text.
+- Keep user strings in locale JSON files.
+- New keys should follow feature namespace patterns (`modules.dashboard.<feature>...`).
+
+## 8) Client/server boundaries
+
+- Add `'use client'` only where hooks/browser APIs are needed.
+- Keep token/auth/provider setup and server-safe logic in server-compatible modules.
+- Do not add client-only side effects in shared server-usable files.
+
+## 9) UI and styling conventions
+
+- Use shared `src/shared/ui/*` components first.
+- Keep complex style in Tailwind utility classes.
+- For forms, use shared `form` and field wrappers.
+- Avoid random per-feature one-off UI primitives when shared alternatives exist.
+
+## 10) Performance and rendering
+
+- Memoize expensive derived arrays with `useMemo`.
+- Memoize callbacks passed to deep children with `useCallback`.
+- Prefer immutable updates for nested state.
+- Keep effects dependency arrays complete.
+
+## 11) Module-specific notes
+
+- `src/app/(web)/[locale]/` is routing/internationalization boundary.
+- `src/shared/hooks` should stay generic.
+- New utility functions should be exported through `src/shared/utils/index.ts`.
+- New shared state should be via feature-local store files, not module-level globals.
+
+## 12) Delivery checklist for agent changes
+
+- Run at least: `yarn lint`, `yarn prettier-check`, `yarn build` before handoff.
+- If no tests exist, document that and run targeted runtime verification instead.
+- Keep PR diffs scoped to existing conventions and shared component reuse.
+- Update this file if conventions change in code or scripts.
+
+## 13) What to avoid
+
+- Business logic in JSX.
+- Hardcoded UI copy.
+- Silent catch blocks.
+- `any` without justification.
+- Introducing duplicate shared logic between modules.

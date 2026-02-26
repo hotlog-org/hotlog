@@ -36,7 +36,7 @@ export interface ModulesEditorProps {
 
 export const ModulesEditor = (props: ModulesEditorProps) => {
   const service = useModulesEditorService(props)
-  const { draft, inputs, selectedSchema } = service
+  const { draft, inputs } = service
 
   const missingRequiredBindings = inputs.some(
     (input) =>

@@ -1,15 +1,15 @@
 import { createElement, useCallback, useEffect, useMemo, useState } from 'react'
 import { useTranslations } from 'next-intl'
+import { useQuery } from '@tanstack/react-query'
 
 import { useDashboardNavbarExtra } from '@/shared/store/dashboard-navbar-extra.store'
-
-import {
-  eventRecords,
-  eventSchemas,
-  type EventRecord,
-  type EventRow,
-  type EventSchema,
-} from './mock-data'
+import { fetchEventSchemas, fetchEvents } from './events.api'
+import { type EventSchema } from '@/lib/events/events.contract'
+import type {
+  EventListQuery,
+  EventRecord,
+  EventRow,
+} from '@/lib/events/events.contract'
 import { EventsExtraComponent } from './events-extra.component'
 
 export type SchemaOption = EventSchema
@@ -76,9 +76,32 @@ const useEventsService = (): EventsService => {
   const [fieldFilters, setFieldFilters] = useState<FieldFilter[]>([])
   const [selectedId, setSelectedId] = useState<string | null>(null)
 
+  const eventFilters = useMemo<EventListQuery>(
+    () => ({
+      search: query,
+      schemaIds: selectedSchemas,
+      limit: 200,
+      offset: 0,
+    }),
+    [query, selectedSchemas],
+  )
+
+  const eventsQuery = useQuery({
+    queryKey: ['events.list', eventFilters],
+    queryFn: () => fetchEvents(eventFilters),
+  })
+
+  const schemasQuery = useQuery({
+    queryKey: ['events.schemas'],
+    queryFn: fetchEventSchemas,
+  })
+
+  const eventRecords = eventsQuery.data?.items ?? []
+  const schemas = schemasQuery.data ?? []
+
   const schemaMap = useMemo(
-    () => new Map(eventSchemas.map((schema) => [schema.id, schema])),
-    [],
+    () => new Map(schemas.map((schema) => [schema.id, schema])),
+    [schemas],
   )
 
   const filteredEvents = useMemo(() => {
@@ -162,11 +185,16 @@ const useEventsService = (): EventsService => {
 
   const stats = useMemo(
     () => ({
-      total: eventRecords.length,
+      total: eventsQuery.data?.total ?? eventRecords.length,
       filtered: filteredEvents.length,
-      schemas: eventSchemas.length,
+      schemas: schemas.length,
     }),
-    [filteredEvents.length],
+    [
+      eventFilters,
+      filteredEvents.length,
+      eventsQuery.data?.total,
+      schemas.length,
+    ],
   )
 
   const upsertFieldFilter = useCallback(
@@ -306,7 +334,7 @@ const useEventsService = (): EventsService => {
           draftSchemaId,
           draftFieldKey,
           draftValue,
-          schemas: eventSchemas,
+          schemas,
           schemaHasFilters,
           fields: fieldsForDraftSchema,
           openChange,
@@ -359,7 +387,7 @@ const useEventsService = (): EventsService => {
     removeFieldFilter,
     resetFilters,
     rows,
-    schemas: eventSchemas,
+    schemas,
     addSchema,
     removeSchema,
     selectedSchemas,
@@ -375,7 +403,7 @@ const useEventsService = (): EventsService => {
       draftSchemaId,
       draftFieldKey,
       draftValue,
-      schemas: eventSchemas,
+      schemas,
       schemaHasFilters,
       fields: fieldsForDraftSchema,
       openChange,

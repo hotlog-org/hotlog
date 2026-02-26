@@ -5,9 +5,11 @@
   "packageManager": "yarn@1.22.22",
   "scripts": {
     "dev": "next dev",
+    "dev:api": "go -C backend run ./cmd/api",
     "build": "next build",
+    "build:api": "go -C backend build ./cmd/api",
     "start": "next start",
-    "lint": "next lint",
+    "lint": "eslint .",
     "eslint-check": "eslint .",
     "eslint-fix": "eslint . --fix",
     "prettier": "prettier . --write",
