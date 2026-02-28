@@ -21,8 +21,14 @@ Required environment variables:
 - `GET /healthz`
 - `GET /events`
 - `POST /events`
+- `GET /events/{id}`
+- `PATCH /events/{id}`
+- `DELETE /events/{id}`
 - `GET /events/schemas`
 - `POST /events/schemas`
+- `GET /events/schemas/{id}`
+- `PATCH /events/schemas/{id}`
+- `DELETE /events/schemas/{id}`
 
 All `/events*` endpoints require:
 

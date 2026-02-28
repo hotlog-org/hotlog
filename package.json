@@ -7,7 +7,7 @@
     "dev": "next dev",
     "dev:api": "go -C backend run ./cmd/api",
     "build": "next build",
-    "build:api": "go -C backend build ./cmd/api",
+    "build:api": "go -C backend build -o /tmp/hotlog-events-api ./cmd/api",
     "start": "next start",
     "lint": "eslint .",
     "eslint-check": "eslint .",

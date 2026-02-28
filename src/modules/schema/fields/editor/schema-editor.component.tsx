@@ -5,6 +5,7 @@ import {
   DrawerContent,
   DrawerFooter,
   DrawerHeader,
+  DrawerTitle,
 } from '@/shared/ui/drawer'
 import { Separator } from '@/shared/ui/separator'
 import { ScrollArea } from '@/shared/ui/scroll-area'
@@ -63,6 +64,9 @@ export function SchemaEditor(props: SchemaEditorProps) {
         {props.schema ? (
           <>
             <DrawerHeader>
+              <DrawerTitle className='sr-only'>
+                {props.t('editor.title')}
+              </DrawerTitle>
               <div className='flex items-end gap-3'>
                 <Field className='w-full'>
                   <FieldLabel className='text-xs uppercase tracking-wide text-muted-foreground'>

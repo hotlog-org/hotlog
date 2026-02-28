@@ -1,5 +1,7 @@
 'use client'
 
+import { useEffect, useState } from 'react'
+
 import {
   SidebarMenu,
   SidebarMenuButton,
@@ -25,6 +27,13 @@ import { HugeiconsIcon } from '@hugeicons/react'
 
 const DashboardSidebarFooterComponent = () => {
   const service = useDashboardSidebarFooterService()
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  const showLoadingSkeleton = !mounted || service.isLoading
 
   return (
     <SidebarMenu>
@@ -45,7 +54,7 @@ const DashboardSidebarFooterComponent = () => {
               ) : (
                 <>
                   <div className='h-full w-full flex flex-col leading-tight'>
-                    {service.isLoading ? (
+                    {showLoadingSkeleton ? (
                       <Skeleton className='h-full w-full' />
                     ) : (
                       <>
@@ -58,7 +67,7 @@ const DashboardSidebarFooterComponent = () => {
                       </>
                     )}
                   </div>
-                  {service.isLoading ? (
+                  {showLoadingSkeleton ? (
                     <Skeleton className='h-full w-4' />
                   ) : (
                     <HugeiconsIcon icon={MoreHorizontalIcon} />

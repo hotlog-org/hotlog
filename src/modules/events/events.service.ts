@@ -1,16 +1,11 @@
 import { createElement, useCallback, useEffect, useMemo, useState } from 'react'
 import { useTranslations } from 'next-intl'
-import { useQuery } from '@tanstack/react-query'
 
 import { useDashboardNavbarExtra } from '@/shared/store/dashboard-navbar-extra.store'
-import { fetchEventSchemas, fetchEvents } from './events.api'
 import { type EventSchema } from '@/lib/events/events.contract'
-import type {
-  EventListQuery,
-  EventRecord,
-  EventRow,
-} from '@/lib/events/events.contract'
+import type { EventRecord, EventRow } from '@/lib/events/events.contract'
 import { EventsExtraComponent } from './events-extra.component'
+import { eventRecords, eventSchemas } from './mock-data'
 
 export type SchemaOption = EventSchema
 export type TFunction = ReturnType<typeof useTranslations>
@@ -76,28 +71,7 @@ const useEventsService = (): EventsService => {
   const [fieldFilters, setFieldFilters] = useState<FieldFilter[]>([])
   const [selectedId, setSelectedId] = useState<string | null>(null)
 
-  const eventFilters = useMemo<EventListQuery>(
-    () => ({
-      search: query,
-      schemaIds: selectedSchemas,
-      limit: 200,
-      offset: 0,
-    }),
-    [query, selectedSchemas],
-  )
-
-  const eventsQuery = useQuery({
-    queryKey: ['events.list', eventFilters],
-    queryFn: () => fetchEvents(eventFilters),
-  })
-
-  const schemasQuery = useQuery({
-    queryKey: ['events.schemas'],
-    queryFn: fetchEventSchemas,
-  })
-
-  const eventRecords = eventsQuery.data?.items ?? []
-  const schemas = schemasQuery.data ?? []
+  const schemas = eventSchemas
 
   const schemaMap = useMemo(
     () => new Map(schemas.map((schema) => [schema.id, schema])),
@@ -185,16 +159,11 @@ const useEventsService = (): EventsService => {
 
   const stats = useMemo(
     () => ({
-      total: eventsQuery.data?.total ?? eventRecords.length,
+      total: eventRecords.length,
       filtered: filteredEvents.length,
       schemas: schemas.length,
     }),
-    [
-      eventFilters,
-      filteredEvents.length,
-      eventsQuery.data?.total,
-      schemas.length,
-    ],
+    [filteredEvents.length, schemas.length],
   )
 
   const upsertFieldFilter = useCallback(

@@ -22,7 +22,9 @@ func NewEventsHandler(repository events.Repository) *EventsHandler {
 
 func (handler *EventsHandler) Register(mux *http.ServeMux) {
 	mux.HandleFunc("/events", handler.handleEvents)
+	mux.HandleFunc("/events/", handler.handleEventByID)
 	mux.HandleFunc("/events/schemas", handler.handleSchemas)
+	mux.HandleFunc("/events/schemas/", handler.handleSchemaByID)
 }
 
 func (handler *EventsHandler) handleEvents(
@@ -72,6 +74,86 @@ func (handler *EventsHandler) handleSchemas(
 		handler.listSchemas(w, r, userID)
 	case http.MethodPost:
 		handler.createSchema(w, r, userID)
+	default:
+		response.WriteMethodNotAllowed(w)
+	}
+}
+
+func (handler *EventsHandler) handleSchemaByID(
+	w http.ResponseWriter,
+	r *http.Request,
+) {
+	userID := strings.TrimSpace(r.Header.Get("X-User-Id"))
+	if userID == "" {
+		response.WriteError(
+			w,
+			http.StatusUnauthorized,
+			response.ErrorCodeUnauthorized,
+			"Unauthorized",
+			nil,
+		)
+		return
+	}
+
+	schemaID := strings.TrimSpace(strings.TrimPrefix(r.URL.Path, "/events/schemas/"))
+	if schemaID == "" || strings.Contains(schemaID, "/") {
+		response.WriteError(
+			w,
+			http.StatusNotFound,
+			response.ErrorCodeNotFound,
+			"Schema not found",
+			nil,
+		)
+		return
+	}
+
+	switch r.Method {
+	case http.MethodGet:
+		handler.getSchema(w, r, userID, schemaID)
+	case http.MethodPatch:
+		handler.updateSchema(w, r, userID, schemaID)
+	case http.MethodDelete:
+		handler.deleteSchema(w, r, userID, schemaID)
+	default:
+		response.WriteMethodNotAllowed(w)
+	}
+}
+
+func (handler *EventsHandler) handleEventByID(
+	w http.ResponseWriter,
+	r *http.Request,
+) {
+	userID := strings.TrimSpace(r.Header.Get("X-User-Id"))
+	if userID == "" {
+		response.WriteError(
+			w,
+			http.StatusUnauthorized,
+			response.ErrorCodeUnauthorized,
+			"Unauthorized",
+			nil,
+		)
+		return
+	}
+
+	eventID := strings.TrimSpace(strings.TrimPrefix(r.URL.Path, "/events/"))
+	if eventID == "" || strings.Contains(eventID, "/") {
+		response.WriteError(
+			w,
+			http.StatusNotFound,
+			response.ErrorCodeNotFound,
+			"Event not found",
+			nil,
+		)
+		return
+	}
+
+	switch r.Method {
+	case http.MethodGet:
+		handler.getEvent(w, r, userID, eventID)
+	case http.MethodPatch:
+		handler.updateEvent(w, r, userID, eventID)
+	case http.MethodDelete:
+		handler.deleteEvent(w, r, userID, eventID)
 	default:
 		response.WriteMethodNotAllowed(w)
 	}
@@ -153,6 +235,168 @@ func (handler *EventsHandler) createEvent(
 	response.WriteSuccess(w, http.StatusCreated, result)
 }
 
+func (handler *EventsHandler) getEvent(
+	w http.ResponseWriter,
+	r *http.Request,
+	userID string,
+	eventID string,
+) {
+	result, err := handler.repository.GetEventByID(r.Context(), userID, eventID)
+	if err != nil {
+		if errors.Is(err, events.ErrEventNotFound) {
+			response.WriteError(
+				w,
+				http.StatusNotFound,
+				response.ErrorCodeNotFound,
+				"Event not found",
+				nil,
+			)
+			return
+		}
+
+		if errors.Is(err, events.ErrEventForbidden) {
+			response.WriteError(
+				w,
+				http.StatusForbidden,
+				response.ErrorCodeForbidden,
+				"Forbidden",
+				nil,
+			)
+			return
+		}
+
+		handleRepositoryError(w, err, "Failed to load event")
+		return
+	}
+
+	response.WriteSuccess(w, http.StatusOK, map[string]events.EventRecord{
+		"item": result,
+	})
+}
+
+func (handler *EventsHandler) updateEvent(
+	w http.ResponseWriter,
+	r *http.Request,
+	userID string,
+	eventID string,
+) {
+	payload, decodeErr := decodeJSONBody[events.EventUpdatePayload](r.Body)
+	if decodeErr != nil {
+		response.WriteError(
+			w,
+			http.StatusBadRequest,
+			response.ErrorCodeValidation,
+			"Invalid request body",
+			map[string][]string{"body": {decodeErr.Error()}},
+		)
+		return
+	}
+
+	events.ApplyDefaultsToEventUpdatePayload(&payload)
+	validation := events.ValidateEventUpdatePayload(payload)
+	if validation.HasErrors() {
+		response.WriteError(
+			w,
+			http.StatusBadRequest,
+			response.ErrorCodeValidation,
+			"Invalid event payload",
+			validation,
+		)
+		return
+	}
+
+	result, err := handler.repository.UpdateEventRecord(
+		r.Context(),
+		userID,
+		eventID,
+		payload,
+	)
+	if err != nil {
+		switch {
+		case errors.Is(err, events.ErrEventNotFound):
+			response.WriteError(
+				w,
+				http.StatusNotFound,
+				response.ErrorCodeNotFound,
+				"Event not found",
+				nil,
+			)
+			return
+		case errors.Is(err, events.ErrEventForbidden):
+			response.WriteError(
+				w,
+				http.StatusForbidden,
+				response.ErrorCodeForbidden,
+				"Forbidden",
+				nil,
+			)
+			return
+		case errors.Is(err, events.ErrSchemaNotFound):
+			response.WriteError(
+				w,
+				http.StatusNotFound,
+				response.ErrorCodeNotFound,
+				"Event schema not found",
+				nil,
+			)
+			return
+		case errors.Is(err, events.ErrSchemaForbidden):
+			response.WriteError(
+				w,
+				http.StatusForbidden,
+				response.ErrorCodeForbidden,
+				"Forbidden",
+				nil,
+			)
+			return
+		default:
+			handleRepositoryError(w, err, "Failed to update event")
+			return
+		}
+	}
+
+	response.WriteSuccess(w, http.StatusOK, map[string]events.EventRecord{
+		"item": result,
+	})
+}
+
+func (handler *EventsHandler) deleteEvent(
+	w http.ResponseWriter,
+	r *http.Request,
+	userID string,
+	eventID string,
+) {
+	err := handler.repository.DeleteEventRecord(r.Context(), userID, eventID)
+	if err != nil {
+		if errors.Is(err, events.ErrEventNotFound) {
+			response.WriteError(
+				w,
+				http.StatusNotFound,
+				response.ErrorCodeNotFound,
+				"Event not found",
+				nil,
+			)
+			return
+		}
+
+		if errors.Is(err, events.ErrEventForbidden) {
+			response.WriteError(
+				w,
+				http.StatusForbidden,
+				response.ErrorCodeForbidden,
+				"Forbidden",
+				nil,
+			)
+			return
+		}
+
+		handleRepositoryError(w, err, "Failed to delete event")
+		return
+	}
+
+	response.WriteSuccess(w, http.StatusOK, map[string]bool{"deleted": true})
+}
+
 func (handler *EventsHandler) listSchemas(
 	w http.ResponseWriter,
 	r *http.Request,
@@ -217,6 +461,151 @@ func (handler *EventsHandler) createSchema(
 	response.WriteSuccess(w, http.StatusCreated, map[string]events.EventSchema{
 		"item": result,
 	})
+}
+
+func (handler *EventsHandler) getSchema(
+	w http.ResponseWriter,
+	r *http.Request,
+	userID string,
+	schemaID string,
+) {
+	result, err := handler.repository.GetEventSchemaByID(r.Context(), userID, schemaID)
+	if err != nil {
+		if errors.Is(err, events.ErrSchemaNotFound) {
+			response.WriteError(
+				w,
+				http.StatusNotFound,
+				response.ErrorCodeNotFound,
+				"Schema not found",
+				nil,
+			)
+			return
+		}
+
+		if errors.Is(err, events.ErrSchemaForbidden) {
+			response.WriteError(
+				w,
+				http.StatusForbidden,
+				response.ErrorCodeForbidden,
+				"Forbidden",
+				nil,
+			)
+			return
+		}
+
+		handleRepositoryError(w, err, "Failed to load schema")
+		return
+	}
+
+	response.WriteSuccess(w, http.StatusOK, map[string]events.EventSchema{
+		"item": result,
+	})
+}
+
+func (handler *EventsHandler) updateSchema(
+	w http.ResponseWriter,
+	r *http.Request,
+	userID string,
+	schemaID string,
+) {
+	payload, decodeErr := decodeJSONBody[events.EventSchemaUpdatePayload](r.Body)
+	if decodeErr != nil {
+		response.WriteError(
+			w,
+			http.StatusBadRequest,
+			response.ErrorCodeValidation,
+			"Invalid request body",
+			map[string][]string{"body": {decodeErr.Error()}},
+		)
+		return
+	}
+
+	events.NormalizeEventSchemaUpdatePayload(&payload)
+	validation := events.ValidateEventSchemaUpdatePayload(payload)
+	if validation.HasErrors() {
+		response.WriteError(
+			w,
+			http.StatusBadRequest,
+			response.ErrorCodeValidation,
+			"Invalid schema payload",
+			validation,
+		)
+		return
+	}
+
+	result, err := handler.repository.UpdateEventSchema(
+		r.Context(),
+		userID,
+		schemaID,
+		payload,
+	)
+	if err != nil {
+		if errors.Is(err, events.ErrSchemaNotFound) {
+			response.WriteError(
+				w,
+				http.StatusNotFound,
+				response.ErrorCodeNotFound,
+				"Schema not found",
+				nil,
+			)
+			return
+		}
+
+		if errors.Is(err, events.ErrSchemaForbidden) {
+			response.WriteError(
+				w,
+				http.StatusForbidden,
+				response.ErrorCodeForbidden,
+				"Forbidden",
+				nil,
+			)
+			return
+		}
+
+		handleRepositoryError(w, err, "Failed to update schema")
+		return
+	}
+
+	response.WriteSuccess(w, http.StatusOK, map[string]events.EventSchema{
+		"item": result,
+	})
+}
+
+func (handler *EventsHandler) deleteSchema(
+	w http.ResponseWriter,
+	r *http.Request,
+	userID string,
+	schemaID string,
+) {
+	err := handler.repository.DeleteEventSchema(r.Context(), userID, schemaID)
+	if err != nil {
+		if errors.Is(err, events.ErrSchemaNotFound) {
+			response.WriteError(
+				w,
+				http.StatusNotFound,
+				response.ErrorCodeNotFound,
+				"Schema not found",
+				nil,
+			)
+			return
+		}
+
+		if errors.Is(err, events.ErrSchemaForbidden) {
+			response.WriteError(
+				w,
+				http.StatusForbidden,
+				response.ErrorCodeForbidden,
+				"Forbidden",
+				nil,
+			)
+			return
+		}
+
+		handleRepositoryError(w, err, "Failed to delete schema")
+		return
+	}
+
+	response.WriteSuccess(w, http.StatusOK, map[string]bool{"deleted": true})
 }
 
 func handleRepositoryError(w http.ResponseWriter, err error, fallbackMessage string) {

@@ -148,6 +148,18 @@ export interface EventSchemaCreatePayload {
   fields: SchemaField[]
 }
 
+export const eventSchemaUpdateSchema = z.object({
+  name: z.string().trim().min(1),
+  version: z.string().trim().min(1),
+  fields: z.array(schemaFieldSchema).min(1),
+})
+
+export interface EventSchemaUpdatePayload {
+  name: string
+  version: string
+  fields: SchemaField[]
+}
+
 export interface EventSchemasResult {
   items: EventSchema[]
 }

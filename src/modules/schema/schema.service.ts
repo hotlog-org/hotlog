@@ -13,6 +13,172 @@ import type {
   SchemaRow,
 } from './schema.interface'
 
+const SCHEMA_STORAGE_KEY = 'hotlog.schema.mock.v1'
+
+const schemaFieldTypes: SchemaFieldType[] = [
+  'string',
+  'number',
+  'boolean',
+  'datetime',
+  'enum',
+  'array',
+  'json',
+  'object',
+]
+
+const isObjectRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === 'object' && value !== null
+
+const isSchemaFieldType = (value: unknown): value is SchemaFieldType =>
+  typeof value === 'string' &&
+  schemaFieldTypes.includes(value as SchemaFieldType)
+
+const sanitizeSchemaField = (value: unknown): SchemaFieldNode | null => {
+  if (!isObjectRecord(value)) return null
+
+  const {
+    id,
+    name,
+    type,
+    description,
+    enumValues,
+    numberRange,
+    itemType,
+    children,
+  } = value
+
+  if (typeof id !== 'string' || !id.trim()) return null
+  if (typeof name !== 'string' || !name.trim()) return null
+  if (!isSchemaFieldType(type)) return null
+
+  const sanitized: SchemaFieldNode = {
+    id,
+    name,
+    type,
+  }
+
+  if (typeof description === 'string' && description.trim()) {
+    sanitized.description = description
+  }
+
+  if (Array.isArray(enumValues)) {
+    sanitized.enumValues = enumValues.filter(
+      (entry): entry is string => typeof entry === 'string',
+    )
+  }
+
+  if (isObjectRecord(numberRange)) {
+    const min =
+      typeof numberRange.min === 'number' || numberRange.min === null
+        ? numberRange.min
+        : undefined
+    const max =
+      typeof numberRange.max === 'number' || numberRange.max === null
+        ? numberRange.max
+        : undefined
+    sanitized.numberRange = { min, max }
+  }
+
+  if (isSchemaFieldType(itemType)) {
+    sanitized.itemType = itemType
+  }
+
+  if (Array.isArray(children)) {
+    const nested = children
+      .map((child) => sanitizeSchemaField(child))
+      .filter((child): child is SchemaFieldNode => Boolean(child))
+
+    if (nested.length > 0) {
+      sanitized.children = nested
+    }
+  }
+
+  return sanitized
+}
+
+const sanitizeSchemaDefinition = (value: unknown): SchemaDefinition | null => {
+  if (!isObjectRecord(value)) return null
+
+  const { id, name, version, fields } = value
+
+  if (typeof id !== 'string' || !id.trim()) return null
+  if (typeof name !== 'string' || !name.trim()) return null
+  if (typeof version !== 'string' || !version.trim()) return null
+  if (!Array.isArray(fields)) return null
+
+  const sanitizedFields = fields
+    .map((field) => sanitizeSchemaField(field))
+    .filter((field): field is SchemaFieldNode => Boolean(field))
+
+  return {
+    id,
+    name,
+    version,
+    fields: sanitizedFields,
+  }
+}
+
+const parsePersistedSchemas = (raw: string): SchemaDefinition[] | null => {
+  try {
+    const parsed = JSON.parse(raw) as unknown
+    if (!Array.isArray(parsed)) {
+      return null
+    }
+
+    const schemas = parsed
+      .map((schema) => sanitizeSchemaDefinition(schema))
+      .filter((schema): schema is SchemaDefinition => Boolean(schema))
+
+    return schemas.length > 0 ? schemas : null
+  } catch {
+    return null
+  }
+}
+
+const createSchemaId = (existingSchemas: SchemaDefinition[]) => {
+  let index = 1
+
+  while (existingSchemas.some((schema) => schema.id === `schema-${index}`)) {
+    index += 1
+  }
+
+  return `schema-${index}`
+}
+
+const cloneField = (field: SchemaFieldNode): SchemaFieldNode => ({
+  ...field,
+  enumValues: field.enumValues ? [...field.enumValues] : undefined,
+  numberRange: field.numberRange
+    ? {
+        min: field.numberRange.min,
+        max: field.numberRange.max,
+      }
+    : undefined,
+  children: field.children ? field.children.map(cloneField) : undefined,
+})
+
+const cloneSchema = (schema: SchemaDefinition): SchemaDefinition => ({
+  ...schema,
+  fields: schema.fields.map(cloneField),
+})
+
+const mergeWithDefaultSchemas = (
+  persisted: SchemaDefinition[] | null,
+): SchemaDefinition[] => {
+  const persistedSchemas = persisted ?? []
+  const existingByID = new Set(persistedSchemas.map((schema) => schema.id))
+
+  const missingDefaults = schemaDefinitions
+    .filter((schema) => !existingByID.has(schema.id))
+    .map(cloneSchema)
+
+  if (persistedSchemas.length === 0) {
+    return schemaDefinitions.map(cloneSchema)
+  }
+
+  return [...persistedSchemas, ...missingDefaults]
+}
+
 export interface FieldWithMeta extends SchemaFieldNode {
   level: number
   canNest: boolean
@@ -152,9 +318,44 @@ const useSchemaService = (): SchemaService => {
   )
 
   const [schemas, setSchemas] = useState<SchemaDefinition[]>(schemaDefinitions)
+  const [hasLoadedPersistedSchemas, setHasLoadedPersistedSchemas] =
+    useState(false)
   const [search, setSearchState] = useState('')
   const [selectedSchemaId, setSelectedSchemaId] = useState<string | null>(null)
   const [selectedFieldId, setSelectedFieldId] = useState<string | null>(null)
+
+  useEffect(() => {
+    let raw: string | null = null
+
+    try {
+      raw = window.localStorage.getItem(SCHEMA_STORAGE_KEY)
+    } catch {
+      setHasLoadedPersistedSchemas(true)
+      return
+    }
+
+    if (!raw) {
+      setHasLoadedPersistedSchemas(true)
+      return
+    }
+
+    const persisted = parsePersistedSchemas(raw)
+    setSchemas(mergeWithDefaultSchemas(persisted))
+
+    setHasLoadedPersistedSchemas(true)
+  }, [])
+
+  useEffect(() => {
+    if (!hasLoadedPersistedSchemas) {
+      return
+    }
+
+    try {
+      window.localStorage.setItem(SCHEMA_STORAGE_KEY, JSON.stringify(schemas))
+    } catch {
+      return
+    }
+  }, [hasLoadedPersistedSchemas, schemas])
 
   const filteredSchemas = useMemo(() => {
     if (!search.trim()) return schemas
@@ -205,7 +406,7 @@ const useSchemaService = (): SchemaService => {
   }, [])
 
   const addSchema = useCallback(() => {
-    const nextId = `schema-${schemas.length + 1}`
+    const nextId = createSchemaId(schemas)
     const newSchema: SchemaDefinition = {
       id: nextId,
       name: t('actions.newSchemaName', { index: schemas.length + 1 }),

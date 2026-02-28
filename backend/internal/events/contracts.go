@@ -107,8 +107,22 @@ type EventCreatePayload struct {
 	Payload  map[string]interface{} `json:"payload"`
 }
 
+type EventUpdatePayload struct {
+	Title    string                 `json:"title"`
+	SchemaID string                 `json:"schemaId"`
+	Source   EventSource            `json:"source"`
+	Status   EventStatus            `json:"status"`
+	Payload  map[string]interface{} `json:"payload"`
+}
+
 type EventSchemaCreatePayload struct {
 	ID      string        `json:"id,omitempty"`
+	Name    string        `json:"name"`
+	Version string        `json:"version"`
+	Fields  []SchemaField `json:"fields"`
+}
+
+type EventSchemaUpdatePayload struct {
 	Name    string        `json:"name"`
 	Version string        `json:"version"`
 	Fields  []SchemaField `json:"fields"`
@@ -164,34 +178,60 @@ func ParseEventListQuery(values url.Values) (EventListQuery, ValidationDetails) 
 }
 
 func ApplyDefaultsToEventCreatePayload(payload *EventCreatePayload) {
-	payload.Title = strings.TrimSpace(payload.Title)
-	payload.SchemaID = strings.TrimSpace(payload.SchemaID)
-
-	if payload.Status == "" {
-		payload.Status = EventStatusIngested
-	}
-
-	if payload.Payload == nil {
-		payload.Payload = map[string]interface{}{}
-	}
+	applyEventPayloadDefaults(&payload.Title, &payload.SchemaID, &payload.Status, &payload.Payload)
 }
 
 func ValidateEventCreatePayload(payload EventCreatePayload) ValidationDetails {
+	return validateEventPayload(payload.Title, payload.SchemaID, payload.Source, payload.Status)
+}
+
+func ApplyDefaultsToEventUpdatePayload(payload *EventUpdatePayload) {
+	applyEventPayloadDefaults(&payload.Title, &payload.SchemaID, &payload.Status, &payload.Payload)
+}
+
+func ValidateEventUpdatePayload(payload EventUpdatePayload) ValidationDetails {
+	return validateEventPayload(payload.Title, payload.SchemaID, payload.Source, payload.Status)
+}
+
+func applyEventPayloadDefaults(
+	title *string,
+	schemaID *string,
+	status *EventStatus,
+	payload *map[string]interface{},
+) {
+	*title = strings.TrimSpace(*title)
+	*schemaID = strings.TrimSpace(*schemaID)
+
+	if *status == "" {
+		*status = EventStatusIngested
+	}
+
+	if *payload == nil {
+		*payload = map[string]interface{}{}
+	}
+}
+
+func validateEventPayload(
+	title string,
+	schemaID string,
+	source EventSource,
+	status EventStatus,
+) ValidationDetails {
 	details := ValidationDetails{}
 
-	if payload.Title == "" {
+	if title == "" {
 		details.Add("title", "is required")
 	}
 
-	if payload.SchemaID == "" {
+	if schemaID == "" {
 		details.Add("schemaId", "is required")
 	}
 
-	if _, ok := allowedEventSources[payload.Source]; !ok {
+	if _, ok := allowedEventSources[source]; !ok {
 		details.Add("source", "must be one of: api, web, mobile, worker, ingestion")
 	}
 
-	if _, ok := allowedEventStatuses[payload.Status]; !ok {
+	if _, ok := allowedEventStatuses[status]; !ok {
 		details.Add("status", "must be one of: ingested, warning, error, muted")
 	}
 
@@ -207,21 +247,40 @@ func NormalizeEventSchemaPayload(payload *EventSchemaCreatePayload) {
 func ValidateEventSchemaCreatePayload(
 	payload EventSchemaCreatePayload,
 ) ValidationDetails {
+	return validateSchemaFields(payload.Name, payload.Version, payload.Fields)
+}
+
+func NormalizeEventSchemaUpdatePayload(payload *EventSchemaUpdatePayload) {
+	payload.Name = strings.TrimSpace(payload.Name)
+	payload.Version = strings.TrimSpace(payload.Version)
+}
+
+func ValidateEventSchemaUpdatePayload(
+	payload EventSchemaUpdatePayload,
+) ValidationDetails {
+	return validateSchemaFields(payload.Name, payload.Version, payload.Fields)
+}
+
+func validateSchemaFields(
+	name string,
+	version string,
+	fields []SchemaField,
+) ValidationDetails {
 	details := ValidationDetails{}
 
-	if payload.Name == "" {
+	if name == "" {
 		details.Add("name", "is required")
 	}
 
-	if payload.Version == "" {
+	if version == "" {
 		details.Add("version", "is required")
 	}
 
-	if len(payload.Fields) == 0 {
+	if len(fields) == 0 {
 		details.Add("fields", "must contain at least one field")
 	}
 
-	for index, field := range payload.Fields {
+	for index, field := range fields {
 		if strings.TrimSpace(field.Key) == "" {
 			details.Add("fields", "field key is required at index "+strconv.Itoa(index))
 		}

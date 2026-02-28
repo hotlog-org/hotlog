@@ -17,25 +17,48 @@ import (
 var (
 	ErrSchemaNotFound     = errors.New("event schema not found")
 	ErrSchemaAlreadyExist = errors.New("event schema already exists")
+	ErrSchemaForbidden    = errors.New("event schema forbidden")
+	ErrEventNotFound      = errors.New("event not found")
+	ErrEventForbidden     = errors.New("event forbidden")
 )
 
 type Repository interface {
 	ListEventSchemas(ctx context.Context, userID string) ([]EventSchema, error)
+	GetEventSchemaByID(
+		ctx context.Context,
+		userID string,
+		schemaID string,
+	) (EventSchema, error)
 	ListEventsForUser(
 		ctx context.Context,
 		userID string,
 		query EventListQuery,
 	) (EventListResult, error)
+	GetEventByID(ctx context.Context, userID string, eventID string) (EventRecord, error)
 	CreateEventSchema(
 		ctx context.Context,
 		userID string,
 		payload EventSchemaCreatePayload,
 	) (EventSchema, error)
+	UpdateEventSchema(
+		ctx context.Context,
+		userID string,
+		schemaID string,
+		payload EventSchemaUpdatePayload,
+	) (EventSchema, error)
+	DeleteEventSchema(ctx context.Context, userID string, schemaID string) error
 	CreateEventRecord(
 		ctx context.Context,
 		userID string,
 		payload EventCreatePayload,
 	) (EventRecord, error)
+	UpdateEventRecord(
+		ctx context.Context,
+		userID string,
+		eventID string,
+		payload EventUpdatePayload,
+	) (EventRecord, error)
+	DeleteEventRecord(ctx context.Context, userID string, eventID string) error
 }
 
 type PostgresRepository struct {
@@ -97,6 +120,36 @@ func (repo *PostgresRepository) ListEventSchemas(
 	}
 
 	return items, nil
+}
+
+func (repo *PostgresRepository) GetEventSchemaByID(
+	ctx context.Context,
+	userID string,
+	schemaID string,
+) (EventSchema, error) {
+	var ownerID string
+	var row eventSchemaRow
+	err := repo.pool.QueryRow(
+		ctx,
+		`SELECT user_id, id, name, version, fields
+		 FROM event_schemas
+		 WHERE id = $1`,
+		schemaID,
+	).Scan(&ownerID, &row.ID, &row.Name, &row.Version, &row.Fields)
+
+	if errors.Is(err, pgx.ErrNoRows) {
+		return EventSchema{}, ErrSchemaNotFound
+	}
+
+	if err != nil {
+		return EventSchema{}, err
+	}
+
+	if ownerID != userID {
+		return EventSchema{}, ErrSchemaForbidden
+	}
+
+	return mapSchemaRow(row), nil
 }
 
 func (repo *PostgresRepository) ListEventsForUser(
@@ -165,6 +218,45 @@ func (repo *PostgresRepository) ListEventsForUser(
 		Items: items,
 		Total: total,
 	}, nil
+}
+
+func (repo *PostgresRepository) GetEventByID(
+	ctx context.Context,
+	userID string,
+	eventID string,
+) (EventRecord, error) {
+	var ownerID string
+	var row eventRecordRow
+	err := repo.pool.QueryRow(
+		ctx,
+		`SELECT user_id, id, schema_id, title, source, status, payload, created_at
+		 FROM events
+		 WHERE id = $1`,
+		eventID,
+	).Scan(
+		&ownerID,
+		&row.ID,
+		&row.SchemaID,
+		&row.Title,
+		&row.Source,
+		&row.Status,
+		&row.Payload,
+		&row.CreatedAt,
+	)
+
+	if errors.Is(err, pgx.ErrNoRows) {
+		return EventRecord{}, ErrEventNotFound
+	}
+
+	if err != nil {
+		return EventRecord{}, err
+	}
+
+	if ownerID != userID {
+		return EventRecord{}, ErrEventForbidden
+	}
+
+	return mapEventRow(row), nil
 }
 
 func (repo *PostgresRepository) CreateEventSchema(
@@ -266,6 +358,223 @@ func (repo *PostgresRepository) CreateEventRecord(
 	}
 
 	return mapEventRow(row), nil
+}
+
+func (repo *PostgresRepository) UpdateEventRecord(
+	ctx context.Context,
+	userID string,
+	eventID string,
+	payload EventUpdatePayload,
+) (EventRecord, error) {
+	ownerID, err := repo.getEventOwner(ctx, eventID)
+	if err != nil {
+		return EventRecord{}, err
+	}
+
+	if ownerID != userID {
+		return EventRecord{}, ErrEventForbidden
+	}
+
+	if err := repo.ensureSchemaOwnedByUser(ctx, userID, payload.SchemaID); err != nil {
+		return EventRecord{}, err
+	}
+
+	payloadJSON, err := json.Marshal(payload.Payload)
+	if err != nil {
+		return EventRecord{}, err
+	}
+
+	var row eventRecordRow
+	err = repo.pool.QueryRow(
+		ctx,
+		`UPDATE events
+		 SET schema_id = $1,
+		     title = $2,
+		     source = $3,
+		     status = $4,
+		     payload = $5
+		 WHERE id = $6
+		 RETURNING id, schema_id, title, source, status, payload, created_at`,
+		payload.SchemaID,
+		payload.Title,
+		payload.Source,
+		payload.Status,
+		payloadJSON,
+		eventID,
+	).Scan(
+		&row.ID,
+		&row.SchemaID,
+		&row.Title,
+		&row.Source,
+		&row.Status,
+		&row.Payload,
+		&row.CreatedAt,
+	)
+	if err != nil {
+		return EventRecord{}, err
+	}
+
+	return mapEventRow(row), nil
+}
+
+func (repo *PostgresRepository) DeleteEventRecord(
+	ctx context.Context,
+	userID string,
+	eventID string,
+) error {
+	ownerID, err := repo.getEventOwner(ctx, eventID)
+	if err != nil {
+		return err
+	}
+
+	if ownerID != userID {
+		return ErrEventForbidden
+	}
+
+	_, err = repo.pool.Exec(ctx, `DELETE FROM events WHERE id = $1`, eventID)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (repo *PostgresRepository) UpdateEventSchema(
+	ctx context.Context,
+	userID string,
+	schemaID string,
+	payload EventSchemaUpdatePayload,
+) (EventSchema, error) {
+	var ownerID string
+	err := repo.pool.QueryRow(
+		ctx,
+		`SELECT user_id FROM event_schemas WHERE id = $1`,
+		schemaID,
+	).Scan(&ownerID)
+
+	if errors.Is(err, pgx.ErrNoRows) {
+		return EventSchema{}, ErrSchemaNotFound
+	}
+
+	if err != nil {
+		return EventSchema{}, err
+	}
+
+	if ownerID != userID {
+		return EventSchema{}, ErrSchemaForbidden
+	}
+
+	fields, err := json.Marshal(payload.Fields)
+	if err != nil {
+		return EventSchema{}, err
+	}
+
+	var row eventSchemaRow
+	err = repo.pool.QueryRow(
+		ctx,
+		`UPDATE event_schemas
+		 SET name = $1,
+		     version = $2,
+		     fields = $3,
+		     updated_at = CURRENT_TIMESTAMP
+		 WHERE id = $4
+		 RETURNING id, name, version, fields`,
+		payload.Name,
+		payload.Version,
+		fields,
+		schemaID,
+	).Scan(&row.ID, &row.Name, &row.Version, &row.Fields)
+	if err != nil {
+		return EventSchema{}, err
+	}
+
+	return mapSchemaRow(row), nil
+}
+
+func (repo *PostgresRepository) DeleteEventSchema(
+	ctx context.Context,
+	userID string,
+	schemaID string,
+) error {
+	commandTag, err := repo.pool.Exec(
+		ctx,
+		`DELETE FROM event_schemas WHERE id = $1 AND user_id = $2`,
+		schemaID,
+		userID,
+	)
+	if err != nil {
+		return err
+	}
+
+	if commandTag.RowsAffected() == 0 {
+		var existingID string
+		err := repo.pool.QueryRow(
+			ctx,
+			`SELECT id FROM event_schemas WHERE id = $1`,
+			schemaID,
+		).Scan(&existingID)
+
+		if errors.Is(err, pgx.ErrNoRows) {
+			return ErrSchemaNotFound
+		}
+
+		if err != nil {
+			return err
+		}
+
+		return ErrSchemaForbidden
+	}
+
+	return nil
+}
+
+func (repo *PostgresRepository) ensureSchemaOwnedByUser(
+	ctx context.Context,
+	userID string,
+	schemaID string,
+) error {
+	var ownerID string
+	err := repo.pool.QueryRow(
+		ctx,
+		`SELECT user_id FROM event_schemas WHERE id = $1`,
+		schemaID,
+	).Scan(&ownerID)
+
+	if errors.Is(err, pgx.ErrNoRows) {
+		return ErrSchemaNotFound
+	}
+
+	if err != nil {
+		return err
+	}
+
+	if ownerID != userID {
+		return ErrSchemaForbidden
+	}
+
+	return nil
+}
+
+func (repo *PostgresRepository) getEventOwner(
+	ctx context.Context,
+	eventID string,
+) (string, error) {
+	var ownerID string
+	err := repo.pool.QueryRow(
+		ctx,
+		`SELECT user_id FROM events WHERE id = $1`,
+		eventID,
+	).Scan(&ownerID)
+
+	if errors.Is(err, pgx.ErrNoRows) {
+		return "", ErrEventNotFound
+	}
+
+	if err != nil {
+		return "", err
+	}
+
+	return ownerID, nil
 }
 
 func buildEventListWhereClause(query EventListQuery, values *[]interface{}) string {
