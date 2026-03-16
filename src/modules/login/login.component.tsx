@@ -46,9 +46,9 @@ const LoginComponent = () => {
           <Form {...service.form}>
             <form
               onSubmit={service.form.handleSubmit(service.onSubmit)}
-              className='space-y-5'
+              className='space-y-4'
             >
-              <div className='space-y-4'>
+              <div className='grid grid-cols-2 gap-3'>
                 <FormField
                   control={service.form.control}
                   name='email'
@@ -86,31 +86,33 @@ const LoginComponent = () => {
                   )}
                 />
               </div>
-              {service.error && (
-                <div className='flex items-center gap-2 text-sm text-destructive'>
-                  <CircleX size={16} />
-                  <span>{service.error}</span>
+              <div className='space-y-2'>
+                {service.error && (
+                  <div className='flex items-center gap-2 text-sm text-destructive'>
+                    <CircleX size={16} />
+                    <span>{service.error}</span>
+                  </div>
+                )}
+                {service.success && (
+                  <div className='flex items-center gap-2 text-sm text-green-600'>
+                    <CircleCheck size={16} />
+                    <span>{service.t('messages.success')}</span>
+                  </div>
+                )}
+                <Button
+                  type='submit'
+                  className='w-full'
+                  disabled={service.isLoading}
+                >
+                  {service.isLoading
+                    ? service.t('actions.submitting')
+                    : service.t('actions.submit')}
+                </Button>
+                <div className='flex flex-col gap-2 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between'>
+                  <Link href='/forgot-password'>
+                    {service.t('links.forgotPassword')}
+                  </Link>
                 </div>
-              )}
-              {service.success && (
-                <div className='flex items-center gap-2 text-sm text-green-600'>
-                  <CircleCheck size={16} />
-                  <span>{service.t('messages.success')}</span>
-                </div>
-              )}
-              <Button
-                type='submit'
-                className='w-full'
-                disabled={service.isLoading}
-              >
-                {service.isLoading
-                  ? service.t('actions.submitting')
-                  : service.t('actions.submit')}
-              </Button>
-              <div className='flex flex-col gap-2 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between'>
-                <Link href='/forgot-password'>
-                  {service.t('links.forgotPassword')}
-                </Link>
               </div>
               <div className='grid gap-2 sm:grid-cols-3'>
                 {service.providers.map((provider) => (
