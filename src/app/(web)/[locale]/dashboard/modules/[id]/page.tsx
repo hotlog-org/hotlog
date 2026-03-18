@@ -1,7 +1,6 @@
 import { ERoutes } from '@/config/routes'
-import { auth } from '@/lib/better-auth/auth'
+import { createClient } from '@/lib/supabase/client'
 import { ModulesComponent } from '@/modules/modules'
-import { headers } from 'next/headers'
 import { redirect } from 'next/navigation'
 
 interface ModulesDetailPageProps {
@@ -11,11 +10,13 @@ interface ModulesDetailPageProps {
 export default async function ModulesDetailPage({
   params,
 }: ModulesDetailPageProps) {
-  const session = await auth.api.getSession({
-    headers: await headers(),
-  })
+  const supabase = createClient()
 
-  if (!session?.user) {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  if (!user) {
     redirect(ERoutes.SIGN_IN)
   }
 
@@ -23,4 +24,3 @@ export default async function ModulesDetailPage({
 
   return <ModulesComponent moduleId={id} />
 }
-
