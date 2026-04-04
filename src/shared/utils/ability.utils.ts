@@ -12,7 +12,6 @@ export const APP_SUBJECTS = [
   'events',
   'schemas',
   'fields',
-  'modules',
   'layouts',
   'components',
   'roles',

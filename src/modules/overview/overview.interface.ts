@@ -6,7 +6,7 @@ export type UserStatus = 'active' | 'pending'
 
 export type PermissionCategory =
   | 'events'
-  | 'modules'
+  | 'layouts'
   | 'api'
   | 'project'
   | 'schema'

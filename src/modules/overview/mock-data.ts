@@ -6,7 +6,7 @@ export const overviewApiKeyMock = baseKey
 
 const permissionColors: Record<PermissionCategory, string> = {
   events: 'border-yellow-500/40 bg-yellow-500/10 text-yellow-300',
-  modules: 'border-pink-500/40 bg-pink-500/10 text-pink-300',
+  layouts: 'border-pink-500/40 bg-pink-500/10 text-pink-300',
   api: 'border-emerald-500/40 bg-emerald-500/10 text-emerald-300',
   project: 'border-slate-500/40 bg-slate-500/10 text-slate-200',
   schema: 'border-purple-500/40 bg-purple-500/10 text-purple-300',
@@ -18,10 +18,10 @@ const permissionColors: Record<PermissionCategory, string> = {
 export const permissionsCatalog: OverviewPermission[] = [
   { id: 'events/read', category: 'events', label: 'read' },
   { id: 'events/export', category: 'events', label: 'export' },
-  { id: 'modules/read', category: 'modules', label: 'read' },
-  { id: 'modules/create', category: 'modules', label: 'create' },
-  { id: 'modules/delete', category: 'modules', label: 'delete' },
-  { id: 'modules/edit', category: 'modules', label: 'edit' },
+  { id: 'layouts/read', category: 'layouts', label: 'read' },
+  { id: 'layouts/create', category: 'layouts', label: 'create' },
+  { id: 'layouts/delete', category: 'layouts', label: 'delete' },
+  { id: 'layouts/edit', category: 'layouts', label: 'edit' },
   { id: 'api/create-key', category: 'api', label: 'create key' },
   { id: 'api/read-key', category: 'api', label: 'read key' },
   { id: 'project/create', category: 'project', label: 'create project' },
@@ -52,9 +52,9 @@ export const overviewRolesMock: OverviewRole[] = [
     permissionIds: [
       'events/read',
       'events/export',
-      'modules/read',
-      'modules/create',
-      'modules/edit',
+      'layouts/read',
+      'layouts/create',
+      'layouts/edit',
       'api/create-key',
       'api/read-key',
       'project/create',
@@ -73,8 +73,8 @@ export const overviewRolesMock: OverviewRole[] = [
     name: 'Developer',
     permissionIds: [
       'events/read',
-      'modules/read',
-      'modules/edit',
+      'layouts/read',
+      'layouts/edit',
       'api/read-key',
       'project/edit',
       'schema/read',
@@ -85,7 +85,7 @@ export const overviewRolesMock: OverviewRole[] = [
   {
     id: 'viewer',
     name: 'Viewer',
-    permissionIds: ['events/read', 'modules/read', 'schema/read', 'api/read-key'],
+    permissionIds: ['events/read', 'layouts/read', 'schema/read', 'api/read-key'],
   },
 ]
 
