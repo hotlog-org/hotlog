@@ -1,6 +1,6 @@
-import { queryOptions, useQuery } from '@tanstack/react-query'
+import { queryOptions, useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 
-import { userProjectsQueryApi } from './user-project.api'
+import { createProjectApi, userProjectsQueryApi } from './user-project.api'
 
 import { EUserProjectKey } from '../interface'
 
@@ -13,4 +13,17 @@ const userProjectsQueryOptions = () => {
 
 export const useUserProjectsQuery = () => {
   return useQuery(userProjectsQueryOptions())
+}
+
+export const useCreateProjectMutation = () => {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (name: string) => createProjectApi(name),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: [EUserProjectKey.USER_PROJECTS_QUERY],
+      })
+    },
+  })
 }

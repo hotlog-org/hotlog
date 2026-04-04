@@ -3,13 +3,18 @@
 import { useTranslations } from 'next-intl'
 import { useEffect, useMemo, useState } from 'react'
 
-import { useUserProjectsQuery } from '@/shared/api'
+import {
+  useCreateProjectMutation,
+  useUserPermissions,
+  useUserProjectsQuery,
+} from '@/shared/api'
 import type { IUserProjectDto } from '@/shared/api/interface'
 import { useDashboardProject } from '@/shared/store/dashboard-project.store'
 
 export const useDashboardSidebarHeaderService = () => {
   const t = useTranslations('modules.dashboard.sidebar.projects')
   const { data } = useUserProjectsQuery()
+  const createProjectMutation = useCreateProjectMutation()
   const selectedProjectId = useDashboardProject(
     (state) => state.selectedProjectId,
   )
@@ -18,6 +23,7 @@ export const useDashboardSidebarHeaderService = () => {
   )
   const [projects, setProjects] = useState<IUserProjectDto[]>([])
   const [createDialogOpen, setCreateDialogOpen] = useState(false)
+  const { can } = useUserPermissions(selectedProjectId)
 
   useEffect(() => {
     setProjects(data?.data ?? [])
@@ -44,17 +50,14 @@ export const useDashboardSidebarHeaderService = () => {
   )
 
   const handleCreateProject = (name: string) => {
-    const nextProject: IUserProjectDto = {
-      id: crypto.randomUUID(),
-      name,
-      createdAt: new Date().toISOString(),
-      isCreator: true,
-    }
-
-    setProjects((prev) => [...prev, nextProject])
-    handleDashboardProject({ selectedProjectId: nextProject.id })
-
-    return nextProject
+    createProjectMutation.mutate(name, {
+      onSuccess: (response) => {
+        const created = response.data[0]
+        if (created) {
+          handleDashboardProject({ selectedProjectId: created.id })
+        }
+      },
+    })
   }
 
   const setSelectedProject = (project: IUserProjectDto) => {
@@ -65,6 +68,8 @@ export const useDashboardSidebarHeaderService = () => {
     t,
     projects,
     selectedProject,
+    canCreateProject: can,
+    selectedProjectId,
     setSelectedProject,
     createDialogOpen,
     setCreateDialogOpen,

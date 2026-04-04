@@ -60,3 +60,16 @@ export const buildAbility = (
 
   return build()
 }
+
+export const hasAbilityPermission = (
+  ability: AppAbility,
+  permission: string,
+): boolean => {
+  const parsedPermission = parsePermissionString(permission)
+
+  if (!parsedPermission) {
+    return false
+  }
+
+  return ability.can(...parsedPermission)
+}

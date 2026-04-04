@@ -16,3 +16,16 @@ export const userProjectsQueryApi = async (
 
   return response.json()
 }
+
+export const createProjectApi = async (
+  name: string,
+): Promise<IUserProjectsResponse> => {
+  const response = await restApiFetcher.post<IUserProjectsResponse>(
+    EUserProjectApi.USER_PROJECTS_API,
+    {
+      json: { name },
+    },
+  )
+
+  return response.json()
+}

@@ -104,15 +104,17 @@ const DashboardSidebarHeaderComponent = () => {
                 </DropdownMenuItem>
               ))}
 
-              <DropdownMenuItem
-                className='gap-2 cursor-pointer text-muted-foreground'
-                onClick={() => service.setCreateDialogOpen(true)}
-              >
-                <div className='flex size-6 items-center justify-center rounded-sm'>
-                  <HugeiconsIcon icon={PlusSignIcon} className='size-4' />
-                </div>
-                <span>{service.t('create')}</span>
-              </DropdownMenuItem>
+              {service.canCreateProject('create:all') && (
+                <DropdownMenuItem
+                  className='gap-2 cursor-pointer text-muted-foreground'
+                  onClick={() => service.setCreateDialogOpen(true)}
+                >
+                  <div className='flex size-6 items-center justify-center rounded-sm'>
+                    <HugeiconsIcon icon={PlusSignIcon} className='size-4' />
+                  </div>
+                  <span>{service.t('create')}</span>
+                </DropdownMenuItem>
+              )}
             </DropdownMenuContent>
           </DropdownMenu>
         </SidebarMenuItem>
