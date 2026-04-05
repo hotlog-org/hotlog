@@ -104,7 +104,7 @@ export function AddRoleModal(props: AddRoleModalProps) {
                 placeholder={props.t('roles.modal.searchPermissions')}
               />
             </FieldControl>
-            <ScrollArea className='max-h-64 rounded-lg border border-border/60 bg-muted/5'>
+            <ScrollArea className='h-64 rounded-lg border border-border/60 bg-muted/5'>
               <div className='divide-y divide-border/60'>
                 {service.filteredPermissions.map((permission) => {
                   const active = service.permissionIds.includes(permission.id)
