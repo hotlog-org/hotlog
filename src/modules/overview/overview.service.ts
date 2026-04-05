@@ -6,6 +6,10 @@ import { useTranslations } from 'next-intl'
 import { useDashboardProject } from '@/shared/store/dashboard-project.store'
 import { useUserPermissions } from '@/shared/api/user-permission'
 import {
+  useDeleteProjectMutation,
+  useUserProjectsQuery,
+} from '@/shared/api/user-project'
+import {
   useProjectRolesQuery,
   useCreateRoleMutation,
   useDeleteRoleMutation,
@@ -74,8 +78,15 @@ export interface OverviewService {
   canCreateRoles: boolean
   canUpdateRoles: boolean
   canDeleteRoles: boolean
+  canDeleteProject: boolean
   isLoading: boolean
   hasNoProject: boolean
+  projectName: string
+  deleteProjectModalOpen: boolean
+  openDeleteProjectModal: () => void
+  closeDeleteProjectModal: () => void
+  deleteProject: () => void
+  isDeletingProject: boolean
 }
 
 const useOverviewService = (): OverviewService => {
@@ -92,6 +103,7 @@ const useOverviewService = (): OverviewService => {
   const canCreateRoles = can('create:roles')
   const canUpdateRoles = can('update:roles')
   const canDeleteRoles = can('delete:roles')
+  const canDeleteProject = can('delete:projects')
 
   // Data queries
   const rolesQuery = useProjectRolesQuery(
@@ -110,6 +122,19 @@ const useOverviewService = (): OverviewService => {
   const removeRolePermissionMutation =
     useRemoveRolePermissionMutation(selectedProjectId)
   const removeMemberMutation = useRemoveMemberMutation(selectedProjectId)
+  const deleteProjectMutation = useDeleteProjectMutation()
+
+  const projectsQuery = useUserProjectsQuery()
+  const projectName = useMemo(() => {
+    const project = projectsQuery.data?.data.find(
+      (p) => p.id === selectedProjectId,
+    )
+    return project?.name ?? ''
+  }, [projectsQuery.data, selectedProjectId])
+
+  const handleDashboardProject = useDashboardProject(
+    (s) => s.handleDashboardProject,
+  )
 
   const [tab, setTab] = useState<OverviewTab>('users')
   const [apiKey, setApiKey] = useState(overviewApiKeyMock)
@@ -117,6 +142,7 @@ const useOverviewService = (): OverviewService => {
   const [roleSearch, setRoleSearch] = useState('')
   const [inviteModalOpen, setInviteModalOpen] = useState(false)
   const [addRoleModalOpen, setAddRoleModalOpen] = useState(false)
+  const [deleteProjectModalOpen, setDeleteProjectModalOpen] = useState(false)
 
   const apiRequests = useMemo(() => buildApiRequestsSeries(), [])
 
@@ -274,6 +300,16 @@ const useOverviewService = (): OverviewService => {
     [removeRolePermissionMutation],
   )
 
+  const deleteProject = useCallback(() => {
+    if (!selectedProjectId) return
+    deleteProjectMutation.mutate(selectedProjectId, {
+      onSuccess: () => {
+        setDeleteProjectModalOpen(false)
+        handleDashboardProject({ selectedProjectId: undefined })
+      },
+    })
+  }, [deleteProjectMutation, handleDashboardProject, selectedProjectId])
+
   return {
     t,
     tab,
@@ -313,8 +349,15 @@ const useOverviewService = (): OverviewService => {
     canCreateRoles,
     canUpdateRoles,
     canDeleteRoles,
+    canDeleteProject,
     isLoading,
     hasNoProject: !selectedProjectId,
+    projectName,
+    deleteProjectModalOpen,
+    openDeleteProjectModal: () => setDeleteProjectModalOpen(true),
+    closeDeleteProjectModal: () => setDeleteProjectModalOpen(false),
+    deleteProject,
+    isDeletingProject: deleteProjectMutation.isPending,
   }
 }
 

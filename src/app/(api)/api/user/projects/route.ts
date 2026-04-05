@@ -172,3 +172,42 @@ export async function POST(request: NextRequest) {
     { status: 201 },
   )
 }
+
+export async function DELETE(request: NextRequest) {
+  const { searchParams } = new URL(request.url)
+  const projectId = searchParams.get('project_id')
+
+  if (!projectId) {
+    return NextResponse.json<IApiErrorResponse>(
+      { error: { message: 'project_id is required' } },
+      { status: 400 },
+    )
+  }
+
+  const supabase = await createClient()
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser()
+
+  if (userError || !user) {
+    return NextResponse.json<IApiErrorResponse>(
+      { error: { message: 'Unauthorized' } },
+      { status: 401 },
+    )
+  }
+
+  const { error } = await supabase
+    .from('projects')
+    .delete()
+    .eq('id', projectId)
+
+  if (error) {
+    return NextResponse.json<IApiErrorResponse>(
+      { error: { message: error.message } },
+      { status: 500 },
+    )
+  }
+
+  return NextResponse.json({ data: { id: projectId } })
+}

@@ -227,7 +227,10 @@ CREATE POLICY "projects_delete_creator"
   ON public.projects
   FOR DELETE
   TO authenticated
-  USING (creator_id = auth.uid());
+  USING (
+    creator_id = auth.uid()
+    OR has_permission(id, 'delete', 'projects')
+  );
 
 
 -- =============================================================

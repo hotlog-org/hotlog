@@ -29,3 +29,9 @@ export const createProjectApi = async (
 
   return response.json()
 }
+
+export const deleteProjectApi = async (projectId: string): Promise<void> => {
+  await restApiFetcher.delete(EUserProjectApi.USER_PROJECTS_API, {
+    searchParams: { project_id: projectId },
+  })
+}

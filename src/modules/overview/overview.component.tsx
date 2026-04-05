@@ -7,7 +7,9 @@ import useOverviewService from './overview.service'
 
 import { ApiRequestsGraph } from './fields/graph/api-requests-graph.component'
 import { ApiKeyCard } from './fields/key/api-key-card.component'
+import { DangerZone } from './fields/danger-zone/danger-zone.component'
 import { AddRoleModal } from './fields/modals/add-role/add-role.modal'
+import { DeleteProjectModal } from './fields/modals/delete-project/delete-project.modal'
 import { InviteMemberModal } from './fields/modals/invite-member/invite-member.modal'
 import { RolesAction } from './fields/tables/roles/action/roles-action.component'
 import { RolesSearch } from './fields/tables/roles/search/roles-search.component'
@@ -189,6 +191,22 @@ export function OverviewComponent() {
           />
         </CardHeader>
       </Card>
+
+      {service.canDeleteProject && (
+        <DangerZone
+          projectName={service.projectName}
+          onDelete={service.openDeleteProjectModal}
+        />
+      )}
+
+      <DeleteProjectModal
+        open={service.deleteProjectModalOpen}
+        onClose={service.closeDeleteProjectModal}
+        onSubmit={service.deleteProject}
+        projectName={service.projectName}
+        isDeleting={service.isDeletingProject}
+        t={service.t}
+      />
     </div>
   )
 }
