@@ -1,5 +1,8 @@
 'use client'
 
+import { Folder02Icon, Loading03Icon } from '@hugeicons/core-free-icons'
+import { HugeiconsIcon } from '@hugeicons/react'
+
 import useOverviewService from './overview.service'
 
 import { ApiRequestsGraph } from './fields/graph/api-requests-graph.component'
@@ -15,8 +18,55 @@ import { UsersTable } from './fields/tables/users/table/users-table.component'
 import { Button } from '@/shared/ui/button'
 import { Card, CardHeader } from '@/shared/ui/card'
 
+function NoPermission({ message }: { message: string }) {
+  return (
+    <div className='flex items-center justify-center rounded-lg border border-dashed border-border/60 bg-muted/5 py-12'>
+      <p className='text-sm text-muted-foreground'>{message}</p>
+    </div>
+  )
+}
+
+function LoadingSpinner() {
+  return (
+    <div className='flex items-center justify-center py-12'>
+      <HugeiconsIcon
+        icon={Loading03Icon}
+        className='size-6 animate-spin text-muted-foreground'
+      />
+    </div>
+  )
+}
+
+function EmptyProject() {
+  return (
+    <div className='flex flex-1 items-center justify-center'>
+      <div className='flex flex-col items-center gap-4 text-center'>
+        <div className='flex size-16 items-center justify-center rounded-full border border-dashed border-border/60 bg-muted/10'>
+          <HugeiconsIcon
+            icon={Folder02Icon}
+            className='size-7 text-muted-foreground'
+          />
+        </div>
+        <div className='space-y-1'>
+          <p className='text-sm font-medium text-foreground'>No project selected</p>
+          <p className='text-sm text-muted-foreground'>
+            Create a project from the sidebar to get started.
+          </p>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export function OverviewComponent() {
   const service = useOverviewService()
+
+  if (service.hasNoProject) {
+    return <EmptyProject />
+  }
+
+  const canViewUsersTab = service.canReadUsers
+  const canViewRolesTab = service.canReadRoles
 
   return (
     <div className='flex min-h-0 flex-1 flex-col gap-4'>
@@ -50,24 +100,29 @@ export function OverviewComponent() {
               </div>
 
               <div className='flex flex-wrap items-center gap-2'>
-                {service.tab === 'users' ? (
+                {service.tab === 'users' && canViewUsersTab && !service.isLoading && (
                   <>
-                    <UsersAction
-                      onInvite={service.openInviteModal}
-                      t={service.t}
-                    />
+                    {service.canCreateUsers && (
+                      <UsersAction
+                        onInvite={service.openInviteModal}
+                        t={service.t}
+                      />
+                    )}
                     <UsersSearch
                       value={service.userSearch}
                       onChange={service.setUserSearch}
                       t={service.t}
                     />
                   </>
-                ) : (
+                )}
+                {service.tab === 'roles' && canViewRolesTab && !service.isLoading && (
                   <>
-                    <RolesAction
-                      onAdd={service.openAddRoleModal}
-                      t={service.t}
-                    />
+                    {service.canCreateRoles && (
+                      <RolesAction
+                        onAdd={service.openAddRoleModal}
+                        t={service.t}
+                      />
+                    )}
                     <RolesSearch
                       value={service.roleSearch}
                       onChange={service.setRoleSearch}
@@ -79,16 +134,24 @@ export function OverviewComponent() {
             </div>
 
             {service.tab === 'users' ? (
-              <UsersTable
-                rows={service.filteredUsers}
-                roles={service.roles}
-                roleOptions={service.roleOptions}
-                onChangeRole={service.updateUserRole}
-                onRemove={service.removeUser}
-                onRevoke={service.revokeInvite}
-                t={service.t}
-              />
-            ) : (
+              service.isLoading ? (
+                <LoadingSpinner />
+              ) : canViewUsersTab ? (
+                <UsersTable
+                  rows={service.filteredUsers}
+                  roles={service.roles}
+                  roleOptions={service.roleOptions}
+                  onChangeRole={service.updateUserRole}
+                  onRemove={service.removeUser}
+                  onRevoke={service.revokeInvite}
+                  t={service.t}
+                />
+              ) : (
+                <NoPermission message="You don't have enough permissions :(" />
+              )
+            ) : service.isLoading ? (
+              <LoadingSpinner />
+            ) : canViewRolesTab ? (
               <RolesTable
                 rows={service.filteredRoles}
                 permissions={service.permissions}
@@ -98,6 +161,8 @@ export function OverviewComponent() {
                 onDelete={service.deleteRole}
                 t={service.t}
               />
+            ) : (
+              <NoPermission message="You don't have enough permissions :(" />
             )}
           </div>
 

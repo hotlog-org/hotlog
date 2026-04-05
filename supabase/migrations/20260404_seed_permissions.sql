@@ -1,13 +1,22 @@
 -- =============================================================
 -- Seed permissions table with all action:subject combinations
 -- =============================================================
--- Inserts 44 permissions (4 actions x 11 subjects).
+-- Inserts 43 permissions. Project creation is open to all authenticated
+-- users, so create:projects is intentionally excluded.
 -- Uses ON CONFLICT DO NOTHING to be idempotent — safe to re-run.
 -- =============================================================
 
 -- Ensure uniqueness on (action, subject) for idempotent seeding
-ALTER TABLE public.permissions
-  ADD CONSTRAINT permissions_action_subject_unique UNIQUE (action, subject);
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint
+    WHERE conname = 'permissions_action_subject_unique'
+  ) THEN
+    ALTER TABLE public.permissions
+      ADD CONSTRAINT permissions_action_subject_unique UNIQUE (action, subject);
+  END IF;
+END $$;
 
 INSERT INTO public.permissions (action, subject) VALUES
   -- all (wildcard)
@@ -15,8 +24,7 @@ INSERT INTO public.permissions (action, subject) VALUES
   ('read', 'all'),
   ('update', 'all'),
   ('delete', 'all'),
-  -- projects
-  ('create', 'projects'),
+  -- projects (create:projects intentionally omitted - open to all)
   ('read', 'projects'),
   ('update', 'projects'),
   ('delete', 'projects'),
@@ -66,3 +74,7 @@ INSERT INTO public.permissions (action, subject) VALUES
   ('update', 'api_keys'),
   ('delete', 'api_keys')
 ON CONFLICT (action, subject) DO NOTHING;
+
+-- Remove create:projects if it exists (project creation is open to all)
+DELETE FROM public.permissions
+  WHERE action = 'create' AND subject = 'projects';

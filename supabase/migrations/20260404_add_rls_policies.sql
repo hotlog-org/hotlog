@@ -3,7 +3,67 @@
 -- =============================================================
 -- Enables Row-Level Security on all 12 public tables with
 -- project-scoped access control and RBAC permission enforcement.
+-- Idempotent — safe to re-run.
 -- =============================================================
+
+
+-- =============================================================
+-- Drop existing policies (idempotent re-run support)
+-- =============================================================
+
+DROP POLICY IF EXISTS "projects_select_member" ON public.projects;
+DROP POLICY IF EXISTS "projects_insert_authenticated" ON public.projects;
+DROP POLICY IF EXISTS "projects_update_creator" ON public.projects;
+DROP POLICY IF EXISTS "projects_delete_creator" ON public.projects;
+
+DROP POLICY IF EXISTS "user_projects_select_own" ON public.user_projects;
+DROP POLICY IF EXISTS "user_projects_insert_self_as_creator" ON public.user_projects;
+DROP POLICY IF EXISTS "user_projects_delete" ON public.user_projects;
+
+DROP POLICY IF EXISTS "roles_select_member" ON public.roles;
+DROP POLICY IF EXISTS "roles_insert" ON public.roles;
+DROP POLICY IF EXISTS "roles_update" ON public.roles;
+DROP POLICY IF EXISTS "roles_delete" ON public.roles;
+
+DROP POLICY IF EXISTS "user_roles_select_own" ON public.user_roles;
+DROP POLICY IF EXISTS "user_roles_insert" ON public.user_roles;
+DROP POLICY IF EXISTS "user_roles_delete" ON public.user_roles;
+
+DROP POLICY IF EXISTS "permissions_select_authenticated" ON public.permissions;
+
+DROP POLICY IF EXISTS "role_permissions_select_member" ON public.role_permissions;
+DROP POLICY IF EXISTS "role_permissions_insert" ON public.role_permissions;
+DROP POLICY IF EXISTS "role_permissions_delete" ON public.role_permissions;
+
+DROP POLICY IF EXISTS "schemas_select_member" ON public.schemas;
+DROP POLICY IF EXISTS "schemas_insert" ON public.schemas;
+DROP POLICY IF EXISTS "schemas_update" ON public.schemas;
+DROP POLICY IF EXISTS "schemas_delete" ON public.schemas;
+
+DROP POLICY IF EXISTS "fields_select_member" ON public.fields;
+DROP POLICY IF EXISTS "fields_insert" ON public.fields;
+DROP POLICY IF EXISTS "fields_update" ON public.fields;
+DROP POLICY IF EXISTS "fields_delete" ON public.fields;
+
+DROP POLICY IF EXISTS "events_select_member" ON public.events;
+DROP POLICY IF EXISTS "events_insert" ON public.events;
+DROP POLICY IF EXISTS "events_update" ON public.events;
+DROP POLICY IF EXISTS "events_delete" ON public.events;
+
+DROP POLICY IF EXISTS "layouts_select_member" ON public.layouts;
+DROP POLICY IF EXISTS "layouts_insert" ON public.layouts;
+DROP POLICY IF EXISTS "layouts_update" ON public.layouts;
+DROP POLICY IF EXISTS "layouts_delete" ON public.layouts;
+
+DROP POLICY IF EXISTS "components_select_member" ON public.components;
+DROP POLICY IF EXISTS "components_insert" ON public.components;
+DROP POLICY IF EXISTS "components_update" ON public.components;
+DROP POLICY IF EXISTS "components_delete" ON public.components;
+
+DROP POLICY IF EXISTS "api_keys_select" ON public.api_keys;
+DROP POLICY IF EXISTS "api_keys_insert" ON public.api_keys;
+DROP POLICY IF EXISTS "api_keys_update" ON public.api_keys;
+DROP POLICY IF EXISTS "api_keys_delete" ON public.api_keys;
 
 
 -- =============================================================
@@ -113,6 +173,29 @@ ALTER TABLE public.api_keys ENABLE ROW LEVEL SECURITY;
 
 
 -- =============================================================
+-- Grant table privileges to the authenticated role.
+-- RLS is the security boundary, but PostgREST still requires
+-- table-level GRANTs for authenticated users to reach them.
+-- =============================================================
+
+GRANT ALL ON public.projects TO authenticated;
+GRANT ALL ON public.user_projects TO authenticated;
+GRANT ALL ON public.roles TO authenticated;
+GRANT ALL ON public.user_roles TO authenticated;
+GRANT SELECT ON public.permissions TO authenticated;
+GRANT ALL ON public.role_permissions TO authenticated;
+GRANT ALL ON public.schemas TO authenticated;
+GRANT ALL ON public.fields TO authenticated;
+GRANT ALL ON public.events TO authenticated;
+GRANT ALL ON public.layouts TO authenticated;
+GRANT ALL ON public.components TO authenticated;
+GRANT ALL ON public.api_keys TO authenticated;
+
+-- Also grant usage on sequences (for int8 PK tables)
+GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO authenticated;
+
+
+-- =============================================================
 -- SECTION C: projects
 -- =============================================================
 
@@ -122,6 +205,7 @@ CREATE POLICY "projects_select_member"
   TO authenticated
   USING (
     is_project_member(id)
+    OR creator_id = auth.uid()
   );
 
 CREATE POLICY "projects_insert_authenticated"

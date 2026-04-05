@@ -5,7 +5,6 @@ import { useEffect, useMemo, useState } from 'react'
 
 import {
   useCreateProjectMutation,
-  useUserPermissions,
   useUserProjectsQuery,
 } from '@/shared/api'
 import type { IUserProjectDto } from '@/shared/api/interface'
@@ -23,7 +22,6 @@ export const useDashboardSidebarHeaderService = () => {
   )
   const [projects, setProjects] = useState<IUserProjectDto[]>([])
   const [createDialogOpen, setCreateDialogOpen] = useState(false)
-  const { can } = useUserPermissions(selectedProjectId)
 
   useEffect(() => {
     setProjects(data?.data ?? [])
@@ -68,7 +66,6 @@ export const useDashboardSidebarHeaderService = () => {
     t,
     projects,
     selectedProject,
-    canCreateProject: can,
     selectedProjectId,
     setSelectedProject,
     createDialogOpen,

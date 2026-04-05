@@ -1,3 +1,6 @@
 export * from './common.interface'
 export * from './user-project.interface'
 export * from './user-permission.interface'
+export * from './project-role.interface'
+export * from './project-member.interface'
+export * from './project-permission.interface'
