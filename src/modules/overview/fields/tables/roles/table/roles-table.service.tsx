@@ -183,8 +183,6 @@ export const useRolesTableService = ({
                 </PopoverTrigger>
                 <PopoverContent
                   className='w-80 space-y-2 border-border/80 bg-card p-3'
-                  onFocusOutside={(event) => event.preventDefault()}
-                  onPointerDownOutside={(event) => event.preventDefault()}
                 >
                   <Input
                     ref={searchInputRef}
