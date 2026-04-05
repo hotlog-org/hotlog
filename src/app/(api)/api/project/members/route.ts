@@ -68,11 +68,30 @@ export async function GET(request: NextRequest) {
     return acc
   }, {})
 
+  // Fetch emails for these members via SECURITY DEFINER function
+  const { data: emailRows, error: emailError } = await supabase.rpc(
+    'get_project_member_emails' as never,
+    { p_project_id: projectId } as never,
+  )
+
+  if (emailError) {
+    return NextResponse.json<IApiErrorResponse>(
+      { error: { message: emailError.message } },
+      { status: 500 },
+    )
+  }
+
+  const emailByUser = ((emailRows ?? []) as { user_id: string; email: string }[])
+    .reduce<Record<string, string>>((acc, row) => {
+      acc[row.user_id] = row.email
+      return acc
+    }, {})
+
   const members = memberships.map((row) => {
     const project = row.projects as unknown as { creator_id: string }
     return {
       id: row.user_id,
-      email: row.user_id,
+      email: emailByUser[row.user_id] ?? row.user_id,
       roleId: rolesByUser[row.user_id]?.roleId ?? null,
       roleName: rolesByUser[row.user_id]?.roleName ?? null,
       isCreator: project.creator_id === row.user_id,

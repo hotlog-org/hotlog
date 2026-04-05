@@ -153,6 +153,31 @@ AS $$
   );
 $$;
 
+-- A6: Get emails of members of a project the current user belongs to.
+-- Uses SECURITY DEFINER to read auth.users, but only returns rows for
+-- projects the caller is already a member of (enforces project scoping).
+CREATE OR REPLACE FUNCTION public.get_project_member_emails(p_project_id uuid)
+RETURNS TABLE (user_id uuid, email text)
+LANGUAGE plpgsql
+STABLE
+SECURITY DEFINER
+SET search_path = public
+AS $$
+BEGIN
+  IF NOT is_project_member(p_project_id) THEN
+    RETURN;
+  END IF;
+
+  RETURN QUERY
+  SELECT u.id, u.email::text
+  FROM auth.users u
+  JOIN public.user_projects up ON up.user_id = u.id
+  WHERE up.project_id = p_project_id;
+END;
+$$;
+
+GRANT EXECUTE ON FUNCTION public.get_project_member_emails(uuid) TO authenticated;
+
 
 -- =============================================================
 -- SECTION B: Enable RLS on All Tables
