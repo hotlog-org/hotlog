@@ -76,6 +76,10 @@ export function OverviewComponent() {
 
       <ApiKeyCard
         keyValue={service.apiKey}
+        loading={service.apiKeyLoading}
+        canRead={service.canReadApiKey}
+        canCreate={service.canCreateApiKey}
+        isRegenerating={service.isRegeneratingApiKey}
         onRegenerate={service.regenerateApiKey}
         t={service.t}
       />

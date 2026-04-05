@@ -22,10 +22,14 @@ import {
   useRemoveMemberMutation,
 } from '@/shared/api/project-member'
 import { useProjectPermissionsQuery } from '@/shared/api/project-permission'
+import {
+  useCreateApiKeyMutation,
+  useDeleteApiKeyMutation,
+  useProjectApiKeysQuery,
+} from '@/shared/api/project-api-key'
 
 import {
   buildApiRequestsSeries,
-  overviewApiKeyMock,
   permissionCategoryStyles,
 } from './mock-data'
 import type {
@@ -45,8 +49,13 @@ export interface OverviewService {
   tab: OverviewTab
   setTab: (tab: OverviewTab) => void
   apiRequests: ApiRequestSeriesPoint[]
-  apiKey: string
-  regenerateApiKey: () => string
+  apiKey: string | null
+  apiKeyLoading: boolean
+  canReadApiKey: boolean
+  canCreateApiKey: boolean
+  canDeleteApiKey: boolean
+  regenerateApiKey: () => void
+  isRegeneratingApiKey: boolean
   users: OverviewUser[]
   filteredUsers: OverviewUser[]
   roles: OverviewRole[]
@@ -108,6 +117,9 @@ const useOverviewService = (): OverviewService => {
   const canUpdateRoles = can('update:roles')
   const canDeleteRoles = can('delete:roles')
   const canDeleteProject = can('delete:projects')
+  const canReadApiKey = can('read:api_keys')
+  const canCreateApiKey = can('create:api_keys')
+  const canDeleteApiKey = can('delete:api_keys')
 
   // Data queries
   const rolesQuery = useProjectRolesQuery(
@@ -117,6 +129,9 @@ const useOverviewService = (): OverviewService => {
     canReadUsers ? selectedProjectId : undefined,
   )
   const permissionsQuery = useProjectPermissionsQuery()
+  const apiKeysQuery = useProjectApiKeysQuery(
+    canReadApiKey ? selectedProjectId : undefined,
+  )
 
   // Mutations
   const createRoleMutation = useCreateRoleMutation(selectedProjectId)
@@ -127,6 +142,8 @@ const useOverviewService = (): OverviewService => {
     useRemoveRolePermissionMutation(selectedProjectId)
   const removeMemberMutation = useRemoveMemberMutation(selectedProjectId)
   const deleteProjectMutation = useDeleteProjectMutation()
+  const createApiKeyMutation = useCreateApiKeyMutation(selectedProjectId)
+  const deleteApiKeyMutation = useDeleteApiKeyMutation(selectedProjectId)
 
   const projectsQuery = useUserProjectsQuery()
   const projectName = useMemo(() => {
@@ -141,7 +158,6 @@ const useOverviewService = (): OverviewService => {
   )
 
   const [tab, setTab] = useState<OverviewTab>('users')
-  const [apiKey, setApiKey] = useState(overviewApiKeyMock)
   const [userSearch, setUserSearch] = useState('')
   const [roleSearch, setRoleSearch] = useState('')
   const [inviteModalOpen, setInviteModalOpen] = useState(false)
@@ -233,12 +249,23 @@ const useOverviewService = (): OverviewService => {
     })
   }, [roleSearch, roles, permissionLookup])
 
+  const apiKeys = apiKeysQuery.data?.data ?? []
+  const apiKey = apiKeys[0]?.key ?? null
+
   const regenerateApiKey = useCallback(() => {
-    const suffix = Math.random().toString(36).slice(2, 10)
-    const nextKey = `hl_sk_${suffix}_generated`
-    setApiKey(nextKey)
-    return nextKey
-  }, [])
+    if (!selectedProjectId) return
+    // Delete all existing keys first, then create a new one
+    const existing = apiKeysQuery.data?.data ?? []
+    existing.forEach((key) => {
+      deleteApiKeyMutation.mutate(key.id)
+    })
+    createApiKeyMutation.mutate({ project_id: selectedProjectId })
+  }, [
+    apiKeysQuery.data,
+    createApiKeyMutation,
+    deleteApiKeyMutation,
+    selectedProjectId,
+  ])
 
   const updateUserRole = useCallback((_userId: string, _roleId: string) => {
     // TODO: implement update user role mutation
@@ -325,7 +352,13 @@ const useOverviewService = (): OverviewService => {
     setTab,
     apiRequests,
     apiKey,
+    apiKeyLoading: apiKeysQuery.isLoading,
+    canReadApiKey,
+    canCreateApiKey,
+    canDeleteApiKey,
     regenerateApiKey,
+    isRegeneratingApiKey:
+      createApiKeyMutation.isPending || deleteApiKeyMutation.isPending,
     users,
     filteredUsers,
     roles,

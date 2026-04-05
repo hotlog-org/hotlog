@@ -1,9 +1,5 @@
 import type { ApiRequestSeriesPoint, PermissionCategory } from './overview.interface'
 
-const baseKey = 'hl_sk_0123456789abcdef_overview_mock'
-
-export const overviewApiKeyMock = baseKey
-
 const permissionColors: Record<PermissionCategory, string> = {
   all: 'border-white/30 bg-black text-white',
   projects: 'border-slate-500/40 bg-slate-500/10 text-slate-200',
