@@ -161,6 +161,28 @@ export async function DELETE(request: NextRequest) {
     )
   }
 
+  // Cannot remove self
+  if (userId === user.id) {
+    return NextResponse.json<IApiErrorResponse>(
+      { error: { message: 'You cannot remove yourself from the project' } },
+      { status: 400 },
+    )
+  }
+
+  // Cannot remove the project creator
+  const { data: project } = await supabase
+    .from('projects')
+    .select('creator_id')
+    .eq('id', projectId)
+    .single()
+
+  if (project?.creator_id === userId) {
+    return NextResponse.json<IApiErrorResponse>(
+      { error: { message: 'The project owner cannot be removed' } },
+      { status: 400 },
+    )
+  }
+
   // Remove user roles for this project first
   const { data: roles } = await supabase
     .from('roles')

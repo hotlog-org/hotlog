@@ -34,6 +34,7 @@ export interface OverviewUser {
   email: string
   roleId: string
   status: UserStatus
+  isCreator: boolean
 }
 
 export interface RoleOption {

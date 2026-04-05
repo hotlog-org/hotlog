@@ -4,6 +4,7 @@ import { useCallback, useMemo, useState } from 'react'
 import { useTranslations } from 'next-intl'
 
 import { useDashboardProject } from '@/shared/store/dashboard-project.store'
+import { useAuth } from '@/shared/hooks/use-auth'
 import { useUserPermissions } from '@/shared/api/user-permission'
 import {
   useDeleteProjectMutation,
@@ -79,6 +80,7 @@ export interface OverviewService {
   canUpdateRoles: boolean
   canDeleteRoles: boolean
   canDeleteProject: boolean
+  currentUserId: string
   isLoading: boolean
   hasNoProject: boolean
   projectName: string
@@ -94,6 +96,8 @@ const useOverviewService = (): OverviewService => {
 
   const selectedProjectId = useDashboardProject((s) => s.selectedProjectId)
   const { can } = useUserPermissions(selectedProjectId)
+  const { user: authUser } = useAuth()
+  const currentUserId = authUser?.id ?? ''
 
   // Permission checks
   const canReadUsers = can('read:users')
@@ -177,6 +181,7 @@ const useOverviewService = (): OverviewService => {
       email: member.email,
       roleId: member.roleId ?? '',
       status: 'active' as const,
+      isCreator: member.isCreator,
     }))
   }, [membersQuery.data])
 
@@ -242,12 +247,16 @@ const useOverviewService = (): OverviewService => {
   const removeUser = useCallback(
     (userId: string) => {
       if (!selectedProjectId) return
+      // Cannot kick self or the project creator
+      if (userId === currentUserId) return
+      const target = users.find((u) => u.id === userId)
+      if (target?.isCreator) return
       removeMemberMutation.mutate({
         project_id: selectedProjectId,
         user_id: userId,
       })
     },
-    [removeMemberMutation, selectedProjectId],
+    [currentUserId, removeMemberMutation, selectedProjectId, users],
   )
 
   const revokeInvite = useCallback(
@@ -350,6 +359,7 @@ const useOverviewService = (): OverviewService => {
     canUpdateRoles,
     canDeleteRoles,
     canDeleteProject,
+    currentUserId,
     isLoading,
     hasNoProject: !selectedProjectId,
     projectName,

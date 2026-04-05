@@ -143,6 +143,7 @@ export function OverviewComponent() {
                   rows={service.filteredUsers}
                   roles={service.roles}
                   roleOptions={service.roleOptions}
+                  currentUserId={service.currentUserId}
                   onChangeRole={service.updateUserRole}
                   onRemove={service.removeUser}
                   onRevoke={service.revokeInvite}

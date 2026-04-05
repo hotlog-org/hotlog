@@ -78,6 +78,7 @@ const renderRoleSelector = (
 export const useUsersTableService = ({
   roleOptions,
   roles,
+  currentUserId,
   onChangeRole,
   onRemove,
   onRevoke,
@@ -130,19 +131,31 @@ export const useUsersTableService = ({
         header: '',
         cell: ({ row }) => {
           const isPending = row.original.status === 'pending'
+          const isSelf = row.original.id === currentUserId
+          const isCreator = row.original.isCreator
+          const disabled = isSelf || isCreator
           return (
             <div className='flex items-center'>
               <Button
                 variant='ghost'
                 size='icon'
-                className='text-destructive hover:text-destructive'
+                className='text-destructive hover:text-destructive disabled:opacity-40'
+                disabled={disabled}
                 onClick={(event) => {
                   event.stopPropagation()
+                  if (disabled) return
                   if (isPending) onRevoke(row.original.id)
                   else onRemove(row.original.id)
                 }}
                 aria-label={
                   isPending ? t('users.table.revoke') : t('users.table.remove')
+                }
+                title={
+                  isCreator
+                    ? 'Project owner cannot be removed'
+                    : isSelf
+                      ? 'You cannot remove yourself'
+                      : undefined
                 }
               >
                 <HugeiconsIcon
@@ -155,7 +168,7 @@ export const useUsersTableService = ({
         },
       },
     ],
-    [onChangeRole, onRemove, onRevoke, roleLookup, roleOptions, t],
+    [currentUserId, onChangeRole, onRemove, onRevoke, roleLookup, roleOptions, t],
   )
 
   return { columns }

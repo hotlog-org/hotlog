@@ -257,8 +257,17 @@ CREATE POLICY "user_projects_delete"
   FOR DELETE
   TO authenticated
   USING (
-    user_id = auth.uid()
-    OR is_project_creator(project_id)
+    -- Cannot remove the project creator from the project
+    NOT EXISTS (
+      SELECT 1 FROM public.projects p
+      WHERE p.id = project_id AND p.creator_id = user_id
+    )
+    AND (
+      -- Leave project (but not as creator — blocked above)
+      user_id = auth.uid()
+      -- Admin removing someone else (but not the creator — blocked above, and not self via this branch)
+      OR has_permission(project_id, 'delete', 'users')
+    )
   );
 
 
