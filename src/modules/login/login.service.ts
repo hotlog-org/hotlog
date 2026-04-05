@@ -1,18 +1,42 @@
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useTranslations } from 'next-intl'
+import { useLocale, useTranslations } from 'next-intl'
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import z from 'zod'
 
-import { loginAction } from './login.action'
+import { loginAction, socialLoginAction } from './login.action'
+import {
+  type LoginData,
+  type LoginProvider,
+  type LoginProviderOption,
+} from './login.interface'
 
 import { ERoutes } from '@/config/routes'
 import { useRouter } from '@/i18n/navigation'
-import { authClient } from '@/lib/better-auth'
+import { DiscordIcon, GithubIcon, GoogleIcon } from '@hugeicons/core-free-icons'
+
+const loginProviders: LoginProviderOption[] = [
+  {
+    id: 'google',
+    icon: GoogleIcon,
+    color: 'text-red-500',
+  },
+  {
+    id: 'github',
+    icon: GithubIcon,
+    color: 'text-white',
+  },
+  {
+    id: 'discord',
+    icon: DiscordIcon,
+    color: 'text-indigo-500',
+  },
+]
 
 export const useLoginService = () => {
   const t = useTranslations('modules.login')
   const tErrors = useTranslations('errors.auth')
+  const locale = useLocale()
 
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(false)
@@ -24,9 +48,7 @@ export const useLoginService = () => {
     password: z.string().min(1, t('validation.password.required')),
   })
 
-  type LoginInputs = z.infer<typeof loginSchema>
-
-  const form = useForm<LoginInputs>({
+  const form = useForm<LoginData>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
       email: '',
@@ -34,13 +56,13 @@ export const useLoginService = () => {
     },
   })
 
-  const onSubmit = async (data: LoginInputs) => {
+  const onSubmit = async (data: LoginData) => {
     setIsLoading(true)
     setSuccess(false)
     setError(null)
 
     try {
-      const result = await loginAction(data, tErrors)
+      const result = await loginAction(data)
 
       if (result.success) {
         router.push(ERoutes.DASHBOARD)
@@ -48,7 +70,11 @@ export const useLoginService = () => {
         setError(null)
         form.reset()
       } else {
-        setError(result.error || t('messages.error'))
+        setError(
+          result.errorCode
+            ? tErrors(result.errorCode as never)
+            : t('messages.error'),
+        )
         setSuccess(false)
       }
     } catch {
@@ -59,14 +85,24 @@ export const useLoginService = () => {
     }
   }
 
-  const handleGoogleSignIn = async () => {
+  const handleProviderSignIn = async (provider: LoginProvider) => {
     setIsLoading(true)
     setError(null)
+    setSuccess(false)
+
     try {
-      await authClient.signIn.social({
-        provider: 'google',
-        callbackURL: ERoutes.DASHBOARD,
-      })
+      const result = await socialLoginAction(provider, locale)
+
+      if (!result.success || !result.url) {
+        setError(
+          result.errorCode
+            ? tErrors(result.errorCode as never)
+            : t('messages.error'),
+        )
+        return
+      }
+
+      window.location.assign(result.url)
     } catch {
       setError(t('messages.error'))
     } finally {
@@ -78,7 +114,8 @@ export const useLoginService = () => {
     t,
     form,
     onSubmit,
-    handleGoogleSignIn,
+    handleProviderSignIn,
+    providers: loginProviders,
     isLoading,
     error,
     success,

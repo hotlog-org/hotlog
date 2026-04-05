@@ -5,14 +5,17 @@ export type OverviewTab = 'users' | 'roles'
 export type UserStatus = 'active' | 'pending'
 
 export type PermissionCategory =
+  | 'all'
+  | 'projects'
   | 'events'
-  | 'modules'
-  | 'api'
-  | 'project'
-  | 'schema'
-  | 'team'
+  | 'schemas'
+  | 'fields'
+  | 'layouts'
+  | 'components'
   | 'roles'
-  | 'special'
+  | 'permissions'
+  | 'users'
+  | 'api_keys'
 
 export interface OverviewPermission {
   id: string
@@ -28,10 +31,10 @@ export interface OverviewRole {
 
 export interface OverviewUser {
   id: string
-  name: string
   email: string
   roleId: string
   status: UserStatus
+  isCreator: boolean
 }
 
 export interface RoleOption {

@@ -3,14 +3,32 @@
 import { useCallback, useMemo, useState } from 'react'
 import { useTranslations } from 'next-intl'
 
+import { useDashboardProject } from '@/shared/store/dashboard-project.store'
+import { useAuth } from '@/shared/hooks/use-auth'
+import { useUserPermissions } from '@/shared/api/user-permission'
 import {
-  buildApiRequestsSeries,
-  overviewApiKeyMock,
-  overviewRolesMock,
-  overviewUsersMock,
-  permissionCategoryStyles,
-  permissionsCatalog,
-} from './mock-data'
+  useDeleteProjectMutation,
+  useUserProjectsQuery,
+} from '@/shared/api/user-project'
+import {
+  useProjectRolesQuery,
+  useCreateRoleMutation,
+  useDeleteRoleMutation,
+  useAddRolePermissionMutation,
+  useRemoveRolePermissionMutation,
+} from '@/shared/api/project-role'
+import {
+  useProjectMembersQuery,
+  useRemoveMemberMutation,
+} from '@/shared/api/project-member'
+import { useProjectPermissionsQuery } from '@/shared/api/project-permission'
+import {
+  useCreateApiKeyMutation,
+  useDeleteApiKeyMutation,
+  useProjectApiKeysQuery,
+} from '@/shared/api/project-api-key'
+
+import { buildApiRequestsSeries, permissionCategoryStyles } from './mock-data'
 import type {
   ApiRequestSeriesPoint,
   OverviewPermission,
@@ -21,9 +39,6 @@ import type {
   RoleOption,
 } from './overview.interface'
 
-const makeId = (prefix: string) =>
-  `${prefix}-${Math.random().toString(36).slice(2, 8)}`
-
 export type TFunction = ReturnType<typeof useTranslations>
 
 export interface OverviewService {
@@ -31,14 +46,19 @@ export interface OverviewService {
   tab: OverviewTab
   setTab: (tab: OverviewTab) => void
   apiRequests: ApiRequestSeriesPoint[]
-  apiKey: string
-  regenerateApiKey: () => string
+  apiKey: string | null
+  apiKeyLoading: boolean
+  canReadApiKey: boolean
+  canCreateApiKey: boolean
+  canDeleteApiKey: boolean
+  regenerateApiKey: () => void
+  isRegeneratingApiKey: boolean
   users: OverviewUser[]
   filteredUsers: OverviewUser[]
   roles: OverviewRole[]
   filteredRoles: OverviewRole[]
   permissions: OverviewPermission[]
-  permissionColors: Record<PermissionCategory, string>
+  permissionColors: Record<PermissionCategory | string, string>
   roleOptions: RoleOption[]
   userSearch: string
   setUserSearch: (value: string) => void
@@ -58,37 +78,141 @@ export interface OverviewService {
   deleteRole: (roleId: string) => void
   addPermissionToRole: (roleId: string, permissionId: string) => void
   removePermissionFromRole: (roleId: string, permissionId: string) => void
+  canReadUsers: boolean
+  canCreateUsers: boolean
+  canDeleteUsers: boolean
+  canReadRoles: boolean
+  canCreateRoles: boolean
+  canUpdateRoles: boolean
+  canDeleteRoles: boolean
+  canDeleteProject: boolean
+  currentUserId: string
+  isLoading: boolean
+  hasNoProject: boolean
+  projectName: string
+  deleteProjectModalOpen: boolean
+  openDeleteProjectModal: () => void
+  closeDeleteProjectModal: () => void
+  deleteProject: () => void
+  isDeletingProject: boolean
 }
 
 const useOverviewService = (): OverviewService => {
   const t = useTranslations('modules.dashboard.overview')
 
+  const selectedProjectId = useDashboardProject((s) => s.selectedProjectId)
+  const { can } = useUserPermissions(selectedProjectId)
+  const { user: authUser } = useAuth()
+  const currentUserId = authUser?.id ?? ''
+
+  // Permission checks
+  const canReadUsers = can('read:users')
+  const canCreateUsers = can('create:users')
+  const canDeleteUsers = can('delete:users')
+  const canReadRoles = can('read:roles')
+  const canCreateRoles = can('create:roles')
+  const canUpdateRoles = can('update:roles')
+  const canDeleteRoles = can('delete:roles')
+  const canDeleteProject = can('delete:projects')
+  const canReadApiKey = can('read:api_keys')
+  const canCreateApiKey = can('create:api_keys')
+  const canDeleteApiKey = can('delete:api_keys')
+
+  // Data queries
+  const rolesQuery = useProjectRolesQuery(
+    canReadRoles ? selectedProjectId : undefined,
+  )
+  const membersQuery = useProjectMembersQuery(
+    canReadUsers ? selectedProjectId : undefined,
+  )
+  const permissionsQuery = useProjectPermissionsQuery()
+  const apiKeysQuery = useProjectApiKeysQuery(
+    canReadApiKey ? selectedProjectId : undefined,
+  )
+
+  // Mutations
+  const createRoleMutation = useCreateRoleMutation(selectedProjectId)
+  const deleteRoleMutation = useDeleteRoleMutation(selectedProjectId)
+  const addRolePermissionMutation =
+    useAddRolePermissionMutation(selectedProjectId)
+  const removeRolePermissionMutation =
+    useRemoveRolePermissionMutation(selectedProjectId)
+  const removeMemberMutation = useRemoveMemberMutation(selectedProjectId)
+  const deleteProjectMutation = useDeleteProjectMutation()
+  const createApiKeyMutation = useCreateApiKeyMutation(selectedProjectId)
+  const deleteApiKeyMutation = useDeleteApiKeyMutation(selectedProjectId)
+
+  const projectsQuery = useUserProjectsQuery()
+  const projectName = useMemo(() => {
+    const project = projectsQuery.data?.data.find(
+      (p) => p.id === selectedProjectId,
+    )
+    return project?.name ?? ''
+  }, [projectsQuery.data, selectedProjectId])
+
+  const handleDashboardProject = useDashboardProject(
+    (s) => s.handleDashboardProject,
+  )
+
   const [tab, setTab] = useState<OverviewTab>('users')
-  const [apiKey, setApiKey] = useState(overviewApiKeyMock)
-  const [users, setUsers] = useState<OverviewUser[]>(overviewUsersMock)
-  const [roles, setRoles] = useState<OverviewRole[]>(overviewRolesMock)
   const [userSearch, setUserSearch] = useState('')
   const [roleSearch, setRoleSearch] = useState('')
   const [inviteModalOpen, setInviteModalOpen] = useState(false)
   const [addRoleModalOpen, setAddRoleModalOpen] = useState(false)
+  const [deleteProjectModalOpen, setDeleteProjectModalOpen] = useState(false)
 
   const apiRequests = useMemo(() => buildApiRequestsSeries(), [])
 
+  const isLoading =
+    rolesQuery.isLoading || membersQuery.isLoading || permissionsQuery.isLoading
+
+  // Map DB permissions to OverviewPermission format
+  const permissions: OverviewPermission[] = useMemo(() => {
+    const dbPermissions = permissionsQuery.data?.data ?? []
+    return dbPermissions.map((p) => ({
+      id: p.id,
+      category: p.subject as PermissionCategory,
+      label: p.action,
+    }))
+  }, [permissionsQuery.data])
+
+  // Map DB roles to OverviewRole format
+  const roles: OverviewRole[] = useMemo(() => {
+    const dbRoles = rolesQuery.data?.data ?? []
+    return dbRoles.map((role) => ({
+      id: role.id,
+      name: role.name,
+      permissionIds: role.permissions.map((p) => p.id),
+    }))
+  }, [rolesQuery.data])
+
+  // Map DB members to OverviewUser format
+  const users: OverviewUser[] = useMemo(() => {
+    const dbMembers = membersQuery.data?.data ?? []
+    return dbMembers.map((member) => ({
+      id: member.id,
+      email: member.email,
+      roleId: member.roleId ?? '',
+      status: 'active' as const,
+      isCreator: member.isCreator,
+    }))
+  }, [membersQuery.data])
+
+  const roleOptions = useMemo<RoleOption[]>(
+    () => roles.map((role) => ({ label: role.name, value: role.id })),
+    [roles],
+  )
+
   const permissionLookup = useMemo(
     () =>
-      permissionsCatalog.reduce<Record<string, OverviewPermission>>(
+      permissions.reduce<Record<string, OverviewPermission>>(
         (map, permission) => {
           map[permission.id] = permission
           return map
         },
         {},
       ),
-    [],
-  )
-
-  const roleOptions = useMemo<RoleOption[]>(
-    () => roles.map((role) => ({ label: role.name, value: role.id })),
-    [roles],
+    [permissions],
   )
 
   const filteredUsers = useMemo(() => {
@@ -98,7 +222,6 @@ const useOverviewService = (): OverviewService => {
     return users.filter((user) => {
       const role = roles.find((item) => item.id === user.roleId)
       return (
-        user.name.toLowerCase().includes(normalized) ||
         user.email.toLowerCase().includes(normalized) ||
         role?.name.toLowerCase().includes(normalized)
       )
@@ -123,114 +246,102 @@ const useOverviewService = (): OverviewService => {
     })
   }, [roleSearch, roles, permissionLookup])
 
+  const apiKeys = apiKeysQuery.data?.data ?? []
+  const apiKey = apiKeys[0]?.key ?? null
+
   const regenerateApiKey = useCallback(() => {
-    const suffix = Math.random().toString(36).slice(2, 10)
-    const nextKey = `hl_sk_${suffix}_generated`
-    setApiKey(nextKey)
-    return nextKey
+    if (!selectedProjectId) return
+    // Delete all existing keys first, then create a new one
+    const existing = apiKeysQuery.data?.data ?? []
+    existing.forEach((key) => {
+      deleteApiKeyMutation.mutate(key.id)
+    })
+    createApiKeyMutation.mutate({ project_id: selectedProjectId })
+  }, [
+    apiKeysQuery.data,
+    createApiKeyMutation,
+    deleteApiKeyMutation,
+    selectedProjectId,
+  ])
+
+  const updateUserRole = useCallback((_userId: string, _roleId: string) => {
+    // TODO: implement update user role mutation
   }, [])
 
-  const updateUserRole = useCallback((userId: string, roleId: string) => {
-    setUsers((current) =>
-      current.map((user) => (user.id === userId ? { ...user, roleId } : user)),
-    )
-  }, [])
-
-  const removeUser = useCallback((userId: string) => {
-    setUsers((current) => current.filter((user) => user.id !== userId))
-  }, [])
+  const removeUser = useCallback(
+    (userId: string) => {
+      if (!selectedProjectId) return
+      // Cannot kick self or the project creator
+      if (userId === currentUserId) return
+      const target = users.find((u) => u.id === userId)
+      if (target?.isCreator) return
+      removeMemberMutation.mutate({
+        project_id: selectedProjectId,
+        user_id: userId,
+      })
+    },
+    [currentUserId, removeMemberMutation, selectedProjectId, users],
+  )
 
   const revokeInvite = useCallback(
     (userId: string) => {
-      const user = users.find((candidate) => candidate.id === userId)
-      if (!user || user.status !== 'pending') return
       removeUser(userId)
     },
-    [removeUser, users],
+    [removeUser],
   )
 
-  const inviteMember = useCallback(
-    (email: string) => {
-      const fallbackRole = roles[roles.length - 1]?.id ?? roles[0]?.id ?? ''
-      const localPart = email.split('@')[0] ?? email
-
-      const newUser: OverviewUser = {
-        id: makeId('invite'),
-        email,
-        name: localPart.replace(/[^a-zA-Z0-9]/g, ' ') || email,
-        roleId: fallbackRole,
-        status: 'pending',
-      }
-
-      setUsers((current) => [...current, newUser])
-    },
-    [roles],
-  )
+  const inviteMember = useCallback((_email: string) => {
+    // TODO: implement invite member flow
+  }, [])
 
   const addRole = useCallback(
     (payload: { name: string; permissionIds: string[] }) => {
-      const newRole: OverviewRole = {
-        id: makeId('role'),
+      if (!selectedProjectId) return
+      createRoleMutation.mutate({
+        project_id: selectedProjectId,
         name: payload.name.trim(),
-        permissionIds: payload.permissionIds,
-      }
-
-      setRoles((current) => [...current, newRole])
+        permission_ids: payload.permissionIds,
+      })
     },
-    [],
+    [createRoleMutation, selectedProjectId],
   )
 
-  const deleteRole = useCallback((roleId: string) => {
-    setRoles((current) => {
-      if (current.length <= 1) return current
-      const nextRoles = current.filter((role) => role.id !== roleId)
-      const fallbackRoleId = nextRoles[0]?.id ?? current[0]?.id ?? ''
-
-      setUsers((userState) =>
-        userState.map((user) =>
-          user.roleId === roleId ? { ...user, roleId: fallbackRoleId } : user,
-        ),
-      )
-
-      return nextRoles
-    })
-  }, [])
+  const deleteRole = useCallback(
+    (roleId: string) => {
+      deleteRoleMutation.mutate(roleId)
+    },
+    [deleteRoleMutation],
+  )
 
   const addPermissionToRole = useCallback(
     (roleId: string, permissionId: string) => {
-      setRoles((current) =>
-        current.map((role) =>
-          role.id === roleId
-            ? role.permissionIds.includes(permissionId)
-              ? role
-              : {
-                  ...role,
-                  permissionIds: [...role.permissionIds, permissionId],
-                }
-            : role,
-        ),
-      )
+      addRolePermissionMutation.mutate({
+        role_id: roleId,
+        permission_id: permissionId,
+      })
     },
-    [],
+    [addRolePermissionMutation],
   )
 
   const removePermissionFromRole = useCallback(
     (roleId: string, permissionId: string) => {
-      setRoles((current) =>
-        current.map((role) =>
-          role.id === roleId
-            ? {
-                ...role,
-                permissionIds: role.permissionIds.filter(
-                  (id) => id !== permissionId,
-                ),
-              }
-            : role,
-        ),
-      )
+      removeRolePermissionMutation.mutate({
+        role_id: roleId,
+        permission_id: permissionId,
+      })
     },
-    [],
+    [removeRolePermissionMutation],
   )
+
+  const deleteProject = useCallback(() => {
+    if (!selectedProjectId) return
+    deleteProjectMutation.mutate(selectedProjectId, {
+      onSuccess: () => {
+        setDeleteProjectModalOpen(false)
+        handleDashboardProject({ selectedProjectId: undefined })
+      },
+    })
+  }, [deleteProjectMutation, handleDashboardProject, selectedProjectId])
 
   return {
     t,
@@ -238,12 +349,18 @@ const useOverviewService = (): OverviewService => {
     setTab,
     apiRequests,
     apiKey,
+    apiKeyLoading: apiKeysQuery.isLoading,
+    canReadApiKey,
+    canCreateApiKey,
+    canDeleteApiKey,
     regenerateApiKey,
+    isRegeneratingApiKey:
+      createApiKeyMutation.isPending || deleteApiKeyMutation.isPending,
     users,
     filteredUsers,
     roles,
     filteredRoles,
-    permissions: permissionsCatalog,
+    permissions,
     permissionColors: permissionCategoryStyles,
     roleOptions,
     userSearch,
@@ -264,6 +381,23 @@ const useOverviewService = (): OverviewService => {
     deleteRole,
     addPermissionToRole,
     removePermissionFromRole,
+    canReadUsers,
+    canCreateUsers,
+    canDeleteUsers,
+    canReadRoles,
+    canCreateRoles,
+    canUpdateRoles,
+    canDeleteRoles,
+    canDeleteProject,
+    currentUserId,
+    isLoading,
+    hasNoProject: !selectedProjectId,
+    projectName,
+    deleteProjectModalOpen,
+    openDeleteProjectModal: () => setDeleteProjectModalOpen(true),
+    closeDeleteProjectModal: () => setDeleteProjectModalOpen(false),
+    deleteProject,
+    isDeletingProject: deleteProjectMutation.isPending,
   }
 }
 

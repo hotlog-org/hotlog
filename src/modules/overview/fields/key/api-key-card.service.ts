@@ -1,11 +1,15 @@
 import { useCallback, useMemo, useState } from 'react'
 import type { ApiKeyCardProps } from './api-key-card.component'
 
-export const useApiKeyCardService = ({ keyValue, onRegenerate }: ApiKeyCardProps) => {
+export const useApiKeyCardService = ({
+  keyValue,
+  onRegenerate,
+}: ApiKeyCardProps) => {
   const [visible, setVisible] = useState(false)
   const [copied, setCopied] = useState(false)
 
   const maskedKey = useMemo(() => {
+    if (!keyValue) return ''
     if (visible) return keyValue
     const tail = keyValue.slice(-6)
     const masked = '•'.repeat(Math.max(12, keyValue.length - tail.length))
@@ -13,6 +17,7 @@ export const useApiKeyCardService = ({ keyValue, onRegenerate }: ApiKeyCardProps
   }, [keyValue, visible])
 
   const handleCopy = useCallback(async () => {
+    if (!keyValue) return
     try {
       await navigator.clipboard.writeText(keyValue)
       setCopied(true)
@@ -27,9 +32,8 @@ export const useApiKeyCardService = ({ keyValue, onRegenerate }: ApiKeyCardProps
   }, [])
 
   const handleRegenerate = useCallback(() => {
-    const next = onRegenerate()
+    onRegenerate()
     setVisible(false)
-    return next
   }, [onRegenerate])
 
   return {

@@ -53,25 +53,14 @@ const DashboardSidebarHeaderComponent = () => {
                 tooltip={service.selectedProject?.name}
               >
                 {state === 'collapsed' ? (
-                  <div className='flex aspect-square size-8 items-center justify-center rounded-lg'>
-                    <HugeiconsIcon
-                      icon={service.selectedProject?.icon}
-                      size={20}
-                      color={service.selectedProject?.color}
-                    />
-                  </div>
+                  <span className='truncate text-sm font-semibold'>
+                    {service.selectedProject?.name?.slice(0, 2) ?? '--'}
+                  </span>
                 ) : (
                   <>
-                    <div className='flex aspect-square size-8 items-center justify-center rounded-lg'>
-                      <HugeiconsIcon
-                        icon={service.selectedProject?.icon}
-                        size={20}
-                        color={service.selectedProject?.color}
-                      />
-                    </div>
                     <div className='grid flex-1 text-left text-sm leading-tight'>
                       <span className='truncate font-semibold'>
-                        {service.selectedProject?.name}
+                        {service.selectedProject?.name ?? service.t('select')}
                       </span>
                       <span className='truncate text-xs text-muted-foreground'>
                         {service.t('label')}
@@ -97,36 +86,22 @@ const DashboardSidebarHeaderComponent = () => {
                 {service.t('select')}
               </DropdownMenuLabel>
 
-              {service.projects.map((project, i) => (
-                <div className='relative' key={i}>
-                  <DropdownMenuItem
-                    key={project.id}
-                    className='gap-2 p-2 cursor-pointer flex items-center'
-                    onClick={() => service.setSelectedProject(project)}
-                  >
-                    <div className='flex size-6 items-center justify-center rounded-sm'>
-                      <HugeiconsIcon
-                        style={{ color: project.color }}
-                        icon={project.icon}
-                        size={16}
-                      />
-                    </div>
+              {service.projects.map((project) => (
+                <DropdownMenuItem
+                  key={project.id}
+                  className='gap-2 p-2 cursor-pointer flex items-center'
+                  onClick={() => service.setSelectedProject(project)}
+                >
+                  <div className='flex-1'>
+                    <span className='font-medium'>{project.name}</span>
+                  </div>
 
-                    <div className='flex-1'>
-                      <span className='font-medium'>{project.name}</span>
-                    </div>
-
-                    <div className='flex items-center gap-2'>
-                      {project.id === service.selectedProject?.id && (
-                        <HugeiconsIcon
-                          icon={Tick02Icon}
-                          className='size-4'
-                          color={service.selectedProject.color}
-                        />
-                      )}
-                    </div>
-                  </DropdownMenuItem>
-                </div>
+                  <div className='flex items-center gap-2'>
+                    {project.id === service.selectedProject?.id && (
+                      <HugeiconsIcon icon={Tick02Icon} className='size-4' />
+                    )}
+                  </div>
+                </DropdownMenuItem>
               ))}
 
               <DropdownMenuItem
@@ -168,7 +143,9 @@ const DashboardSidebarHeaderComponent = () => {
             />
 
             <DialogFooter>
-              <Button type='submit'>{service.t('create')}</Button>
+              <Button variant='outline' type='submit'>
+                {service.t('create')}
+              </Button>
             </DialogFooter>
           </form>
         </DialogContent>

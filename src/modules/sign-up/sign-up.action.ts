@@ -1,40 +1,30 @@
-'use client'
+'use server'
 
-import { authClient } from '@/lib/better-auth'
-import { ErrorCode, mapErrorToCode } from '@/shared/utils'
+import { revalidatePath } from 'next/cache'
 
-export interface SignUpData {
-  username: string
-  email: string
-  password: string
-}
+import { createClient } from '@/lib/supabase/server'
+import { mapErrorToCode } from '@/shared/utils'
 
-export interface SignUpResult {
-  success: boolean
-  error?: string
-  errorCode?: ErrorCode
-}
+import { type SignUpData, type SignUpResult } from './sign-up.interface'
 
-export const signUpAction = async (
-  data: SignUpData,
-  t: (key: string) => string,
-): Promise<SignUpResult> => {
+export const signUpAction = async (data: SignUpData): Promise<SignUpResult> => {
   try {
-    const result = await authClient.signUp.email({
-      name: data.username,
+    const supabase = await createClient()
+    const { error } = await supabase.auth.signUp({
       email: data.email,
       password: data.password,
     })
 
-    if (result.error) {
-      const errorCode = mapErrorToCode(result.error)
+    if (error) {
+      const errorCode = mapErrorToCode(error)
 
       return {
         success: false,
-        error: t(errorCode) || t(ErrorCode.FAILED_TO_CREATE_USER),
         errorCode,
       }
     }
+
+    revalidatePath('/', 'layout')
 
     return {
       success: true,
@@ -44,7 +34,6 @@ export const signUpAction = async (
 
     return {
       success: false,
-      error: t(errorCode) || t(ErrorCode.FAILED_TO_CREATE_USER),
       errorCode,
     }
   }

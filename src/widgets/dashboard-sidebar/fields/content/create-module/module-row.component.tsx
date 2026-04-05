@@ -8,6 +8,7 @@ import { CircleIcon } from '@hugeicons/core-free-icons'
 import { SidebarMenuButton, SidebarMenuItem } from '@/shared/ui/sidebar'
 import { cn } from '@/shared/utils/shadcn.utils'
 import type { ModuleDefinition } from '@/modules/modules/modules.interface'
+import { Button } from '@/shared/ui/button'
 
 export interface ModuleRowProps {
   module: ModuleDefinition
@@ -45,14 +46,13 @@ export const ModuleRow = (props: ModuleRowProps) => {
 
         {!isCollapsed ? (
           <button
-            type='button'
-            className='absolute right-2 top-1/2 hidden -translate-y-1/2 rounded-md border border-border/70 bg-background/80 p-1 text-destructive opacity-0 shadow-sm transition group-hover:block group-hover:opacity-100 hover:bg-destructive hover:text-destructive-foreground'
+            className='absolute right-2 top-1/2 hidden -translate-y-1/2 p-1 text-destructive opacity-0 transition group-hover:block group-hover:opacity-100 hover:text-white'
+            aria-label='Delete module'
             onClick={(event) => {
               event.preventDefault()
               event.stopPropagation()
               props.onDelete(props.module.id)
             }}
-            aria-label='Delete module'
           >
             <HugeiconsIcon icon={Delete02Icon} className='size-4' />
           </button>

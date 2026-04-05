@@ -16,12 +16,8 @@
     },
     "sign-up": {
       "title": "Sign up",
-      "description": "Enter credentials to create your account.",
+      "description": "Create your account with email and password. Already have an account? <signIn>Sign in here</signIn>.",
       "fields": {
-        "username": {
-          "label": "Username",
-          "placeholder": "Enter your username"
-        },
         "email": {
           "label": "Email",
           "placeholder": "Enter your email address"
@@ -36,10 +32,6 @@
         "submitting": "Creating Account..."
       },
       "validation": {
-        "username": {
-          "min": "Username must be at least 3 characters",
-          "required": "Username is required"
-        },
         "email": {
           "invalid": "Invalid email address",
           "required": "Email is required"
@@ -56,7 +48,11 @@
     },
     "login": {
       "title": "Sign in",
-      "description": "Enter your credentials to sign in.",
+      "description": "Choose a provider or continue with your email and password. If you don't have account <signUp>sign up here</signUp>.",
+      "email": {
+        "title": "Email login",
+        "description": "Use the credentials tied to your workspace account."
+      },
       "fields": {
         "email": {
           "label": "Email",
@@ -71,6 +67,20 @@
         "submit": "Sign In",
         "submitting": "Signing In..."
       },
+      "providers": {
+        "google": {
+          "label": "Google",
+          "description": "Fast browser sign-in"
+        },
+        "github": {
+          "label": "GitHub",
+          "description": "Developer account"
+        },
+        "discord": {
+          "label": "Discord",
+          "description": "Community login"
+        }
+      },
       "validation": {
         "email": {
           "invalid": "Invalid email address",
@@ -82,7 +92,13 @@
       },
       "messages": {
         "success": "Signed in successfully!",
-        "error": "Failed to sign in. Please try again."
+        "error": "Failed to sign in. Please try again.",
+        "safe": "Protected by secure session cookies"
+      },
+      "links": {
+        "forgotPassword": "Forgot password?",
+        "signUpPrompt": "Don't have an account?",
+        "signUp": "Sign up"
       }
     },
     "dashboard": {
@@ -196,16 +212,16 @@
           "searchPlaceholder": "Search roles or permissions",
           "table": {
             "name": "Name",
-          "permissions": "Permissions",
-          "addPermission": "Add permission",
-          "searchPermissions": "Search permissions...",
-          "noPermissionResults": "No permissions match your search.",
-          "add": "Add",
-          "delete": "Delete role",
-          "expand": "Show {count} more",
-          "collapse": "Show less",
-          "hide": "Hide"
-        },
+            "permissions": "Permissions",
+            "addPermission": "Add permission",
+            "searchPermissions": "Search permissions...",
+            "noPermissionResults": "No permissions match your search.",
+            "add": "Add",
+            "delete": "Delete role",
+            "expand": "Show {count} more",
+            "collapse": "Show less",
+            "hide": "Hide"
+          },
           "modal": {
             "title": "Add role",
             "description": "Create a role and preselect its permissions.",

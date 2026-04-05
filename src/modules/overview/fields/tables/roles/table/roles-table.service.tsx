@@ -11,6 +11,7 @@ import { Button } from '@/shared/ui/button'
 import { Input } from '@/shared/ui/input'
 import { Popover, PopoverContent, PopoverTrigger } from '@/shared/ui/popover'
 import { ScrollArea } from '@/shared/ui/scroll-area'
+import { isOptimisticId } from '@/shared/api/project-role'
 
 import type {
   OverviewPermission,
@@ -97,14 +98,25 @@ export const useRolesTableService = ({
             <span>{t('roles.table.name')}</span>
           </div>
         ),
-        cell: ({ row }) => (
-          <p className='font-medium text-foreground'>{row.original.name}</p>
-        ),
+        cell: ({ row }) => {
+          const pending = isOptimisticId(row.original.id)
+          return (
+            <div className='flex items-center gap-2'>
+              <p className='font-medium text-foreground'>{row.original.name}</p>
+              {pending && (
+                <span className='text-xs italic text-muted-foreground'>
+                  Saving...
+                </span>
+              )}
+            </div>
+          )
+        },
       },
       {
         id: 'permissions',
         header: t('roles.table.permissions'),
         cell: ({ row }) => {
+          const pending = isOptimisticId(row.original.id)
           const isOpen = openRoleId === row.original.id
           const selectedPermissions = row.original.permissionIds
             .map((id) => permissionLookup[id])
@@ -132,8 +144,13 @@ export const useRolesTableService = ({
                     : 6,
                 )
                 .map((permission) =>
-                  renderPermissionBadge(permission, permissionColors, () =>
-                    onRemovePermission(row.original.id, permission.id),
+                  renderPermissionBadge(
+                    permission,
+                    permissionColors,
+                    pending
+                      ? undefined
+                      : () =>
+                          onRemovePermission(row.original.id, permission.id),
                   ),
                 )}
 
@@ -167,6 +184,7 @@ export const useRolesTableService = ({
               <Popover
                 open={isOpen}
                 onOpenChange={(next) => {
+                  if (pending) return
                   setOpenRoleId(next ? row.original.id : null)
                   if (!next) setPermissionSearch('')
                 }}
@@ -175,16 +193,15 @@ export const useRolesTableService = ({
                   <Button
                     variant='ghost'
                     size='icon'
-                    className='border border-dashed border-border/70 bg-muted/40 text-muted-foreground hover:text-foreground'
+                    className='border border-dashed border-border/70 bg-muted/40 text-muted-foreground hover:text-foreground disabled:opacity-40'
                     aria-label={t('roles.table.addPermission')}
+                    disabled={pending}
                   >
                     <HugeiconsIcon icon={AddCircleIcon} className='size-5' />
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent
                   className='w-80 space-y-2 border-border/80 bg-card p-3'
-                  onFocusOutside={(event) => event.preventDefault()}
-                  onPointerDownOutside={(event) => event.preventDefault()}
                 >
                   <Input
                     ref={searchInputRef}
@@ -237,21 +254,24 @@ export const useRolesTableService = ({
       {
         id: 'actions',
         header: '',
-        cell: ({ row }) => (
-          <Button
-            variant='ghost'
-            size='icon'
-            className='text-destructive hover:text-destructive'
-            disabled={rows.length <= 1}
-            onClick={(event) => {
-              event.stopPropagation()
-              onDelete(row.original.id)
-            }}
-            aria-label={t('roles.table.delete')}
-          >
-            <HugeiconsIcon icon={Delete02Icon} className='size-5' />
-          </Button>
-        ),
+        cell: ({ row }) => {
+          const pending = isOptimisticId(row.original.id)
+          return (
+            <Button
+              variant='ghost'
+              size='icon'
+              className='text-destructive hover:text-destructive disabled:opacity-40'
+              disabled={rows.length <= 1 || pending}
+              onClick={(event) => {
+                event.stopPropagation()
+                onDelete(row.original.id)
+              }}
+              aria-label={t('roles.table.delete')}
+            >
+              <HugeiconsIcon icon={Delete02Icon} className='size-5' />
+            </Button>
+          )
+        },
       },
     ],
     [

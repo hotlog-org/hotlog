@@ -1,15 +1,15 @@
 import { ERoutes } from '@/config/routes'
-import { auth } from '@/lib/better-auth/auth'
+import { createClient } from '@/lib/supabase/server'
 import { SignUpComponent } from '@/modules/sign-up'
-import { headers } from 'next/headers'
 import { redirect } from 'next/navigation'
 
 export default async function SignUpPage() {
-  const session = await auth.api.getSession({
-    headers: await headers(),
-  })
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
 
-  if (session?.user) {
+  if (user) {
     redirect(ERoutes.BASE)
   }
 

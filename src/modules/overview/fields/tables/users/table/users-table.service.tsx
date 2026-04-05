@@ -56,9 +56,8 @@ const renderRoleSelector = (
                     event.preventDefault()
                     onSelect(option.value)
                   }}
-                  className={`flex w-full items-center justify-between px-3 py-2 text-sm transition hover:bg-accent/50 ${
-                    isActive ? 'bg-accent/50 font-medium' : ''
-                  }`}
+                  className={`flex w-full items-center justify-between px-3 py-2 text-sm transition hover:bg-accent/50 ${isActive ? 'bg-accent/50 font-medium' : ''
+                    }`}
                 >
                   <span className='truncate'>{option.label}</span>
                   {isActive && (
@@ -79,6 +78,7 @@ const renderRoleSelector = (
 export const useUsersTableService = ({
   roleOptions,
   roles,
+  currentUserId,
   onChangeRole,
   onRemove,
   onRevoke,
@@ -96,19 +96,10 @@ export const useUsersTableService = ({
   const columns: ColumnDef<OverviewUser>[] = useMemo(
     () => [
       {
-        accessorKey: 'name',
-        header: t('users.table.name'),
-        cell: ({ row }) => (
-          <div className='space-y-1'>
-            <p className='font-medium text-foreground'>{row.original.name}</p>
-          </div>
-        ),
-      },
-      {
         accessorKey: 'email',
         header: t('users.table.email'),
         cell: ({ row }) => (
-          <p className='text-sm text-muted-foreground'>{row.original.email}</p>
+          <p className='font-medium text-foreground'>{row.original.email}</p>
         ),
       },
       {
@@ -140,19 +131,31 @@ export const useUsersTableService = ({
         header: '',
         cell: ({ row }) => {
           const isPending = row.original.status === 'pending'
+          const isSelf = row.original.id === currentUserId
+          const isCreator = row.original.isCreator
+          const disabled = isSelf || isCreator
           return (
             <div className='flex items-center'>
               <Button
                 variant='ghost'
                 size='icon'
-                className='text-destructive hover:text-destructive'
+                className='text-destructive hover:text-destructive disabled:opacity-40'
+                disabled={disabled}
                 onClick={(event) => {
                   event.stopPropagation()
+                  if (disabled) return
                   if (isPending) onRevoke(row.original.id)
                   else onRemove(row.original.id)
                 }}
                 aria-label={
                   isPending ? t('users.table.revoke') : t('users.table.remove')
+                }
+                title={
+                  isCreator
+                    ? 'Project owner cannot be removed'
+                    : isSelf
+                      ? 'You cannot remove yourself'
+                      : undefined
                 }
               >
                 <HugeiconsIcon
@@ -165,7 +168,7 @@ export const useUsersTableService = ({
         },
       },
     ],
-    [onChangeRole, onRemove, onRevoke, roleLookup, roleOptions, t],
+    [currentUserId, onChangeRole, onRemove, onRevoke, roleLookup, roleOptions, t],
   )
 
   return { columns }
