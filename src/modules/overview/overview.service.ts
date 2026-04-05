@@ -28,10 +28,7 @@ import {
   useProjectApiKeysQuery,
 } from '@/shared/api/project-api-key'
 
-import {
-  buildApiRequestsSeries,
-  permissionCategoryStyles,
-} from './mock-data'
+import { buildApiRequestsSeries, permissionCategoryStyles } from './mock-data'
 import type {
   ApiRequestSeriesPoint,
   OverviewPermission,

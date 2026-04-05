@@ -3,23 +3,9 @@
 import { useTranslations } from 'next-intl'
 import { useEffect, useMemo, useState } from 'react'
 
-import {
-  useCreateProjectMutation,
-  useUserProjectsQuery,
-} from '@/shared/api'
+import { useCreateProjectMutation, useUserProjectsQuery } from '@/shared/api'
 import type { IUserProjectDto } from '@/shared/api/interface'
 import { useDashboardProject } from '@/shared/store/dashboard-project.store'
-
-const initialProjects: Project[] = [
-  { id: '1', name: 'HotLog', icon: Rocket02Icon, color: '#3b82f6' },
-  { id: '2', name: 'Noir Inc.', icon: TestTube02Icon, color: '#8b5cf6' },
-  {
-    id: '3',
-    name: 'Polytechnic Labs',
-    icon: ThreeDRotateIcon,
-    color: '#10b981',
-  },
-]
 
 export const useDashboardSidebarHeaderService = () => {
   const t = useTranslations('modules.dashboard.sidebar.projects')

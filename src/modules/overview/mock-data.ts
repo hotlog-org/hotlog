@@ -1,4 +1,7 @@
-import type { ApiRequestSeriesPoint, PermissionCategory } from './overview.interface'
+import type {
+  ApiRequestSeriesPoint,
+  PermissionCategory,
+} from './overview.interface'
 
 const permissionColors: Record<PermissionCategory, string> = {
   all: 'border-white/30 bg-black text-white',

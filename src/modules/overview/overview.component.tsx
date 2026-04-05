@@ -50,7 +50,9 @@ function EmptyProject() {
           />
         </div>
         <div className='space-y-1'>
-          <p className='text-sm font-medium text-foreground'>No project selected</p>
+          <p className='text-sm font-medium text-foreground'>
+            No project selected
+          </p>
           <p className='text-sm text-muted-foreground'>
             Create a project from the sidebar to get started.
           </p>
@@ -106,36 +108,40 @@ export function OverviewComponent() {
               </div>
 
               <div className='flex flex-wrap items-center gap-2'>
-                {service.tab === 'users' && canViewUsersTab && !service.isLoading && (
-                  <>
-                    {service.canCreateUsers && (
-                      <UsersAction
-                        onInvite={service.openInviteModal}
+                {service.tab === 'users' &&
+                  canViewUsersTab &&
+                  !service.isLoading && (
+                    <>
+                      {service.canCreateUsers && (
+                        <UsersAction
+                          onInvite={service.openInviteModal}
+                          t={service.t}
+                        />
+                      )}
+                      <UsersSearch
+                        value={service.userSearch}
+                        onChange={service.setUserSearch}
                         t={service.t}
                       />
-                    )}
-                    <UsersSearch
-                      value={service.userSearch}
-                      onChange={service.setUserSearch}
-                      t={service.t}
-                    />
-                  </>
-                )}
-                {service.tab === 'roles' && canViewRolesTab && !service.isLoading && (
-                  <>
-                    {service.canCreateRoles && (
-                      <RolesAction
-                        onAdd={service.openAddRoleModal}
+                    </>
+                  )}
+                {service.tab === 'roles' &&
+                  canViewRolesTab &&
+                  !service.isLoading && (
+                    <>
+                      {service.canCreateRoles && (
+                        <RolesAction
+                          onAdd={service.openAddRoleModal}
+                          t={service.t}
+                        />
+                      )}
+                      <RolesSearch
+                        value={service.roleSearch}
+                        onChange={service.setRoleSearch}
                         t={service.t}
                       />
-                    )}
-                    <RolesSearch
-                      value={service.roleSearch}
-                      onChange={service.setRoleSearch}
-                      t={service.t}
-                    />
-                  </>
-                )}
+                    </>
+                  )}
               </div>
             </div>
 
