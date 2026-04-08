@@ -247,10 +247,10 @@ BEGIN
   -- ============================================================
   -- Application Logs
   INSERT INTO public.fields (id, name, type, schema_id, metadata) VALUES
-    (gen_random_uuid(), 'message',   'STRING',   s_app_logs, null),
+    (gen_random_uuid(), 'message',   'STRING',   s_app_logs, '{}'::json),
     (gen_random_uuid(), 'level',     'ENUM',     s_app_logs, '{"values":["DEBUG","INFO","WARN","ERROR","FATAL"]}'::json),
-    (gen_random_uuid(), 'timestamp', 'DATETIME', s_app_logs, null),
-    (gen_random_uuid(), 'service',   'STRING',   s_app_logs, null);
+    (gen_random_uuid(), 'timestamp', 'DATETIME', s_app_logs, '{}'::json),
+    (gen_random_uuid(), 'service',   'STRING',   s_app_logs, '{}'::json);
 
   -- System Metrics
   INSERT INTO public.fields (id, name, type, schema_id, metadata) VALUES
@@ -259,41 +259,41 @@ BEGIN
     (gen_random_uuid(), 'disk_io',        'NUMBER',  s_sys_metrics, '{"unit":"MB/s"}'::json),
     (gen_random_uuid(), 'network_in',     'NUMBER',  s_sys_metrics, '{"unit":"KB/s"}'::json),
     (gen_random_uuid(), 'network_out',    'NUMBER',  s_sys_metrics, '{"unit":"KB/s"}'::json),
-    (gen_random_uuid(), 'active_connections','NUMBER',s_sys_metrics, null);
+    (gen_random_uuid(), 'active_connections','NUMBER',s_sys_metrics, '{}'::json);
 
   -- Error Reports
   INSERT INTO public.fields (id, name, type, schema_id, metadata) VALUES
-    (gen_random_uuid(), 'error_message', 'STRING', s_errors, null),
-    (gen_random_uuid(), 'stack_trace',   'STRING', s_errors, null),
+    (gen_random_uuid(), 'error_message', 'STRING', s_errors, '{}'::json),
+    (gen_random_uuid(), 'stack_trace',   'STRING', s_errors, '{}'::json),
     (gen_random_uuid(), 'severity',      'ENUM',   s_errors, '{"values":["low","medium","high","critical"]}'::json);
 
   -- HTTP Requests
   INSERT INTO public.fields (id, name, type, schema_id, metadata) VALUES
-    (gen_random_uuid(), 'method',      'STRING',  s_http, null),
-    (gen_random_uuid(), 'endpoint',    'STRING',  s_http, null),
-    (gen_random_uuid(), 'status_code', 'NUMBER',  s_http, null),
+    (gen_random_uuid(), 'method',      'STRING',  s_http, '{}'::json),
+    (gen_random_uuid(), 'endpoint',    'STRING',  s_http, '{}'::json),
+    (gen_random_uuid(), 'status_code', 'NUMBER',  s_http, '{}'::json),
     (gen_random_uuid(), 'duration_ms', 'NUMBER',  s_http, '{"unit":"ms"}'::json),
-    (gen_random_uuid(), 'ip_address',  'STRING',  s_http, null);
+    (gen_random_uuid(), 'ip_address',  'STRING',  s_http, '{}'::json);
 
   -- User Actions
   INSERT INTO public.fields (id, name, type, schema_id, metadata) VALUES
-    (gen_random_uuid(), 'action',     'STRING',  s_user_actions, null),
-    (gen_random_uuid(), 'user_agent', 'STRING',  s_user_actions, null),
-    (gen_random_uuid(), 'page',       'STRING',  s_user_actions, null),
-    (gen_random_uuid(), 'session_id', 'STRING',  s_user_actions, null);
+    (gen_random_uuid(), 'action',     'STRING',  s_user_actions, '{}'::json),
+    (gen_random_uuid(), 'user_agent', 'STRING',  s_user_actions, '{}'::json),
+    (gen_random_uuid(), 'page',       'STRING',  s_user_actions, '{}'::json),
+    (gen_random_uuid(), 'session_id', 'STRING',  s_user_actions, '{}'::json);
 
   -- Deployments
   INSERT INTO public.fields (id, name, type, schema_id, metadata) VALUES
-    (gen_random_uuid(), 'version',     'STRING',  s_deployments, null),
-    (gen_random_uuid(), 'environment', 'STRING',  s_deployments, null),
+    (gen_random_uuid(), 'version',     'STRING',  s_deployments, '{}'::json),
+    (gen_random_uuid(), 'environment', 'STRING',  s_deployments, '{}'::json),
     (gen_random_uuid(), 'status',      'ENUM',    s_deployments, '{"values":["success","failed","rolled_back"]}'::json),
     (gen_random_uuid(), 'duration_s',  'NUMBER',  s_deployments, '{"unit":"seconds"}'::json);
 
   -- Performance (Mobile)
   INSERT INTO public.fields (id, name, type, schema_id, metadata) VALUES
-    (gen_random_uuid(), 'screen_name',   'STRING', s_perf, null),
+    (gen_random_uuid(), 'screen_name',   'STRING', s_perf, '{}'::json),
     (gen_random_uuid(), 'load_time_ms',  'NUMBER', s_perf, '{"unit":"ms"}'::json),
-    (gen_random_uuid(), 'fps',           'NUMBER', s_perf, null),
+    (gen_random_uuid(), 'fps',           'NUMBER', s_perf, '{}'::json),
     (gen_random_uuid(), 'battery_level', 'NUMBER', s_perf, '{"unit":"percent"}'::json);
 
   -- ============================================================
