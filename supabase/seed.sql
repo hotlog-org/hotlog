@@ -444,10 +444,10 @@ BEGIN
   -- 11. API_KEYS (4 keys)
   -- ============================================================
   INSERT INTO public.api_keys (key, project_id) VALUES
-    ('hk_live_' || encode(gen_random_bytes(24), 'hex'), p_prod),
-    ('hk_test_' || encode(gen_random_bytes(24), 'hex'), p_staging),
-    ('hk_live_' || encode(gen_random_bytes(24), 'hex'), p_analytics),
-    ('hk_live_' || encode(gen_random_bytes(24), 'hex'), p_mobile);
+    (gen_random_uuid(), p_prod),
+    (gen_random_uuid(), p_staging),
+    (gen_random_uuid(), p_analytics),
+    (gen_random_uuid(), p_mobile);
 
   -- ============================================================
   -- DONE
