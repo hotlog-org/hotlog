@@ -96,9 +96,13 @@ export function EventsComponent() {
                 (key: string) => service.t(key),
               )
               return (
-                <span
+                <button
+                  type='button'
                   key={filter.id}
-                  className='border-border text-muted-foreground inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs'
+                  onClick={() =>
+                    service.editFieldFilters(filter.schemaId, filter.fieldKey)
+                  }
+                  className='border-border text-muted-foreground inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs transition hover:border-foreground/40 hover:text-foreground'
                 >
                   <span className='font-medium text-foreground'>
                     {parts.schemaLabel}
@@ -109,14 +113,26 @@ export function EventsComponent() {
                   {parts.valueLabel ? (
                     <span className='text-foreground'>{parts.valueLabel}</span>
                   ) : null}
-                  <button
-                    type='button'
-                    onClick={() => service.removeFieldFilter(filter.id)}
-                    className='hover:text-foreground'
+                  <span
+                    role='button'
+                    aria-label='Remove filter'
+                    tabIndex={0}
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      service.removeFieldFilter(filter.id)
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault()
+                        e.stopPropagation()
+                        service.removeFieldFilter(filter.id)
+                      }
+                    }}
+                    className='-mr-1 ml-1 inline-flex size-4 items-center justify-center rounded hover:bg-destructive/20 hover:text-destructive'
                   >
                     <LucideX className='size-3.5' />
-                  </button>
-                </span>
+                  </span>
+                </button>
               )
             })}
           </div>

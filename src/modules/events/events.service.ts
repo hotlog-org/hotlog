@@ -392,15 +392,12 @@ const useEventsService = (): EventsService => {
   // Fast-navigation: open the popover straight at the value step for
   // an existing (schemaId, fieldKey). Used when the user clicks on a
   // chip in the strip above the table.
-  const editFieldFilters = useCallback(
-    (schemaId: string, fieldKey: string) => {
-      setDraftSchemaId(schemaId)
-      setDraftFieldKey(fieldKey)
-      setFilterStep('value')
-      setFilterMenuOpen(true)
-    },
-    [],
-  )
+  const editFieldFilters = useCallback((schemaId: string, fieldKey: string) => {
+    setDraftSchemaId(schemaId)
+    setDraftFieldKey(fieldKey)
+    setFilterStep('value')
+    setFilterMenuOpen(true)
+  }, [])
 
   const back = useCallback(() => {
     if (filterStep === 'value') {
@@ -625,6 +622,7 @@ const useEventsService = (): EventsService => {
     fieldFilters,
     removeFieldFilter,
     clearFieldFilters,
+    editFieldFilters,
     filterMenu,
     selectedEvent,
     selectedSchema,

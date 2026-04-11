@@ -142,13 +142,7 @@ const KeywordButton = (props: KeywordButtonProps) => {
             {literal}
           </Button>
         </TooltipTrigger>
-        <TooltipContent
-          side='top'
-          sideOffset={6}
-          className='border border-border bg-popover text-popover-foreground shadow-md [&>span>svg]:fill-popover [&>span>svg]:bg-popover'
-        >
-          {tooltip}
-        </TooltipContent>
+        <TooltipContent side='top'>{tooltip}</TooltipContent>
       </Tooltip>
     </TooltipProvider>
   )
@@ -347,18 +341,8 @@ function ValueTokenInputInner(
         )}
 
         <span className='mx-1 text-xs text-muted-foreground'>·</span>
-        <KeywordButton
-          literal='and'
-          insert='and '
-          variant='ghost'
-          onInsert={insertAtEnd}
-        />
-        <KeywordButton
-          literal='or'
-          insert='or '
-          variant='ghost'
-          onInsert={insertAtEnd}
-        />
+        <KeywordButton literal='and' insert='and ' onInsert={insertAtEnd} />
+        <KeywordButton literal='or' insert='or ' onInsert={insertAtEnd} />
       </div>
 
       {fieldType === 'enum' && enumValues && enumValues.length > 0 ? (

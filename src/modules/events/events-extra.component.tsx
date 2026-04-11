@@ -64,12 +64,15 @@ export function EventsExtraComponent(props: EventsExtraComponentProps) {
   return (
     <div className='space-y-2'>
       <div className='flex flex-wrap items-end gap-3'>
-        <Menubar className='h-9 border-border'>
-          <MenubarMenu>
-            <MenubarTrigger
-              className='gap-2 hover:bg-transparent focus:bg-transparent'
-              onClick={() => filterMenu.openChange(!filterMenu.open)}
-            >
+        {/* Controlled menubar so the popover can be opened
+            programmatically (e.g. clicking a chip above the table). */}
+        <Menubar
+          className='h-9 border-border'
+          value={filterMenu.open ? 'filter' : ''}
+          onValueChange={(v) => filterMenu.openChange(v === 'filter')}
+        >
+          <MenubarMenu value='filter'>
+            <MenubarTrigger className='gap-2 hover:bg-transparent focus:bg-transparent'>
               <HugeiconsIcon icon={FilterAddIcon} className='size-4' />
               {t('filter.button')}
             </MenubarTrigger>
