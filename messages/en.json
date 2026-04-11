@@ -122,9 +122,45 @@
           "back": "Back",
           "apply": "Apply filter",
           "clearAll": "Clear all",
-          "valuePlaceholder": "Type to filter",
+          "valuePlaceholder": "e.g. < 30 and > 20",
           "hasFilter": "Filter applied",
-          "reset": "Reset filters"
+          "reset": "Reset filters",
+          "operators": {
+            "contains": "contains",
+            "eq": "=",
+            "ne": "≠",
+            "starts_with": "starts with",
+            "ends_with": "ends with",
+            "gt": ">",
+            "gte": "≥",
+            "lt": "<",
+            "lte": "≤",
+            "between": "between",
+            "is_one_of": "is one of",
+            "is_not_one_of": "is not one of",
+            "is_true": "is true",
+            "is_false": "is false",
+            "is_on": "on",
+            "before": "before",
+            "after": "after",
+            "contains_item": "contains",
+            "is_empty": "is empty",
+            "is_not_empty": "is not empty"
+          },
+          "tokenInput": {
+            "placeholder": "Type filters: amount > 100, currency = USD, ..."
+          },
+          "suggestions": {
+            "fields": "Fields:",
+            "operators": "Operators:",
+            "values": "Values:"
+          },
+          "applyCount": "Apply {count} filters",
+          "noSchemas": "No schemas in this project yet.",
+          "noFields": "No fields on this schema.",
+          "preview": "Preview:",
+          "jsonIfHint": "KEY if EXPR — filter on a nested json key",
+          "clearField": "Clear filters for this field"
         },
         "table": {
           "event": "Event",

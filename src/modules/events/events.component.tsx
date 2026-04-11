@@ -18,6 +18,7 @@ import { Skeleton } from '@/shared/ui/skeleton'
 import { useInfiniteScroll } from '@/shared/hooks'
 
 import useEventsService from './events.service'
+import { formatFilterChip } from './filter-operators'
 import { EventsTable } from './fields/table/events-table.component'
 import { DetailDrawer } from './fields/detail/detail-drawer.component'
 
@@ -59,7 +60,7 @@ export function EventsComponent() {
         <h1 className='text-2xl'>{service.t('title')}</h1>
 
         {(service.selectedSchemas.length > 0 ||
-          service.appliedFilters.length > 0) && (
+          service.fieldFilters.length > 0) && (
           <div className='flex flex-wrap items-center gap-2'>
             {service.selectedSchemas.map((schemaId) => {
               const schema = service.schemas.find((s) => s.id === schemaId)
@@ -82,30 +83,35 @@ export function EventsComponent() {
               )
             })}
 
-            {service.appliedFilters.map((filter) => {
-              const schema = service.schemas.find(
-                (s) => s.id === filter.schemaId,
+            {service.fieldFilters.map((filter) => {
+              const parts = formatFilterChip(
+                {
+                  schemaDisplayName: filter.schemaDisplayName,
+                  fieldKey: filter.fieldKey,
+                  operator: filter.operator,
+                  values: filter.values,
+                  quantifier: filter.quantifier,
+                  keyPath: filter.keyPath,
+                },
+                (key: string) => service.t(key),
               )
               return (
                 <span
-                  key={`${filter.schemaId}-${filter.fieldKey}`}
+                  key={filter.id}
                   className='border-border text-muted-foreground inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs'
                 >
                   <span className='font-medium text-foreground'>
-                    {schema?.name ?? filter.schemaId}
+                    {parts.schemaLabel}
                   </span>
-                  <span className='text-border'>/</span>
-                  <span>{filter.fieldKey}</span>
-                  <span className='text-border'>=</span>
-                  <span className='text-foreground'>{filter.value}</span>
+                  <span className='text-border'>·</span>
+                  <span>{parts.fieldLabel}</span>
+                  <span className='text-border'>{parts.opLabel}</span>
+                  {parts.valueLabel ? (
+                    <span className='text-foreground'>{parts.valueLabel}</span>
+                  ) : null}
                   <button
                     type='button'
-                    onClick={() =>
-                      service.removeFieldFilter(
-                        filter.schemaId,
-                        filter.fieldKey,
-                      )
-                    }
+                    onClick={() => service.removeFieldFilter(filter.id)}
                     className='hover:text-foreground'
                   >
                     <LucideX className='size-3.5' />

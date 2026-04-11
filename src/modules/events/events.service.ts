@@ -9,6 +9,7 @@ import {
   useState,
 } from 'react'
 import { useTranslations } from 'next-intl'
+import { useQueries } from '@tanstack/react-query'
 
 import { useDashboardNavbarExtra } from '@/shared/store/dashboard-navbar-extra.store'
 import { useDashboardProject } from '@/shared/store/dashboard-project.store'
@@ -18,12 +19,13 @@ import {
   type IEventFieldFilter,
   type IFieldDto,
   type ProjectFieldType,
+  ESchemaKey,
 } from '@/shared/api/interface'
 import {
   useDeleteEventsMutation,
   useEventsInfiniteQuery,
 } from '@/shared/api/event'
-import { useSchemaFieldsQuery, useSchemasQuery } from '@/shared/api/schema'
+import { schemaFieldsQueryApi, useSchemasQuery } from '@/shared/api/schema'
 
 import {
   type EventRecord,
@@ -32,21 +34,56 @@ import {
   type FieldType,
   type SchemaField,
 } from './mock-data'
+import {
+  makeFilterId,
+  type ParsedFieldFilter,
+} from './fields/filter/filter-parser'
+import { formatClausesToText } from './fields/filter/value-clause-parser'
 import { EventsExtraComponent } from './events-extra.component'
 
 export type SchemaOption = EventSchema
 export type TFunction = ReturnType<typeof useTranslations>
 
-export interface FieldFilter {
-  schemaId: string
-  fieldKey: string
-  value: string
-}
+// The local FieldFilter is a thin alias around ParsedFieldFilter — same
+// shape, just renamed for the rest of the events module.
+export type FieldFilter = ParsedFieldFilter
 
 export interface EventFilters {
   query: string
   selectedSchemas: string[]
   fieldFilters: FieldFilter[]
+}
+
+export interface FilterMenuState {
+  open: boolean
+  step: 'schema' | 'field' | 'value'
+  draftSchemaId: string | null
+  draftSchemaName: string | null
+  draftField: SchemaField | null
+  fields: { field: SchemaField; hasFilter: boolean }[]
+  schemas: SchemaOption[]
+  schemaHasFilters: (schemaId: string) => boolean
+  // Canonical text reconstruction of the filters that already exist
+  // on the currently-selected (schemaId, fieldKey) pair. Used to
+  // pre-populate the value-step input on reopen so the user can
+  // edit existing filters in place.
+  initialValueText: string
+  openChange: (open: boolean) => void
+  selectSchema: (schemaId: string) => void
+  selectField: (fieldKey: string) => void
+  back: () => void
+  clearAll: () => void
+  // Called when the user clicks Apply at the value step. Replaces all
+  // existing filters on the chosen (schemaId, fieldKey) with the new
+  // ones — passing an empty array clears the field's filters entirely.
+  applyClauses: (
+    clauses: {
+      operator: FieldFilter['operator']
+      values: string[]
+      quantifier?: FieldFilter['quantifier']
+      keyPath?: FieldFilter['keyPath']
+    }[],
+  ) => void
 }
 
 export interface EventsService {
@@ -56,9 +93,15 @@ export interface EventsService {
   addSchema: (schemaId: string) => void
   removeSchema: (schemaId: string) => void
   selectedSchemas: string[]
-  upsertFieldFilter: (schemaId: string, fieldKey: string, value: string) => void
-  removeFieldFilter: (schemaId: string, fieldKey: string) => void
+  fieldFilters: FieldFilter[]
+  removeFieldFilter: (id: string) => void
+  clearFieldFilters: () => void
+  // Open the filter popover directly at the value step for an
+  // existing (schemaId, fieldKey) pair so the user can edit it
+  // without manually navigating the schema/field menus.
+  editFieldFilters: (schemaId: string, fieldKey: string) => void
   resetFilters: () => void
+  filterMenu: FilterMenuState
   rows: EventRow[]
   schemas: SchemaOption[]
   selectedEvent: EventRecord | null
@@ -87,24 +130,6 @@ export interface EventsService {
   confirmDelete: () => void
   isDeleting: boolean
   deleteError: string | null
-  filterMenu: {
-    open: boolean
-    step: 'schema' | 'field' | 'value'
-    draftSchemaId: string | null
-    draftFieldKey: string | null
-    draftValue: string
-    schemas: SchemaOption[]
-    schemaHasFilters: (schemaId: string) => boolean
-    fields: { field: SchemaField; hasFilter: boolean }[]
-    openChange: (open: boolean) => void
-    selectSchema: (schemaId: string) => void
-    selectField: (fieldKey: string) => void
-    setDraftValue: (value: string) => void
-    back: () => void
-    apply: () => void
-    clearAll: () => void
-  }
-  appliedFilters: FieldFilter[]
 }
 
 const FIELD_TYPE_MAP: Record<ProjectFieldType, FieldType> = {
@@ -135,6 +160,26 @@ const eventDtoToRecord = (dto: IEventDto): EventRecord => ({
   payload: dto.value,
 })
 
+const filterToWire = (filter: FieldFilter): IEventFieldFilter => ({
+  schema_id: filter.schemaId,
+  field_key: filter.fieldKey,
+  field_type: FIELD_TYPE_MAP_REVERSE[filter.fieldType],
+  operator: filter.operator,
+  values: filter.values,
+  quantifier: filter.quantifier,
+  key_path: filter.keyPath,
+})
+
+const FIELD_TYPE_MAP_REVERSE: Record<FieldType, ProjectFieldType> = {
+  string: 'STRING',
+  number: 'NUMBER',
+  boolean: 'BOOLEAN',
+  datetime: 'DATETIME',
+  array: 'ARRAY',
+  json: 'JSON',
+  enum: 'ENUM',
+}
+
 const useEventsService = (): EventsService => {
   const t = useTranslations('modules.dashboard.events')
   const selectedProjectId = useDashboardProject((s) => s.selectedProjectId)
@@ -145,7 +190,14 @@ const useEventsService = (): EventsService => {
   const [query, setQuery] = useState('')
   const deferredQuery = useDeferredValue(query)
   const [selectedSchemas, setSelectedSchemas] = useState<string[]>([])
-  const [fieldFilters, setFieldFilters] = useState<FieldFilter[]>([])
+  const [fieldFilters, setFieldFiltersState] = useState<FieldFilter[]>([])
+  // Popover draft state
+  const [filterMenuOpen, setFilterMenuOpen] = useState(false)
+  const [filterStep, setFilterStep] = useState<'schema' | 'field' | 'value'>(
+    'schema',
+  )
+  const [draftSchemaId, setDraftSchemaId] = useState<string | null>(null)
+  const [draftFieldKey, setDraftFieldKey] = useState<string | null>(null)
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
   const [pendingDeleteIds, setPendingDeleteIds] = useState<number[] | null>(
@@ -166,13 +218,41 @@ const useEventsService = (): EventsService => {
     }))
   }, [schemasQuery.data])
 
+  // Fan out: fetch active fields for every schema in the project so the
+  // filter parser can resolve identifiers across all schemas. Each query
+  // is cached individually and shared with the detail drawer's per-schema
+  // fetch, so we don't double-fetch.
+  const schemaList = schemasQuery.data?.data ?? []
+  const fieldQueries = useQueries({
+    queries: schemaList.map((s) => ({
+      queryKey: [
+        ESchemaKey.SCHEMA_FIELDS_QUERY,
+        s.id,
+        { includeArchived: false },
+      ],
+      queryFn: (opt: { signal: AbortSignal }) =>
+        schemaFieldsQueryApi(s.id, false, {
+          signal: opt.signal,
+        } as Parameters<typeof schemaFieldsQueryApi>[2]),
+      enabled: Boolean(canRead && selectedProjectId),
+      staleTime: 1000 * 60,
+    })),
+  })
+
+  // Map schemaId -> active fields. Used by the popover field step and
+  // by the detail drawer (so we don't double-fetch the same schemas).
+  const fieldsBySchemaId: Map<string, IFieldDto[]> = useMemo(() => {
+    const m = new Map<string, IFieldDto[]>()
+    schemaList.forEach((s, i) => {
+      const fieldsResp = fieldQueries[i]?.data
+      m.set(s.id, fieldsResp?.data ?? [])
+    })
+    return m
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [schemaList, ...fieldQueries.map((q) => q.data)])
+
   const apiFieldFilters: IEventFieldFilter[] = useMemo(
-    () =>
-      fieldFilters.map((f) => ({
-        schema_id: f.schemaId,
-        field_key: f.fieldKey,
-        value: f.value,
-      })),
+    () => fieldFilters.map(filterToWire),
     [fieldFilters],
   )
 
@@ -210,103 +290,14 @@ const useEventsService = (): EventsService => {
     [flatEvents, schemaNameById, t],
   )
 
-  // === Filter menu draft state (UX unchanged) =================
-  const [filterMenuOpen, setFilterMenuOpen] = useState(false)
-  const [filterStep, setFilterStep] = useState<'schema' | 'field' | 'value'>(
-    'schema',
-  )
-  const [draftSchemaId, setDraftSchemaId] = useState<string | null>(null)
-  const [draftFieldKey, setDraftFieldKey] = useState<string | null>(null)
-  const [draftValue, setDraftValue] = useState('')
-
-  // Lazy-load fields for whichever schema the user is browsing in
-  // the filter menu so we only fetch when needed.
-  const draftFieldsQuery = useSchemaFieldsQuery(draftSchemaId ?? undefined)
-  const draftFieldList: SchemaField[] = useMemo(
-    () => (draftFieldsQuery.data?.data ?? []).map(fieldDtoToSchemaField),
-    [draftFieldsQuery.data],
-  )
-
-  const fieldsForDraftSchema: { field: SchemaField; hasFilter: boolean }[] =
-    useMemo(() => {
-      if (!draftSchemaId) return []
-      return draftFieldList.map((field) => ({
-        field,
-        hasFilter: fieldFilters.some(
-          (f) => f.schemaId === draftSchemaId && f.fieldKey === field.key,
-        ),
-      }))
-    }, [draftFieldList, draftSchemaId, fieldFilters])
-
-  const resetDraft = useCallback(() => {
-    setDraftSchemaId(null)
-    setDraftFieldKey(null)
-    setDraftValue('')
-    setFilterStep('schema')
+  // === Filter list management ================================
+  const removeFieldFilter = useCallback((id: string) => {
+    setFieldFiltersState((prev) => prev.filter((f) => f.id !== id))
   }, [])
 
-  const schemaHasFilters = useCallback(
-    (id: string) => fieldFilters.some((f) => f.schemaId === id),
-    [fieldFilters],
-  )
-
-  const openChange = useCallback(
-    (open: boolean) => {
-      setFilterMenuOpen(open)
-      if (!open) resetDraft()
-      if (open) setFilterStep('schema')
-    },
-    [resetDraft],
-  )
-
-  const selectSchema = useCallback((id: string) => {
-    setDraftSchemaId(id)
-    setFilterStep('field')
+  const clearFieldFilters = useCallback(() => {
+    setFieldFiltersState([])
   }, [])
-
-  const selectField = useCallback(
-    (fieldKey: string) => {
-      setDraftFieldKey(fieldKey)
-      const existing = fieldFilters.find(
-        (f) => f.schemaId === draftSchemaId && f.fieldKey === fieldKey,
-      )
-      setDraftValue(existing?.value ?? '')
-      setFilterStep('value')
-    },
-    [draftSchemaId, fieldFilters],
-  )
-
-  const upsertFieldFilter = useCallback(
-    (schema: string, fieldKey: string, value: string) => {
-      setFieldFilters((prev) => {
-        const existing = prev.find(
-          (f) => f.schemaId === schema && f.fieldKey === fieldKey,
-        )
-        if (existing) {
-          return prev.map((f) =>
-            f.schemaId === schema && f.fieldKey === fieldKey
-              ? { ...f, value }
-              : f,
-          )
-        }
-        return [...prev, { schemaId: schema, fieldKey, value }]
-      })
-    },
-    [],
-  )
-
-  const removeFieldFilter = useCallback((schema: string, fieldKey: string) => {
-    setFieldFilters((prev) =>
-      prev.filter((f) => !(f.schemaId === schema && f.fieldKey === fieldKey)),
-    )
-  }, [])
-
-  const applyFilter = useCallback(() => {
-    const value = draftValue.trim()
-    if (!draftSchemaId || !draftFieldKey || !value) return
-    upsertFieldFilter(draftSchemaId, draftFieldKey, value)
-    setFilterStep('field')
-  }, [draftFieldKey, draftSchemaId, draftValue, upsertFieldFilter])
 
   const addSchema = useCallback((id: string) => {
     setSelectedSchemas((prev) => (prev.includes(id) ? prev : [...prev, id]))
@@ -314,29 +305,156 @@ const useEventsService = (): EventsService => {
 
   const removeSchema = useCallback((id: string) => {
     setSelectedSchemas((prev) => prev.filter((s) => s !== id))
-    setFieldFilters((prev) => prev.filter((f) => f.schemaId !== id))
+    setFieldFiltersState((prev) => prev.filter((f) => f.schemaId !== id))
   }, [])
-
-  const back = useCallback(() => {
-    if (filterStep === 'value') {
-      setFilterStep('field')
-      return
-    }
-    setFilterStep('schema')
-    setDraftFieldKey(null)
-  }, [filterStep])
-
-  const clearAll = useCallback(() => {
-    setFieldFilters([])
-    setSelectedSchemas([])
-    resetDraft()
-  }, [resetDraft])
 
   const resetFilters = useCallback(() => {
     setQuery('')
     setSelectedSchemas([])
-    setFieldFilters([])
+    setFieldFiltersState([])
   }, [])
+
+  // === Popover state machine ==================================
+  const draftSchema = useMemo(
+    () => schemaList.find((s) => s.id === draftSchemaId) ?? null,
+    [draftSchemaId, schemaList],
+  )
+
+  const draftFieldList: SchemaField[] = useMemo(
+    () =>
+      draftSchemaId
+        ? (fieldsBySchemaId.get(draftSchemaId) ?? []).map(fieldDtoToSchemaField)
+        : [],
+    [draftSchemaId, fieldsBySchemaId],
+  )
+
+  const fieldsForDraftSchema = useMemo(
+    () =>
+      draftFieldList.map((field) => ({
+        field,
+        hasFilter: fieldFilters.some(
+          (f) => f.schemaId === draftSchemaId && f.fieldKey === field.key,
+        ),
+      })),
+    [draftFieldList, draftSchemaId, fieldFilters],
+  )
+
+  const draftField = useMemo(
+    () =>
+      draftFieldKey
+        ? (draftFieldList.find((f) => f.key === draftFieldKey) ?? null)
+        : null,
+    [draftFieldKey, draftFieldList],
+  )
+
+  // Reconstruct the canonical text form of any existing filters on the
+  // current draft (schemaId, fieldKey) so the value-step input can be
+  // pre-populated for editing.
+  const initialValueText = useMemo(() => {
+    if (!draftSchemaId || !draftFieldKey) return ''
+    const existing = fieldFilters.filter(
+      (f) => f.schemaId === draftSchemaId && f.fieldKey === draftFieldKey,
+    )
+    if (existing.length === 0) return ''
+    return formatClausesToText(existing)
+  }, [fieldFilters, draftSchemaId, draftFieldKey])
+
+  const schemaHasFilters = useCallback(
+    (id: string) => fieldFilters.some((f) => f.schemaId === id),
+    [fieldFilters],
+  )
+
+  const resetDraft = useCallback(() => {
+    setDraftSchemaId(null)
+    setDraftFieldKey(null)
+    setFilterStep('schema')
+  }, [])
+
+  const openChange = useCallback(
+    (open: boolean) => {
+      setFilterMenuOpen(open)
+      if (!open) resetDraft()
+      else setFilterStep('schema')
+    },
+    [resetDraft],
+  )
+
+  const selectSchemaInMenu = useCallback((id: string) => {
+    setDraftSchemaId(id)
+    setFilterStep('field')
+  }, [])
+
+  const selectFieldInMenu = useCallback((fieldKey: string) => {
+    setDraftFieldKey(fieldKey)
+    setFilterStep('value')
+  }, [])
+
+  // Fast-navigation: open the popover straight at the value step for
+  // an existing (schemaId, fieldKey). Used when the user clicks on a
+  // chip in the strip above the table.
+  const editFieldFilters = useCallback(
+    (schemaId: string, fieldKey: string) => {
+      setDraftSchemaId(schemaId)
+      setDraftFieldKey(fieldKey)
+      setFilterStep('value')
+      setFilterMenuOpen(true)
+    },
+    [],
+  )
+
+  const back = useCallback(() => {
+    if (filterStep === 'value') {
+      setFilterStep('field')
+      setDraftFieldKey(null)
+      return
+    }
+    setFilterStep('schema')
+    setDraftSchemaId(null)
+  }, [filterStep])
+
+  const clearAll = useCallback(() => {
+    setFieldFiltersState([])
+    setSelectedSchemas([])
+    resetDraft()
+  }, [resetDraft])
+
+  const applyClauses = useCallback(
+    (
+      clauses: {
+        operator: FieldFilter['operator']
+        values: string[]
+        quantifier?: FieldFilter['quantifier']
+        keyPath?: FieldFilter['keyPath']
+      }[],
+    ) => {
+      if (!draftSchema || !draftField) return
+      const newFilters: FieldFilter[] = clauses.map((c) => ({
+        id: makeFilterId(),
+        schemaId: draftSchema.id,
+        schemaKey: draftSchema.key,
+        schemaDisplayName: draftSchema.displayName,
+        fieldKey: draftField.key,
+        fieldType: draftField.type,
+        operator: c.operator,
+        values: c.values,
+        quantifier: c.quantifier,
+        keyPath: c.keyPath,
+      }))
+      // Replace any existing filters on this (schemaId, fieldKey) with
+      // the new ones. Passing an empty `clauses` array clears the
+      // field's filters entirely (the user emptied the input).
+      setFieldFiltersState((prev) => [
+        ...prev.filter(
+          (f) =>
+            !(f.schemaId === draftSchema.id && f.fieldKey === draftField.key),
+        ),
+        ...newFilters,
+      ])
+      setFilterMenuOpen(false)
+      resetDraft()
+    },
+    [draftField, draftSchema, resetDraft],
+  )
 
   // === Row selection (for bulk delete) ========================
   const toggleRowSelection = useCallback((id: string, selected: boolean) => {
@@ -427,8 +545,9 @@ const useEventsService = (): EventsService => {
     [rows, selectedId],
   )
 
-  const selectedSchemaFieldsQuery = useSchemaFieldsQuery(selectedRow?.schemaId)
-
+  // The detail drawer needs the selected schema's fields. We already
+  // fetch fields for every schema via parserSchemas, so reuse that
+  // instead of firing another query.
   const selectedEvent: EventRecord | null = useMemo(() => {
     if (!selectedRow) return null
     const {
@@ -441,16 +560,15 @@ const useEventsService = (): EventsService => {
 
   const selectedSchema: EventSchema | null = useMemo(() => {
     if (!selectedRow) return null
-    const fields = (selectedSchemaFieldsQuery.data?.data ?? []).map(
-      fieldDtoToSchemaField,
-    )
+    const matchedFields = fieldsBySchemaId.get(selectedRow.schemaId) ?? []
+    const fields = matchedFields.map(fieldDtoToSchemaField)
     return {
       id: selectedRow.schemaId,
       name: selectedRow.schemaName,
       version: '',
       fields,
     }
-  }, [selectedRow, selectedSchemaFieldsQuery.data])
+  }, [selectedRow, fieldsBySchemaId])
 
   const filters: EventFilters = {
     query,
@@ -463,74 +581,51 @@ const useEventsService = (): EventsService => {
     (s) => s.handleDashboardNavbarExtra,
   )
 
+  const filterMenu: FilterMenuState = {
+    open: filterMenuOpen,
+    step: filterStep,
+    draftSchemaId,
+    draftSchemaName: draftSchema?.displayName ?? null,
+    draftField,
+    fields: fieldsForDraftSchema,
+    schemas,
+    schemaHasFilters,
+    initialValueText,
+    openChange,
+    selectSchema: selectSchemaInMenu,
+    selectField: selectFieldInMenu,
+    back,
+    clearAll,
+    applyClauses,
+  }
+
   useEffect(() => {
     setNavbarExtra({
       component: createElement(EventsExtraComponent, {
         t,
         query,
         onQueryChange: setQuery,
-        filterMenu: {
-          open: filterMenuOpen,
-          step: filterStep,
-          draftSchemaId,
-          draftFieldKey,
-          draftValue,
-          schemas,
-          schemaHasFilters,
-          fields: fieldsForDraftSchema,
-          openChange,
-          selectSchema: (id: string) => {
-            addSchema(id)
-            selectSchema(id)
-          },
-          selectField,
-          setDraftValue,
-          back,
-          apply: applyFilter,
-          clearAll,
-        },
-        appliedFilters: fieldFilters,
-        removeFieldFilter,
+        filterMenu,
       }),
     })
 
     return () => setNavbarExtra({ component: undefined })
-  }, [
-    addSchema,
-    applyFilter,
-    back,
-    clearAll,
-    draftFieldKey,
-    draftSchemaId,
-    draftValue,
-    fieldFilters,
-    fieldsForDraftSchema,
-    filterMenuOpen,
-    filterStep,
-    openChange,
-    query,
-    removeFieldFilter,
-    schemaHasFilters,
-    schemas,
-    selectField,
-    selectSchema,
-    setDraftValue,
-    setNavbarExtra,
-    t,
-  ])
+  }, [filterMenu, query, setNavbarExtra, t])
 
   return {
     t,
     filters,
     setQuery,
-    upsertFieldFilter,
-    removeFieldFilter,
     resetFilters,
     rows,
     schemas,
     addSchema,
     removeSchema,
     selectedSchemas,
+    fieldFilters,
+    removeFieldFilter,
+    clearFieldFilters,
+    filterMenu,
     selectedEvent,
     selectedSchema,
     openEvent,
@@ -559,24 +654,6 @@ const useEventsService = (): EventsService => {
     confirmDelete,
     isDeleting: deleteEventsMutation.isPending,
     deleteError,
-    filterMenu: {
-      open: filterMenuOpen,
-      step: filterStep,
-      draftSchemaId,
-      draftFieldKey,
-      draftValue,
-      schemas,
-      schemaHasFilters,
-      fields: fieldsForDraftSchema,
-      openChange,
-      selectSchema,
-      selectField,
-      setDraftValue,
-      back,
-      apply: applyFilter,
-      clearAll,
-    },
-    appliedFilters: fieldFilters,
   }
 }
 
