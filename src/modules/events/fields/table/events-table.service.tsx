@@ -3,6 +3,7 @@ import { type ColumnDef } from '@tanstack/react-table'
 import { format, formatDistanceToNow } from 'date-fns'
 import {
   Calendar03Icon,
+  Delete02FreeIcons,
   Heading01Icon,
   SchemeIcon,
 } from '@hugeicons/core-free-icons'
@@ -14,6 +15,8 @@ import type { EventsTableProps } from './events-table.component'
 export const useEventsTableService = ({
   rows,
   onOpen,
+  onDelete,
+  canDelete,
   t,
 }: EventsTableProps) => {
   const columns: ColumnDef<EventRow>[] = useMemo(
@@ -84,21 +87,37 @@ export const useEventsTableService = ({
         id: 'action',
         header: '',
         cell: ({ row }) => (
-          <button
-            type='button'
-            aria-label={t('table.open')}
-            className='inline-flex items-center justify-center gap-1 text-sm opacity-60 underline'
-            onClick={(e) => {
-              e.stopPropagation()
-              onOpen(row.original.id)
-            }}
-          >
-            Open
-          </button>
+          <div className='flex items-center justify-end gap-3'>
+            <button
+              type='button'
+              aria-label={t('table.open')}
+              className='inline-flex items-center justify-center gap-1 text-sm opacity-60 underline'
+              onClick={(e) => {
+                e.stopPropagation()
+                onOpen(row.original.id)
+              }}
+            >
+              {t('table.open')}
+            </button>
+            {canDelete && onDelete ? (
+              <button
+                type='button'
+                aria-label={t('actions.delete')}
+                title={t('actions.delete')}
+                className='inline-flex items-center justify-center text-destructive opacity-60 hover:opacity-100'
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onDelete(Number(row.original.id))
+                }}
+              >
+                <HugeiconsIcon icon={Delete02FreeIcons} className='size-4' />
+              </button>
+            ) : null}
+          </div>
         ),
       },
     ],
-    [onOpen, t],
+    [canDelete, onDelete, onOpen, t],
   )
 
   const rowCountLabel = useMemo(

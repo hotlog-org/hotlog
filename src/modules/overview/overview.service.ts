@@ -27,8 +27,9 @@ import {
   useDeleteApiKeyMutation,
   useProjectApiKeysQuery,
 } from '@/shared/api/project-api-key'
+import { useEventStatsQuery } from '@/shared/api/event'
 
-import { buildApiRequestsSeries, permissionCategoryStyles } from './mock-data'
+import { permissionCategoryStyles } from './mock-data'
 import type {
   ApiRequestSeriesPoint,
   OverviewPermission,
@@ -46,6 +47,7 @@ export interface OverviewService {
   tab: OverviewTab
   setTab: (tab: OverviewTab) => void
   apiRequests: ApiRequestSeriesPoint[]
+  apiRequestsLoading: boolean
   apiKey: string | null
   apiKeyLoading: boolean
   canReadApiKey: boolean
@@ -161,7 +163,15 @@ const useOverviewService = (): OverviewService => {
   const [addRoleModalOpen, setAddRoleModalOpen] = useState(false)
   const [deleteProjectModalOpen, setDeleteProjectModalOpen] = useState(false)
 
-  const apiRequests = useMemo(() => buildApiRequestsSeries(), [])
+  const eventStatsQuery = useEventStatsQuery(selectedProjectId, 30)
+  const apiRequests: ApiRequestSeriesPoint[] = useMemo(() => {
+    const data = eventStatsQuery.data?.data ?? []
+    return data.map((row) => ({
+      date: new Date(row.day),
+      value: row.count,
+      category: 'Events',
+    }))
+  }, [eventStatsQuery.data])
 
   const isLoading =
     rolesQuery.isLoading || membersQuery.isLoading || permissionsQuery.isLoading
@@ -348,6 +358,7 @@ const useOverviewService = (): OverviewService => {
     tab,
     setTab,
     apiRequests,
+    apiRequestsLoading: eventStatsQuery.isLoading,
     apiKey,
     apiKeyLoading: apiKeysQuery.isLoading,
     canReadApiKey,

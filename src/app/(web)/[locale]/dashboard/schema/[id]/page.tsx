@@ -1,16 +1,10 @@
 import { ERoutes } from '@/config/routes'
-import { createClient } from '@/lib/supabase/client'
+import { createClient } from '@/lib/supabase/server'
 import { SchemaComponent } from '@/modules/schema'
 import { redirect } from 'next/navigation'
 
-interface SchemaDetailPageProps {
-  params: Promise<{ id: string }>
-}
-
-export default async function SchemaDetailPage({
-  params,
-}: SchemaDetailPageProps) {
-  const supabase = createClient()
+export default async function SchemaDetailPage() {
+  const supabase = await createClient()
 
   const {
     data: { user },
