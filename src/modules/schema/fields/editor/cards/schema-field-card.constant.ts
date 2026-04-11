@@ -17,7 +17,6 @@ export const typeOptions: SchemaFieldType[] = [
   'enum',
   'array',
   'json',
-  'object',
 ]
 
 export const typeStyles: Record<SchemaFieldType, string> = {
@@ -28,7 +27,6 @@ export const typeStyles: Record<SchemaFieldType, string> = {
   enum: 'bg-fuchsia-500/15 text-fuchsia-500',
   array: 'bg-cyan-500/15 text-cyan-500',
   json: 'bg-slate-500/15 text-slate-300',
-  object: 'bg-orange-500/15 text-orange-500',
 }
 
 export const rendererMap: Partial<

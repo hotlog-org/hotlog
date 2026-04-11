@@ -4,10 +4,13 @@ import type { SchemaFieldType } from '../../../schema.interface'
 export type FieldCardProps = {
   field: FieldWithMeta
   t: TFunction
-  maxDepth: number
-  onAddField: (parentId?: string) => void
-  onDeleteField: (fieldId: string) => void
-  onFieldNameChange: (fieldId: string, name: string) => void
+  canEdit: boolean
+  canArchive: boolean
+  onArchiveField: (fieldId: string) => void
+  onRestoreField: (fieldId: string) => void
+  onFieldDisplayNameChange: (fieldId: string, value: string) => void
+  onFieldKeyChange: (fieldId: string, value: string) => void
+  onFieldRequiredChange: (fieldId: string, value: boolean) => void
   onFieldTypeChange: (fieldId: string, type: SchemaFieldType) => void
   onEnumChange: (fieldId: string, values: string[]) => void
   onRangeChange: (

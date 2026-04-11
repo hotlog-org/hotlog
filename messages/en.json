@@ -332,17 +332,40 @@
         "table": {
           "schema": "Name",
           "fields": "Fields",
+          "events": "Events",
           "open": "Open",
           "noResults": "No schemas yet.",
           "pagination": "Page {page} of {pages}"
         },
+        "emptyState": {
+          "noProject": "Select a project to view its schemas.",
+          "noPermission": "You do not have permission to view schemas in this project."
+        },
+        "createDialog": {
+          "title": "Create schema",
+          "displayNameLabel": "Display name",
+          "displayNamePlaceholder": "e.g. Order Created",
+          "keyPreview": "Key:",
+          "create": "Create",
+          "creating": "Creating..."
+        },
+        "validation": {
+          "displayNameRequired": "Display name is required.",
+          "keyFormat": "Key must start with a lowercase letter and contain only lowercase letters, digits, and underscores.",
+          "keyTaken": "A schema with this key already exists in this project.",
+          "createFailed": "Failed to create schema.",
+          "saveFailed": "Failed to save changes."
+        },
         "editor": {
           "title": "Schema builder",
-          "subtitle": "Draft field types, nesting, and constraints. State is saved to the URL for sharing.",
-          "schemaName": "Schema name",
+          "subtitle": "Define field types and constraints. Fields are immutable contracts so historical events stay valid.",
+          "schemaName": "Display name",
           "schemaNamePlaceholder": "Name this schema",
-          "fieldName": "Field name",
-          "fieldType": "Field type",
+          "schemaKeyHint": "Immutable identifier used in event payloads.",
+          "fieldDisplayName": "Display name",
+          "fieldKey": "Field key",
+          "fieldKeyPlaceholder": "unset",
+          "fieldType": "Type",
           "types": {
             "string": "String",
             "number": "Number",
@@ -350,8 +373,7 @@
             "datetime": "Datetime",
             "enum": "Enum",
             "array": "Array",
-            "json": "JSON",
-            "object": "Object"
+            "json": "JSON"
           },
           "enumValues": "Allowed values",
           "enumPlaceholder": "value1, value2, value3",
@@ -360,19 +382,29 @@
           "min": "Min",
           "max": "Max",
           "numberHelp": "Leave empty for no min/max limits.",
-          "arrayOf": "Array of",
-          "arrayValueType": "Array value type",
-          "objectFields": "Nested fields",
-          "depth": "Level {level}",
-          "noNested": "No nested fields yet.",
-          "maxDepth": "Max depth reached",
-          "addNested": "Add nested field",
+          "arrayValueType": "Array item type",
           "addField": "Add field",
-          "fieldSingular": "field",
-          "fieldPlural": "fields",
-          "shareable": "State saved in the URL for quick sharing.",
-          "depthLimit": "Max depth {depth}",
-          "defaultFieldName": "New field"
+          "defaultFieldName": "New field",
+          "required": "Required",
+          "requiredYes": "Required",
+          "requiredNo": "Optional",
+          "archive": "Archive field",
+          "restore": "Restore field",
+          "removeDraft": "Remove draft",
+          "archiveSchema": "Archive schema",
+          "archivedBadge": "Archived",
+          "newBadge": "New",
+          "typeImmutableHint": "Type is locked. Create a new field to use a different type.",
+          "showArchived": "Show archived fields",
+          "hideArchived": "Hide archived fields",
+          "activeFields": "{count} active fields",
+          "noFields": "No fields yet. Click \"Add field\" to start building this schema.",
+          "save": "Save changes",
+          "saving": "Saving...",
+          "cancel": "Cancel"
+        },
+        "fields": {
+          "notProvided": "Provide at least one value."
         }
       },
       "sidebar": {
