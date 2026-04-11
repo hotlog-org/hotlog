@@ -395,7 +395,16 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      events_daily_counts: {
+        Args: {
+          p_project_id: string
+          p_days: number
+        }
+        Returns: {
+          day: string
+          count: number
+        }[]
+      }
     }
     Enums: {
       ComponentTypes: 'TIME_SERIES'

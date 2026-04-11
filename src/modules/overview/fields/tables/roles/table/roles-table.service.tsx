@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { type ColumnDef } from '@tanstack/react-table'
 import {
   AddCircleIcon,
@@ -18,6 +18,7 @@ import type {
   OverviewRole,
   PermissionCategory,
 } from '../../../../overview.interface'
+import type { TFunction } from '../../../../overview.service'
 import type { RolesTableProps } from './roles-table.component'
 
 export interface RolesTableService {
@@ -50,6 +51,94 @@ const renderPermissionBadge = (
   </span>
 )
 
+// Local component so the search-input state lives outside the parent's
+// `columns` useMemo. Typing inside the popover used to bump a state in
+// the service hook, which rebuilt the columns array on every keystroke,
+// which caused TanStack Table to rebuild the cell tree, which unmounted
+// the input and ate every keystroke after the first.
+function PermissionPicker(props: {
+  role: OverviewRole
+  pending: boolean
+  permissions: OverviewPermission[]
+  permissionColors: Record<PermissionCategory | string, string>
+  onAddPermission: (roleId: string, permissionId: string) => void
+  t: TFunction
+}) {
+  const [open, setOpen] = useState(false)
+  const [search, setSearch] = useState('')
+
+  const handleOpenChange = (next: boolean) => {
+    if (props.pending) return
+    setOpen(next)
+    if (!next) setSearch('')
+  }
+
+  const availablePermissions = useMemo(() => {
+    const needle = search.trim().toLowerCase()
+    return props.permissions.filter(
+      (permission) =>
+        !props.role.permissionIds.includes(permission.id) &&
+        (needle.length === 0 ||
+          permission.label.toLowerCase().includes(needle) ||
+          permission.category.toLowerCase().includes(needle)),
+    )
+  }, [props.permissions, props.role.permissionIds, search])
+
+  return (
+    <Popover open={open} onOpenChange={handleOpenChange}>
+      <PopoverTrigger asChild>
+        <Button
+          variant='ghost'
+          size='icon'
+          className='border border-dashed border-border/70 bg-muted/40 text-muted-foreground hover:text-foreground disabled:opacity-40'
+          aria-label={props.t('roles.table.addPermission')}
+          disabled={props.pending}
+        >
+          <HugeiconsIcon icon={AddCircleIcon} className='size-5' />
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className='w-80 space-y-2 border-border/80 bg-card p-3'>
+        <Input
+          autoFocus
+          value={search}
+          onChange={(event) => setSearch(event.target.value)}
+          placeholder={props.t('roles.table.searchPermissions')}
+          onKeyDown={(event) => event.stopPropagation()}
+        />
+        <ScrollArea className='max-h-72 overflow-y-auto rounded-md border border-border/60'>
+          <div className='divide-y divide-border/70'>
+            {availablePermissions.length === 0 ? (
+              <p className='px-3 py-2 text-sm text-muted-foreground'>
+                {props.t('roles.table.noPermissionResults')}
+              </p>
+            ) : (
+              availablePermissions.map((permission) => (
+                <button
+                  type='button'
+                  key={permission.id}
+                  onClick={(event) => {
+                    event.preventDefault()
+                    props.onAddPermission(props.role.id, permission.id)
+                    setSearch('')
+                  }}
+                  className='flex w-full items-center justify-between px-3 py-2 text-left text-sm transition hover:bg-accent/20'
+                >
+                  <div className='flex items-center gap-2'>
+                    {renderPermissionBadge(permission, props.permissionColors)}
+                  </div>
+                  <span className='text-xs text-muted-foreground'>
+                    {props.t('roles.table.add')}
+                  </span>
+                </button>
+              ))
+            )}
+          </div>
+        </ScrollArea>
+      </PopoverContent>
+    </Popover>
+  )
+}
+
 export const useRolesTableService = ({
   rows,
   permissions,
@@ -59,12 +148,9 @@ export const useRolesTableService = ({
   onDelete,
   t,
 }: RolesTableProps): RolesTableService => {
-  const [permissionSearch, setPermissionSearch] = useState('')
-  const [openRoleId, setOpenRoleId] = useState<string | null>(null)
   const [expandedRoleIds, setExpandedRoleIds] = useState<
     Record<string, boolean>
   >({})
-  const searchInputRef = useRef<HTMLInputElement | null>(null)
 
   const permissionLookup = useMemo(
     () =>
@@ -81,12 +167,6 @@ export const useRolesTableService = ({
       [roleId]: !current[roleId],
     }))
   }
-
-  useEffect(() => {
-    if (openRoleId && searchInputRef.current) {
-      searchInputRef.current.focus()
-    }
-  }, [openRoleId])
 
   const columns: ColumnDef<OverviewRole>[] = useMemo(
     () => [
@@ -117,22 +197,9 @@ export const useRolesTableService = ({
         header: t('roles.table.permissions'),
         cell: ({ row }) => {
           const pending = isOptimisticId(row.original.id)
-          const isOpen = openRoleId === row.original.id
           const selectedPermissions = row.original.permissionIds
             .map((id) => permissionLookup[id])
             .filter(Boolean) as OverviewPermission[]
-
-          const availablePermissions = permissions.filter(
-            (permission) =>
-              !row.original.permissionIds.includes(permission.id) &&
-              (permissionSearch.trim().length === 0 ||
-                permission.label
-                  .toLowerCase()
-                  .includes(permissionSearch.trim().toLowerCase()) ||
-                permission.category
-                  .toLowerCase()
-                  .includes(permissionSearch.trim().toLowerCase())),
-          )
 
           return (
             <div className='flex flex-wrap items-center gap-2'>
@@ -181,72 +248,14 @@ export const useRolesTableService = ({
                 </div>
               )}
 
-              <Popover
-                open={isOpen}
-                onOpenChange={(next) => {
-                  if (pending) return
-                  setOpenRoleId(next ? row.original.id : null)
-                  if (!next) setPermissionSearch('')
-                }}
-              >
-                <PopoverTrigger asChild>
-                  <Button
-                    variant='ghost'
-                    size='icon'
-                    className='border border-dashed border-border/70 bg-muted/40 text-muted-foreground hover:text-foreground disabled:opacity-40'
-                    aria-label={t('roles.table.addPermission')}
-                    disabled={pending}
-                  >
-                    <HugeiconsIcon icon={AddCircleIcon} className='size-5' />
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent
-                  className='w-80 space-y-2 border-border/80 bg-card p-3'
-                >
-                  <Input
-                    ref={searchInputRef}
-                    value={permissionSearch}
-                    onChange={(event) =>
-                      setPermissionSearch(event.target.value)
-                    }
-                    placeholder={t('roles.table.searchPermissions')}
-                    onKeyDown={(event) => event.stopPropagation()}
-                  />
-                  <ScrollArea className='max-h-72 overflow-y-auto rounded-md border border-border/60'>
-                    <div className='divide-y divide-border/70'>
-                      {availablePermissions.length === 0 ? (
-                        <p className='px-3 py-2 text-sm text-muted-foreground'>
-                          {t('roles.table.noPermissionResults')}
-                        </p>
-                      ) : (
-                        availablePermissions.map((permission) => (
-                          <button
-                            type='button'
-                            key={permission.id}
-                            onClick={(event) => {
-                              event.preventDefault()
-                              onAddPermission(row.original.id, permission.id)
-                              setPermissionSearch('')
-                              setOpenRoleId(row.original.id)
-                            }}
-                            className='flex w-full items-center justify-between px-3 py-2 text-left text-sm transition hover:bg-accent/20'
-                          >
-                            <div className='flex items-center gap-2'>
-                              {renderPermissionBadge(
-                                permission,
-                                permissionColors,
-                              )}
-                            </div>
-                            <span className='text-xs text-muted-foreground'>
-                              {t('roles.table.add')}
-                            </span>
-                          </button>
-                        ))
-                      )}
-                    </div>
-                  </ScrollArea>
-                </PopoverContent>
-              </Popover>
+              <PermissionPicker
+                role={row.original}
+                pending={pending}
+                permissions={permissions}
+                permissionColors={permissionColors}
+                onAddPermission={onAddPermission}
+                t={t}
+              />
             </div>
           )
         },
@@ -278,10 +287,8 @@ export const useRolesTableService = ({
       onAddPermission,
       onDelete,
       onRemovePermission,
-      openRoleId,
       permissionColors,
       permissionLookup,
-      permissionSearch,
       permissions,
       expandedRoleIds,
       rows.length,

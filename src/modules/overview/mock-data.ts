@@ -1,7 +1,4 @@
-import type {
-  ApiRequestSeriesPoint,
-  PermissionCategory,
-} from './overview.interface'
+import type { PermissionCategory } from './overview.interface'
 
 const permissionColors: Record<PermissionCategory, string> = {
   all: 'border-white/30 bg-black text-white',
@@ -18,24 +15,3 @@ const permissionColors: Record<PermissionCategory, string> = {
 }
 
 export const permissionCategoryStyles = permissionColors
-
-export const buildApiRequestsSeries = (): ApiRequestSeriesPoint[] => {
-  const now = new Date()
-  const series: ApiRequestSeriesPoint[] = []
-
-  for (let index = 0; index < 30; index++) {
-    const date = new Date(now)
-    date.setDate(now.getDate() - (29 - index))
-
-    const base = 2400 + Math.sin(index / 3.5) * 700
-    const cadence = (index % 6) * 90
-
-    series.push({
-      date,
-      value: Math.max(320, Math.round(base + cadence)),
-      category: 'API requests',
-    })
-  }
-
-  return series
-}

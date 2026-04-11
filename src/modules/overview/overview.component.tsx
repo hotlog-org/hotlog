@@ -74,7 +74,11 @@ export function OverviewComponent() {
 
   return (
     <div className='flex min-h-0 flex-1 flex-col gap-4'>
-      <ApiRequestsGraph data={service.apiRequests} t={service.t} />
+      <ApiRequestsGraph
+        data={service.apiRequests}
+        loading={service.apiRequestsLoading}
+        t={service.t}
+      />
 
       <ApiKeyCard
         keyValue={service.apiKey}

@@ -1,14 +1,36 @@
-import { createElement, useCallback, useEffect, useMemo, useState } from 'react'
+'use client'
+
+import {
+  createElement,
+  useCallback,
+  useDeferredValue,
+  useEffect,
+  useMemo,
+  useState,
+} from 'react'
 import { useTranslations } from 'next-intl'
 
 import { useDashboardNavbarExtra } from '@/shared/store/dashboard-navbar-extra.store'
+import { useDashboardProject } from '@/shared/store/dashboard-project.store'
+import { useUserPermissions } from '@/shared/api/user-permission'
+import {
+  type IEventDto,
+  type IEventFieldFilter,
+  type IFieldDto,
+  type ProjectFieldType,
+} from '@/shared/api/interface'
+import {
+  useDeleteEventsMutation,
+  useEventsInfiniteQuery,
+} from '@/shared/api/event'
+import { useSchemaFieldsQuery, useSchemasQuery } from '@/shared/api/schema'
 
 import {
-  eventRecords,
-  eventSchemas,
   type EventRecord,
   type EventRow,
   type EventSchema,
+  type FieldType,
+  type SchemaField,
 } from './mock-data'
 import { EventsExtraComponent } from './events-extra.component'
 
@@ -44,11 +66,27 @@ export interface EventsService {
   openEvent: (id: string) => void
   closeDrawer: () => void
   drawerOpen: boolean
-  stats: {
-    total: number
-    filtered: number
-    schemas: number
-  }
+  hasNoProject: boolean
+  canRead: boolean
+  canDelete: boolean
+  isLoading: boolean
+  isError: boolean
+  hasNextPage: boolean
+  isFetchingNextPage: boolean
+  loadMore: () => void
+  // Selection + delete
+  selectedIds: Set<string>
+  selectedCount: number
+  toggleRowSelection: (id: string, selected: boolean) => void
+  toggleManySelection: (ids: string[], selected: boolean) => void
+  clearSelection: () => void
+  // Delete confirmation dialog
+  pendingDeleteIds: number[] | null
+  requestDelete: (ids: number[]) => void
+  cancelDelete: () => void
+  confirmDelete: () => void
+  isDeleting: boolean
+  deleteError: string | null
   filterMenu: {
     open: boolean
     step: 'schema' | 'field' | 'value'
@@ -57,7 +95,7 @@ export interface EventsService {
     draftValue: string
     schemas: SchemaOption[]
     schemaHasFilters: (schemaId: string) => boolean
-    fields: { field: EventSchema['fields'][number]; hasFilter: boolean }[]
+    fields: { field: SchemaField; hasFilter: boolean }[]
     openChange: (open: boolean) => void
     selectSchema: (schemaId: string) => void
     selectField: (fieldKey: string) => void
@@ -69,131 +107,110 @@ export interface EventsService {
   appliedFilters: FieldFilter[]
 }
 
+const FIELD_TYPE_MAP: Record<ProjectFieldType, FieldType> = {
+  STRING: 'string',
+  NUMBER: 'number',
+  BOOLEAN: 'boolean',
+  DATETIME: 'datetime',
+  ARRAY: 'array',
+  JSON: 'json',
+  ENUM: 'enum',
+}
+
+const fieldDtoToSchemaField = (dto: IFieldDto): SchemaField => ({
+  key: dto.key,
+  label: dto.displayName,
+  type: FIELD_TYPE_MAP[dto.type],
+  description: dto.metadata?.description,
+  enumValues: dto.metadata?.enumValues,
+})
+
+const eventDtoToRecord = (dto: IEventDto): EventRecord => ({
+  id: String(dto.id),
+  title: `${dto.schemaDisplayName || dto.schemaKey} · #${dto.id}`,
+  schemaId: dto.schemaId,
+  source: 'api',
+  status: 'ingested',
+  createdAt: dto.createdAt,
+  payload: dto.value,
+})
+
 const useEventsService = (): EventsService => {
   const t = useTranslations('modules.dashboard.events')
+  const selectedProjectId = useDashboardProject((s) => s.selectedProjectId)
+  const { can } = useUserPermissions(selectedProjectId)
+  const canRead = can('read:events')
+  const canDelete = can('delete:events')
+
   const [query, setQuery] = useState('')
+  const deferredQuery = useDeferredValue(query)
   const [selectedSchemas, setSelectedSchemas] = useState<string[]>([])
   const [fieldFilters, setFieldFilters] = useState<FieldFilter[]>([])
   const [selectedId, setSelectedId] = useState<string | null>(null)
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
+  const [pendingDeleteIds, setPendingDeleteIds] = useState<number[] | null>(
+    null,
+  )
+  const [deleteError, setDeleteError] = useState<string | null>(null)
+  const deleteEventsMutation = useDeleteEventsMutation(selectedProjectId)
 
-  const schemaMap = useMemo(
-    () => new Map(eventSchemas.map((schema) => [schema.id, schema])),
-    [],
+  const schemasQuery = useSchemasQuery(canRead ? selectedProjectId : undefined)
+
+  const schemas: SchemaOption[] = useMemo(() => {
+    const list = schemasQuery.data?.data ?? []
+    return list.map((s) => ({
+      id: s.id,
+      name: s.displayName,
+      version: '',
+      fields: [],
+    }))
+  }, [schemasQuery.data])
+
+  const apiFieldFilters: IEventFieldFilter[] = useMemo(
+    () =>
+      fieldFilters.map((f) => ({
+        schema_id: f.schemaId,
+        field_key: f.fieldKey,
+        value: f.value,
+      })),
+    [fieldFilters],
   )
 
-  const filteredEvents = useMemo(() => {
-    const normalizedQuery = query.trim().toLowerCase()
+  const eventsQuery = useEventsInfiniteQuery({
+    projectId: canRead ? selectedProjectId : undefined,
+    schemas: selectedSchemas,
+    search: deferredQuery,
+    fieldFilters: apiFieldFilters,
+  })
 
-    return eventRecords
-      .filter((event) => {
-        const matchingSchemaFilters = fieldFilters.filter(
-          (f) => f.schemaId === event.schemaId,
-        )
-        const matchesFieldFilters = matchingSchemaFilters.every((filter) => {
-          const value = (event.payload ?? {})[filter.fieldKey]
-          if (value === undefined || value === null) return false
-          const normalizedValue =
-            typeof value === 'object'
-              ? JSON.stringify(value).toLowerCase()
-              : String(value).toLowerCase()
-          return normalizedValue.includes(filter.value.toLowerCase())
-        })
+  const flatEvents: IEventDto[] = useMemo(
+    () => eventsQuery.data?.pages.flatMap((p) => p.data) ?? [],
+    [eventsQuery.data],
+  )
 
-        if (!matchesFieldFilters) return false
-
-        if (
-          selectedSchemas.length > 0 &&
-          !selectedSchemas.includes(event.schemaId)
-        ) {
-          return false
-        }
-
-        if (!normalizedQuery) return true
-
-        const schema = schemaMap.get(event.schemaId)
-        const matchesTitle = event.title.toLowerCase().includes(normalizedQuery)
-        const matchesSchema = schema?.name
-          .toLowerCase()
-          .includes(normalizedQuery)
-        const matchesPayload = JSON.stringify(event.payload)
-          .toLowerCase()
-          .includes(normalizedQuery)
-
-        return matchesTitle || matchesSchema || matchesPayload
-      })
-      .sort(
-        (a, b) =>
-          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
-      )
-  }, [fieldFilters, query, selectedSchemas, schemaMap])
+  const schemaNameById = useMemo(() => {
+    const map = new Map<string, string>()
+    for (const s of schemas) map.set(s.id, s.name)
+    return map
+  }, [schemas])
 
   const rows: EventRow[] = useMemo(
     () =>
-      filteredEvents.map((event) => {
-        const schema = schemaMap.get(event.schemaId)
+      flatEvents.map((event) => {
+        const record = eventDtoToRecord(event)
         return {
-          ...event,
-          schemaName: schema?.name ?? t('unknownSchema'),
-          schemaVersion: schema?.version ?? t('fields.empty'),
+          ...record,
+          schemaName:
+            schemaNameById.get(event.schemaId) ||
+            event.schemaDisplayName ||
+            t('unknownSchema'),
+          schemaVersion: '',
         }
       }),
-    [filteredEvents, schemaMap, t],
+    [flatEvents, schemaNameById, t],
   )
 
-  const selectedEvent = useMemo(
-    () => eventRecords.find((event) => event.id === selectedId) ?? null,
-    [selectedId],
-  )
-
-  const selectedSchema = useMemo(
-    () =>
-      selectedEvent ? (schemaMap.get(selectedEvent.schemaId) ?? null) : null,
-    [schemaMap, selectedEvent],
-  )
-
-  const openEvent = useCallback((id: string) => setSelectedId(id), [])
-  const closeDrawer = useCallback(() => setSelectedId(null), [])
-
-  const resetFilters = useCallback(() => {
-    setQuery('')
-    setSelectedSchemas([])
-    setFieldFilters([])
-  }, [])
-
-  const stats = useMemo(
-    () => ({
-      total: eventRecords.length,
-      filtered: filteredEvents.length,
-      schemas: eventSchemas.length,
-    }),
-    [filteredEvents.length],
-  )
-
-  const upsertFieldFilter = useCallback(
-    (schema: string, fieldKey: string, value: string) => {
-      setFieldFilters((prev) => {
-        const existing = prev.find(
-          (f) => f.schemaId === schema && f.fieldKey === fieldKey,
-        )
-        if (existing) {
-          return prev.map((f) =>
-            f.schemaId === schema && f.fieldKey === fieldKey
-              ? { ...f, value }
-              : f,
-          )
-        }
-        return [...prev, { schemaId: schema, fieldKey, value }]
-      })
-    },
-    [],
-  )
-
-  const removeFieldFilter = useCallback((schema: string, fieldKey: string) => {
-    setFieldFilters((prev) =>
-      prev.filter((f) => !(f.schemaId === schema && f.fieldKey === fieldKey)),
-    )
-  }, [])
-
+  // === Filter menu draft state (UX unchanged) =================
   const [filterMenuOpen, setFilterMenuOpen] = useState(false)
   const [filterStep, setFilterStep] = useState<'schema' | 'field' | 'value'>(
     'schema',
@@ -201,6 +218,25 @@ const useEventsService = (): EventsService => {
   const [draftSchemaId, setDraftSchemaId] = useState<string | null>(null)
   const [draftFieldKey, setDraftFieldKey] = useState<string | null>(null)
   const [draftValue, setDraftValue] = useState('')
+
+  // Lazy-load fields for whichever schema the user is browsing in
+  // the filter menu so we only fetch when needed.
+  const draftFieldsQuery = useSchemaFieldsQuery(draftSchemaId ?? undefined)
+  const draftFieldList: SchemaField[] = useMemo(
+    () => (draftFieldsQuery.data?.data ?? []).map(fieldDtoToSchemaField),
+    [draftFieldsQuery.data],
+  )
+
+  const fieldsForDraftSchema: { field: SchemaField; hasFilter: boolean }[] =
+    useMemo(() => {
+      if (!draftSchemaId) return []
+      return draftFieldList.map((field) => ({
+        field,
+        hasFilter: fieldFilters.some(
+          (f) => f.schemaId === draftSchemaId && f.fieldKey === field.key,
+        ),
+      }))
+    }, [draftFieldList, draftSchemaId, fieldFilters])
 
   const resetDraft = useCallback(() => {
     setDraftSchemaId(null)
@@ -240,6 +276,31 @@ const useEventsService = (): EventsService => {
     [draftSchemaId, fieldFilters],
   )
 
+  const upsertFieldFilter = useCallback(
+    (schema: string, fieldKey: string, value: string) => {
+      setFieldFilters((prev) => {
+        const existing = prev.find(
+          (f) => f.schemaId === schema && f.fieldKey === fieldKey,
+        )
+        if (existing) {
+          return prev.map((f) =>
+            f.schemaId === schema && f.fieldKey === fieldKey
+              ? { ...f, value }
+              : f,
+          )
+        }
+        return [...prev, { schemaId: schema, fieldKey, value }]
+      })
+    },
+    [],
+  )
+
+  const removeFieldFilter = useCallback((schema: string, fieldKey: string) => {
+    setFieldFilters((prev) =>
+      prev.filter((f) => !(f.schemaId === schema && f.fieldKey === fieldKey)),
+    )
+  }, [])
+
   const applyFilter = useCallback(() => {
     const value = draftValue.trim()
     if (!draftSchemaId || !draftFieldKey || !value) return
@@ -271,20 +332,125 @@ const useEventsService = (): EventsService => {
     resetDraft()
   }, [resetDraft])
 
-  const fieldsForDraftSchema: {
-    field: EventSchema['fields'][number]
-    hasFilter: boolean
-  }[] = useMemo(() => {
-    if (!draftSchemaId) return []
-    const draftSchema = schemaMap.get(draftSchemaId)
-    if (!draftSchema) return []
-    return draftSchema.fields.map((field) => ({
-      field,
-      hasFilter: fieldFilters.some(
-        (f) => f.schemaId === draftSchemaId && f.fieldKey === field.key,
-      ),
-    }))
-  }, [draftSchemaId, fieldFilters, schemaMap])
+  const resetFilters = useCallback(() => {
+    setQuery('')
+    setSelectedSchemas([])
+    setFieldFilters([])
+  }, [])
+
+  // === Row selection (for bulk delete) ========================
+  const toggleRowSelection = useCallback((id: string, selected: boolean) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev)
+      if (selected) next.add(id)
+      else next.delete(id)
+      return next
+    })
+  }, [])
+
+  const toggleManySelection = useCallback(
+    (ids: string[], selected: boolean) => {
+      setSelectedIds((prev) => {
+        const next = new Set(prev)
+        if (selected) ids.forEach((id) => next.add(id))
+        else ids.forEach((id) => next.delete(id))
+        return next
+      })
+    },
+    [],
+  )
+
+  const clearSelection = useCallback(() => {
+    setSelectedIds(new Set())
+  }, [])
+
+  // Prune selection of ids that are no longer in the loaded rows so
+  // the count stays accurate after a refetch / filter change.
+  useEffect(() => {
+    setSelectedIds((prev) => {
+      if (prev.size === 0) return prev
+      const presentIds = new Set(rows.map((row) => row.id))
+      let changed = false
+      const next = new Set<string>()
+      prev.forEach((id) => {
+        if (presentIds.has(id)) next.add(id)
+        else changed = true
+      })
+      return changed ? next : prev
+    })
+  }, [rows])
+
+  // === Delete confirmation flow ===============================
+  const requestDelete = useCallback((ids: number[]) => {
+    setDeleteError(null)
+    setPendingDeleteIds(ids)
+  }, [])
+
+  const cancelDelete = useCallback(() => {
+    setPendingDeleteIds(null)
+    setDeleteError(null)
+  }, [])
+
+  const confirmDelete = useCallback(() => {
+    if (!pendingDeleteIds || !selectedProjectId) return
+    setDeleteError(null)
+    deleteEventsMutation.mutate(
+      { projectId: selectedProjectId, ids: pendingDeleteIds },
+      {
+        onSuccess: () => {
+          const deletedSet = new Set(pendingDeleteIds.map(String))
+          setSelectedIds((prev) => {
+            const next = new Set(prev)
+            deletedSet.forEach((id) => next.delete(id))
+            return next
+          })
+          setPendingDeleteIds(null)
+          setSelectedId((current) =>
+            current && deletedSet.has(current) ? null : current,
+          )
+        },
+        onError: (err) => {
+          setDeleteError(
+            err instanceof Error ? err.message : t('confirmDelete.failed'),
+          )
+        },
+      },
+    )
+  }, [deleteEventsMutation, pendingDeleteIds, selectedProjectId, t])
+
+  // === Selected event / drawer ================================
+  const openEvent = useCallback((id: string) => setSelectedId(id), [])
+  const closeDrawer = useCallback(() => setSelectedId(null), [])
+
+  const selectedRow = useMemo(
+    () => rows.find((row) => row.id === selectedId) ?? null,
+    [rows, selectedId],
+  )
+
+  const selectedSchemaFieldsQuery = useSchemaFieldsQuery(selectedRow?.schemaId)
+
+  const selectedEvent: EventRecord | null = useMemo(() => {
+    if (!selectedRow) return null
+    const {
+      schemaName: _name,
+      schemaVersion: _version,
+      ...record
+    } = selectedRow
+    return record
+  }, [selectedRow])
+
+  const selectedSchema: EventSchema | null = useMemo(() => {
+    if (!selectedRow) return null
+    const fields = (selectedSchemaFieldsQuery.data?.data ?? []).map(
+      fieldDtoToSchemaField,
+    )
+    return {
+      id: selectedRow.schemaId,
+      name: selectedRow.schemaName,
+      version: '',
+      fields,
+    }
+  }, [selectedRow, selectedSchemaFieldsQuery.data])
 
   const filters: EventFilters = {
     query,
@@ -292,10 +458,13 @@ const useEventsService = (): EventsService => {
     fieldFilters,
   }
 
-  const useExtra = useDashboardNavbarExtra((s) => s.handleDashboardNavbarExtra)
+  // === Navbar extra ===========================================
+  const setNavbarExtra = useDashboardNavbarExtra(
+    (s) => s.handleDashboardNavbarExtra,
+  )
 
   useEffect(() => {
-    useExtra({
+    setNavbarExtra({
       component: createElement(EventsExtraComponent, {
         t,
         query,
@@ -306,7 +475,7 @@ const useEventsService = (): EventsService => {
           draftSchemaId,
           draftFieldKey,
           draftValue,
-          schemas: eventSchemas,
+          schemas,
           schemaHasFilters,
           fields: fieldsForDraftSchema,
           openChange,
@@ -325,11 +494,15 @@ const useEventsService = (): EventsService => {
       }),
     })
 
-    return () => useExtra({ component: undefined })
+    return () => setNavbarExtra({ component: undefined })
   }, [
+    addSchema,
     applyFilter,
     back,
     clearAll,
+    draftFieldKey,
+    draftSchemaId,
+    draftValue,
     fieldFilters,
     fieldsForDraftSchema,
     filterMenuOpen,
@@ -338,17 +511,12 @@ const useEventsService = (): EventsService => {
     query,
     removeFieldFilter,
     schemaHasFilters,
-    addSchema,
-    draftSchemaId,
-    draftFieldKey,
-    draftValue,
-    setQuery,
-    stats,
-    t,
-    useExtra,
-    selectSchema,
+    schemas,
     selectField,
+    selectSchema,
     setDraftValue,
+    setNavbarExtra,
+    t,
   ])
 
   return {
@@ -359,7 +527,7 @@ const useEventsService = (): EventsService => {
     removeFieldFilter,
     resetFilters,
     rows,
-    schemas: eventSchemas,
+    schemas,
     addSchema,
     removeSchema,
     selectedSchemas,
@@ -368,14 +536,36 @@ const useEventsService = (): EventsService => {
     openEvent,
     closeDrawer,
     drawerOpen: Boolean(selectedId),
-    stats,
+    hasNoProject: !selectedProjectId,
+    canRead,
+    canDelete,
+    isLoading: eventsQuery.isLoading,
+    isError: eventsQuery.isError,
+    hasNextPage: Boolean(eventsQuery.hasNextPage),
+    isFetchingNextPage: eventsQuery.isFetchingNextPage,
+    loadMore: () => {
+      if (eventsQuery.hasNextPage && !eventsQuery.isFetchingNextPage) {
+        eventsQuery.fetchNextPage()
+      }
+    },
+    selectedIds,
+    selectedCount: selectedIds.size,
+    toggleRowSelection,
+    toggleManySelection,
+    clearSelection,
+    pendingDeleteIds,
+    requestDelete,
+    cancelDelete,
+    confirmDelete,
+    isDeleting: deleteEventsMutation.isPending,
+    deleteError,
     filterMenu: {
       open: filterMenuOpen,
       step: filterStep,
       draftSchemaId,
       draftFieldKey,
       draftValue,
-      schemas: eventSchemas,
+      schemas,
       schemaHasFilters,
       fields: fieldsForDraftSchema,
       openChange,

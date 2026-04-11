@@ -155,6 +155,29 @@
           "invalidDate": "Invalid date",
           "true": "True",
           "false": "False"
+        },
+        "actions": {
+          "loadMore": "Load more",
+          "loading": "Loading...",
+          "endOfList": "End of list",
+          "delete": "Delete event",
+          "deleteSelected": "Delete {count, plural, one {# event} other {# events}}",
+          "selectedCount": "{count, plural, one {# event selected} other {# events selected}}",
+          "clearSelection": "Clear selection"
+        },
+        "emptyState": {
+          "noProject": "Select a project to view its events.",
+          "noPermission": "You do not have permission to view events in this project.",
+          "noEvents": "No events yet. Send one through the ingest API to see it here.",
+          "noResults": "No events match the current filters."
+        },
+        "confirmDelete": {
+          "title": "Delete {count, plural, one {event} other {# events}}?",
+          "description": "This will permanently remove {count, plural, one {this event} other {these events}}. This action cannot be undone.",
+          "confirm": "Delete {count, plural, one {event} other {# events}}",
+          "cancel": "Cancel",
+          "deleting": "Deleting...",
+          "failed": "Failed to delete events."
         }
       },
       "overview": {
@@ -169,7 +192,8 @@
         },
         "apiRequests": {
           "title": "API requests",
-          "subtitle": "Requests in the last 30 days"
+          "subtitle": "Requests in the last 30 days",
+          "empty": "No events in the last 30 days yet. Send one through the ingest API to see activity here."
         },
         "apiKey": {
           "title": "API Key",
