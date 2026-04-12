@@ -141,6 +141,7 @@ export function SchemaComponent() {
         schema={service.selectedSchema}
         fields={service.fields}
         fieldCount={service.fieldCount}
+        archivedFieldCount={service.archivedFieldCount}
         t={service.t}
         selectedFieldId={service.selectedFieldId}
         isDirty={service.isDirty}

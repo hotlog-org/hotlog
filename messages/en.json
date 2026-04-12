@@ -458,6 +458,7 @@
           "showArchived": "Show archived fields",
           "hideArchived": "Hide archived fields",
           "activeFields": "{count} active fields",
+          "archivedFields": "{count} archived",
           "noFields": "No fields yet. Click \"Add field\" to start building this schema.",
           "save": "Save changes",
           "saving": "Saving...",

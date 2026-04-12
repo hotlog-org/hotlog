@@ -20,6 +20,7 @@ export function SchemaTable(props: SchemaTableProps) {
       columns={service.columns}
       data={props.rows}
       onRowClick={(row) => props.onOpen((row as SchemaRow).id)}
+      paginated={false}
       t={props.t}
     />
   )
