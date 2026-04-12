@@ -28,7 +28,7 @@ export default async function LocaleLayout({
 
   return (
     <html lang={locale} suppressHydrationWarning className={cn(geist.variable)}>
-      <body>
+      <body className='bg-background'>
         <ApiProvider>
           <NextIntlClientProvider locale={locale} messages={messages}>
             <ThemeProvider
