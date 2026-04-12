@@ -100,7 +100,7 @@ export function DataTable<TData, TValue>({
 
   return (
     <div className='h-full w-full space-y-3'>
-      <div className='h-full rounded-xl border border-border bg-card shadow-sm'>
+      <div className='h-full overflow-x-auto rounded-xl border border-border bg-card shadow-sm'>
         <Table className='h-full'>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (

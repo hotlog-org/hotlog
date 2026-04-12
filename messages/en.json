@@ -229,7 +229,7 @@
         "apiRequests": {
           "title": "API requests",
           "subtitle": "Requests in the last 30 days",
-          "empty": "No events in the last 30 days yet. Send one through the ingest API to see activity here."
+          "empty": "No events in the last 30 days"
         },
         "apiKey": {
           "title": "API Key",

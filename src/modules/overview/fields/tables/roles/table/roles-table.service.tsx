@@ -7,6 +7,7 @@ import {
 } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
 
+import { useIsMobile } from '@/shared/hooks/use-mobile'
 import { Button } from '@/shared/ui/button'
 import { Input } from '@/shared/ui/input'
 import { Popover, PopoverContent, PopoverTrigger } from '@/shared/ui/popover'
@@ -31,7 +32,7 @@ const renderPermissionBadge = (
   onRemove?: () => void,
 ) => (
   <span
-    className={`inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-medium ${colors[permission.category]}`}
+    className={`inline-flex shrink-0 items-center gap-2 whitespace-nowrap rounded-full border px-3 py-1 text-xs font-medium ${colors[permission.category]}`}
   >
     <span>
       {permission.category}/{permission.label}
@@ -139,6 +140,78 @@ function PermissionPicker(props: {
   )
 }
 
+const MOBILE_VISIBLE_COUNT = 3
+
+function PermissionsList(props: {
+  role: OverviewRole
+  pending: boolean
+  permissions: OverviewPermission[]
+  permissionLookup: Record<string, OverviewPermission>
+  permissionColors: Record<PermissionCategory | string, string>
+  onAddPermission: (roleId: string, permissionId: string) => void
+  onRemovePermission: (roleId: string, permissionId: string) => void
+  t: TFunction
+}) {
+  const isMobile = useIsMobile()
+  const [expanded, setExpanded] = useState(false)
+
+  const selectedPermissions = props.role.permissionIds
+    .map((id) => props.permissionLookup[id])
+    .filter(Boolean) as OverviewPermission[]
+
+  const shouldTruncate =
+    isMobile && !expanded && selectedPermissions.length > MOBILE_VISIBLE_COUNT
+  const visible = shouldTruncate
+    ? selectedPermissions.slice(0, MOBILE_VISIBLE_COUNT)
+    : selectedPermissions
+  const hiddenCount = selectedPermissions.length - MOBILE_VISIBLE_COUNT
+
+  return (
+    <div className='flex items-center gap-2'>
+      <div className='flex items-center gap-2 overflow-x-auto scrollbar-none'>
+        {visible.map((permission) =>
+          renderPermissionBadge(
+            permission,
+            props.permissionColors,
+            props.pending
+              ? undefined
+              : () =>
+                  props.onRemovePermission(props.role.id, permission.id),
+          ),
+        )}
+        {shouldTruncate && (
+          <Button
+            variant='outline'
+            size='sm'
+            className='shrink-0 border-dashed text-xs'
+            onClick={() => setExpanded(true)}
+          >
+            +{hiddenCount} more
+          </Button>
+        )}
+        {isMobile && expanded && selectedPermissions.length > MOBILE_VISIBLE_COUNT && (
+          <Button
+            variant='ghost'
+            size='sm'
+            className='shrink-0 text-xs'
+            onClick={() => setExpanded(false)}
+          >
+            {props.t('roles.table.collapse')}
+          </Button>
+        )}
+      </div>
+      <PermissionPicker
+        role={props.role}
+        pending={props.pending}
+        permissions={props.permissions}
+        permissionColors={props.permissionColors}
+        onAddPermission={props.onAddPermission}
+        t={props.t}
+      />
+    </div>
+  )
+}
+
 export const useRolesTableService = ({
   rows,
   permissions,
@@ -148,10 +221,6 @@ export const useRolesTableService = ({
   onDelete,
   t,
 }: RolesTableProps): RolesTableService => {
-  const [expandedRoleIds, setExpandedRoleIds] = useState<
-    Record<string, boolean>
-  >({})
-
   const permissionLookup = useMemo(
     () =>
       permissions.reduce<Record<string, OverviewPermission>>((map, item) => {
@@ -160,13 +229,6 @@ export const useRolesTableService = ({
       }, {}),
     [permissions],
   )
-
-  const toggleExpanded = (roleId: string) => {
-    setExpandedRoleIds((current) => ({
-      ...current,
-      [roleId]: !current[roleId],
-    }))
-  }
 
   const columns: ColumnDef<OverviewRole>[] = useMemo(
     () => [
@@ -195,70 +257,18 @@ export const useRolesTableService = ({
       {
         id: 'permissions',
         header: t('roles.table.permissions'),
-        cell: ({ row }) => {
-          const pending = isOptimisticId(row.original.id)
-          const selectedPermissions = row.original.permissionIds
-            .map((id) => permissionLookup[id])
-            .filter(Boolean) as OverviewPermission[]
-
-          return (
-            <div className='flex flex-wrap items-center gap-2'>
-              {selectedPermissions
-                .slice(
-                  0,
-                  expandedRoleIds[row.original.id]
-                    ? selectedPermissions.length
-                    : 6,
-                )
-                .map((permission) =>
-                  renderPermissionBadge(
-                    permission,
-                    permissionColors,
-                    pending
-                      ? undefined
-                      : () =>
-                          onRemovePermission(row.original.id, permission.id),
-                  ),
-                )}
-
-              {selectedPermissions.length > 6 && (
-                <div className='flex items-center gap-2'>
-                  <Button
-                    variant='outline'
-                    size='sm'
-                    className='border-dashed text-xs'
-                    onClick={() => toggleExpanded(row.original.id)}
-                  >
-                    {expandedRoleIds[row.original.id]
-                      ? t('roles.table.collapse')
-                      : t('roles.table.expand', {
-                          count: selectedPermissions.length - 6,
-                        })}
-                  </Button>
-                  {expandedRoleIds[row.original.id] && (
-                    <Button
-                      variant='ghost'
-                      size='sm'
-                      className='text-xs'
-                      onClick={() => toggleExpanded(row.original.id)}
-                    >
-                      {t('roles.table.hide')}
-                    </Button>
-                  )}
-                </div>
-              )}
-
-              <PermissionPicker
-                role={row.original}
-                pending={pending}
-                permissions={permissions}
-                permissionColors={permissionColors}
-                onAddPermission={onAddPermission}
-                t={t}
-              />
-            </div>
-          )
-        },
+        cell: ({ row }) => (
+          <PermissionsList
+            role={row.original}
+            pending={isOptimisticId(row.original.id)}
+            permissions={permissions}
+            permissionLookup={permissionLookup}
+            permissionColors={permissionColors}
+            onAddPermission={onAddPermission}
+            onRemovePermission={onRemovePermission}
+            t={t}
+          />
+        ),
       },
       {
         id: 'actions',
@@ -290,7 +300,6 @@ export const useRolesTableService = ({
       permissionColors,
       permissionLookup,
       permissions,
-      expandedRoleIds,
       rows.length,
       t,
     ],

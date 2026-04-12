@@ -38,7 +38,7 @@ import { useDashboardSidebarHeaderService } from './dashboard-sidebar-header.ser
 
 const DashboardSidebarHeaderComponent = () => {
   const service = useDashboardSidebarHeaderService()
-  const { state } = useSidebar()
+  const { state, isMobile } = useSidebar()
   const [projectName, setProjectName] = useState('')
 
   return (
@@ -79,7 +79,7 @@ const DashboardSidebarHeaderComponent = () => {
             <DropdownMenuContent
               className='w-(--radix-dropdown-menu-trigger-width) min-w-56 rounded-lg'
               align='start'
-              side='left'
+              side={isMobile ? 'bottom' : 'left'}
               sideOffset={4}
             >
               <DropdownMenuLabel className='text-xs text-muted-foreground'>

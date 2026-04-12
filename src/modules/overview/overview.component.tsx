@@ -90,28 +90,26 @@ export function OverviewComponent() {
         t={service.t}
       />
 
-      <Card>
+      <Card className='overflow-hidden'>
         <CardHeader>
-          <div className='space-y-3'>
-            <div className='flex flex-wrap items-center justify-between gap-3'>
-              <div className='flex items-center gap-2'>
-                <Button
-                  size='sm'
-                  variant={service.tab === 'users' ? 'secondary' : 'ghost'}
-                  onClick={() => service.setTab('users')}
-                >
-                  {service.t('tabs.users')}
-                </Button>
-                <Button
-                  size='sm'
-                  variant={service.tab === 'roles' ? 'secondary' : 'ghost'}
-                  onClick={() => service.setTab('roles')}
-                >
-                  {service.t('tabs.roles')}
-                </Button>
-              </div>
+          <div className='min-w-0 space-y-3'>
+            <div className='flex items-center gap-2'>
+              <Button
+                size='sm'
+                variant={service.tab === 'users' ? 'secondary' : 'ghost'}
+                onClick={() => service.setTab('users')}
+              >
+                {service.t('tabs.users')}
+              </Button>
+              <Button
+                size='sm'
+                variant={service.tab === 'roles' ? 'secondary' : 'ghost'}
+                onClick={() => service.setTab('roles')}
+              >
+                {service.t('tabs.roles')}
+              </Button>
 
-              <div className='flex flex-wrap items-center gap-2'>
+              <div className='ml-auto flex items-center gap-2'>
                 {service.tab === 'users' &&
                   canViewUsersTab &&
                   !service.isLoading && (

@@ -13,7 +13,7 @@ export interface DangerZoneProps {
 
 export function DangerZone({ projectName, onDelete }: DangerZoneProps) {
   return (
-    <Card className='border-destructive/40'>
+    <Card className='border-destructive/40 bg-destructive/5'>
       <CardHeader>
         <div className='flex items-center gap-2'>
           <HugeiconsIcon
@@ -26,7 +26,7 @@ export function DangerZone({ projectName, onDelete }: DangerZoneProps) {
         </div>
       </CardHeader>
       <CardContent>
-        <div className='flex flex-wrap items-center justify-between gap-4 rounded-lg border border-destructive/30 bg-destructive/5 p-4'>
+        <div className='flex flex-wrap items-center justify-between gap-4'>
           <div className='space-y-1'>
             <p className='text-sm font-medium text-foreground'>
               Delete this project
@@ -39,7 +39,7 @@ export function DangerZone({ projectName, onDelete }: DangerZoneProps) {
               and all its data. This action cannot be undone.
             </p>
           </div>
-          <Button variant='destructive' size='sm' onClick={onDelete}>
+          <Button variant='destructive' size='sm' className='ml-auto sm:ml-0' onClick={onDelete}>
             Delete project
           </Button>
         </div>
