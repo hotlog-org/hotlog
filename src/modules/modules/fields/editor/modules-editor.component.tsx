@@ -165,29 +165,42 @@ export const ModulesEditor = (props: ModulesEditorProps) => {
                               </p>
                             </div>
                             <div className='w-48'>
-                              <select
-                                value={
+                              {(() => {
+                                const boundKey =
                                   draft.bindings.find(
                                     (binding) => binding.inputId === input.id,
                                   )?.fieldKey || ''
-                                }
-                                onChange={(event) =>
-                                  service.handleBindingChange(
-                                    input.id,
-                                    event.target.value || null,
-                                  )
-                                }
-                                className='w-full rounded-md border border-border bg-muted px-2 py-2 text-sm'
-                              >
-                                <option value=''>
-                                  {props.t('drawer.selectField')}
-                                </option>
-                                {fields.map((field) => (
-                                  <option key={field.key} value={field.key}>
-                                    {field.label}
-                                  </option>
-                                ))}
-                              </select>
+                                const hasMatchingOption =
+                                  !boundKey ||
+                                  fields.some((f) => f.key === boundKey)
+
+                                return (
+                                  <select
+                                    value={boundKey}
+                                    onChange={(event) =>
+                                      service.handleBindingChange(
+                                        input.id,
+                                        event.target.value || null,
+                                      )
+                                    }
+                                    className='w-full rounded-md border border-border bg-muted px-2 py-2 text-sm'
+                                  >
+                                    <option value=''>
+                                      {props.t('drawer.selectField')}
+                                    </option>
+                                    {!hasMatchingOption && boundKey ? (
+                                      <option value={boundKey}>
+                                        {boundKey}
+                                      </option>
+                                    ) : null}
+                                    {fields.map((field) => (
+                                      <option key={field.key} value={field.key}>
+                                        {field.label}
+                                      </option>
+                                    ))}
+                                  </select>
+                                )
+                              })()}
                             </div>
                           </div>
                         </div>
