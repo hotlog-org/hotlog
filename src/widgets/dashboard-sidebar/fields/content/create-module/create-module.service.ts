@@ -4,6 +4,8 @@ import { useState } from 'react'
 import { useTranslations } from 'next-intl'
 
 import { useModulesStore } from '@/modules/modules/modules.store'
+import { useCreateLayoutMutation } from '@/shared/api/layout'
+import { useDashboardProject } from '@/shared/store/dashboard-project.store'
 import type { DashboardSidebarCreateModuleProps } from './create-module.component'
 
 export const useDashboardSidebarCreateModuleService = (
@@ -14,15 +16,25 @@ export const useDashboardSidebarCreateModuleService = (
   const [open, setOpen] = useState(false)
   const [name, setName] = useState('')
   const [color, setColor] = useState('#3b82f6')
-  const addModule = useModulesStore((state) => state.addModule)
+
+  const selectedProjectId = useDashboardProject(
+    (state) => state.selectedProjectId,
+  )
+  const createLayoutMutation = useCreateLayoutMutation(selectedProjectId)
   const setSelectedModuleId = useModulesStore(
     (state) => state.setSelectedModuleId,
   )
 
-  const handleSubmit = () => {
-    if (!name.trim()) return
-    const module = addModule({ name: name.trim(), color })
-    setSelectedModuleId(module.id)
+  const handleSubmit = async () => {
+    if (!name.trim() || !selectedProjectId) return
+
+    const result = await createLayoutMutation.mutateAsync({
+      project_id: selectedProjectId,
+      name: name.trim(),
+      color,
+    })
+
+    setSelectedModuleId(String(result.data.id))
     setName('')
     setOpen(false)
   }
@@ -37,6 +49,6 @@ export const useDashboardSidebarCreateModuleService = (
     color,
     setColor,
     handleSubmit,
+    isCreating: createLayoutMutation.isPending,
   }
 }
-

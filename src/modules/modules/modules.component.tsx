@@ -21,6 +21,14 @@ export function ModulesComponent({ moduleId }: ModulesComponentProps) {
   const service = useModulesService({ moduleId })
   const currentModule = service.module
 
+  if (service.isLoading) {
+    return (
+      <div className='rounded-lg border border-dashed border-border/70 bg-muted/40 p-6 text-sm text-muted-foreground'>
+        Loading...
+      </div>
+    )
+  }
+
   if (!currentModule) {
     return (
       <div className='rounded-lg border border-dashed border-border/70 bg-muted/40 p-6 text-sm text-muted-foreground'>
@@ -87,20 +95,24 @@ export function ModulesComponent({ moduleId }: ModulesComponentProps) {
         </div>
 
         <div className='flex flex-wrap items-center gap-2'>
-          <ModulesDragButton
-            active={service.reorderEnabled}
-            onToggle={() => service.setReorderEnabled(!service.reorderEnabled)}
-            t={service.t}
-          />
-          <Button
-            variant='outline'
-            size='sm'
-            className='gap-2'
-            onClick={service.openCreateComponent}
-          >
-            <HugeiconsIcon icon={AddCircleIcon} className='size-5' />
-            {service.t('actions.addComponent')}
-          </Button>
+          {service.canUpdateComponents ? (
+            <ModulesDragButton
+              active={service.reorderEnabled}
+              onToggle={() => service.setReorderEnabled(!service.reorderEnabled)}
+              t={service.t}
+            />
+          ) : null}
+          {service.canCreateComponents ? (
+            <Button
+              variant='outline'
+              size='sm'
+              className='gap-2'
+              onClick={service.openCreateComponent}
+            >
+              <HugeiconsIcon icon={AddCircleIcon} className='size-5' />
+              {service.t('actions.addComponent')}
+            </Button>
+          ) : null}
         </div>
       </div>
 
@@ -117,16 +129,10 @@ export function ModulesComponent({ moduleId }: ModulesComponentProps) {
         reorderEnabled={service.reorderEnabled}
         onReorder={service.reorderComponent}
         onEdit={service.openEditComponent}
-        onDelete={service.deleteComponent}
+        onDelete={service.canDeleteComponents ? service.deleteComponent : undefined}
+        onToggleSpan={service.canUpdateComponents ? service.toggleComponentSpan : undefined}
         t={service.t}
       />
-
-      {service.isDirty ? (
-        <div className='flex justify-end gap-2'>
-          <ModulesCancelButton onCancel={service.cancelChanges} t={service.t} />
-          <ModulesSaveButton onSave={service.saveModule} t={service.t} />
-        </div>
-      ) : null}
 
       <ModulesEditor
         open={service.editor.open}
@@ -138,6 +144,13 @@ export function ModulesComponent({ moduleId }: ModulesComponentProps) {
         onClose={service.closeEditor}
         t={service.t}
       />
+
+      {service.isDirty && (service.canUpdateLayouts || service.canUpdateComponents) ? (
+        <div className='fixed bottom-6 right-6 z-40 flex items-center gap-2 rounded-lg border border-border bg-card p-3 shadow-lg'>
+          <ModulesCancelButton onCancel={service.cancelChanges} t={service.t} />
+          <ModulesSaveButton onSave={service.saveModule} t={service.t} disabled={service.isSaving} />
+        </div>
+      ) : null}
     </div>
   )
 }

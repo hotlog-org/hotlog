@@ -49,6 +49,8 @@ export interface ModuleBinding {
   fieldKey: string | null | undefined
 }
 
+export type ModuleComponentSpan = 'full' | 'half'
+
 export interface ModuleComponent {
   id: string
   kind: 'chart'
@@ -58,6 +60,7 @@ export interface ModuleComponent {
   title?: string
   description?: string
   order?: number
+  span: ModuleComponentSpan
 }
 
 export interface ModuleDefinition {

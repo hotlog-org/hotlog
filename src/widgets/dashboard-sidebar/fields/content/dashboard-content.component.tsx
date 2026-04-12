@@ -80,13 +80,15 @@ const DashboardSidebarContentComponent = () => {
                   module={module}
                   sidebarState={service.sidebarState}
                   selectedModuleId={service.selectedModuleId}
-                  onDelete={service.deleteModule}
+                  onDelete={service.canDeleteLayouts ? service.deleteModule : undefined}
                   onSelect={service.setSelectedModuleId}
                 />
               ))}
-              <DashboardSidebarCreateModuleComponent
-                sidebarState={service.sidebarState}
-              />
+              {service.canCreateLayouts ? (
+                <DashboardSidebarCreateModuleComponent
+                  sidebarState={service.sidebarState}
+                />
+              ) : null}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>

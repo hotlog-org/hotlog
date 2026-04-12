@@ -1,8 +1,11 @@
 import { useEffect, useMemo, useState } from 'react'
 
+import { useSchemaFieldsQuery } from '@/shared/api/schema'
+
 import type {
   ModuleComponent,
   ModuleSchemaDefinition,
+  ModuleSchemaField,
   ModuleVisualizationInput,
   ModuleVisualizationType,
 } from '../../modules.interface'
@@ -34,6 +37,20 @@ const normalizeBindings = (
   return { ...component, bindings }
 }
 
+const mapFieldType = (type: string): ModuleSchemaField['type'] => {
+  switch (type.toLowerCase()) {
+    case 'number':
+    case 'boolean':
+    case 'datetime':
+    case 'enum':
+    case 'array':
+    case 'json':
+      return type.toLowerCase() as ModuleSchemaField['type']
+    default:
+      return 'string'
+  }
+}
+
 export const useModulesEditorService = (props: ModulesEditorProps) => {
   const [draft, setDraft] = useState<ModuleComponent | null>(null)
 
@@ -44,6 +61,17 @@ export const useModulesEditorService = (props: ModulesEditorProps) => {
       setDraft(null)
     }
   }, [props.component])
+
+  const fieldsQuery = useSchemaFieldsQuery(draft?.schemaId || undefined)
+
+  const schemaFields = useMemo<ModuleSchemaField[]>(() => {
+    if (!fieldsQuery.data?.data) return []
+    return fieldsQuery.data.data.map((f) => ({
+      key: f.key,
+      label: f.displayName || f.key,
+      type: mapFieldType(f.type),
+    }))
+  }, [fieldsQuery.data])
 
   const visualizationInputs = useMemo(() => {
     if (!draft) return []
@@ -125,16 +153,14 @@ export const useModulesEditorService = (props: ModulesEditorProps) => {
   }
 
   const availableFieldsForInput = (input: ModuleVisualizationInput) => {
-    if (!selectedSchema) return []
-    return selectedSchema.fields.filter((field) =>
-      matchesType(input.type, field.type),
-    )
+    return schemaFields.filter((field) => matchesType(input.type, field.type))
   }
 
   return {
     draft,
     inputs: visualizationInputs,
     selectedSchema,
+    fieldsLoading: fieldsQuery.isLoading,
     setDraftValue,
     handleVisualizationChange,
     handleSchemaChange,

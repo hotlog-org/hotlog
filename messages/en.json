@@ -311,7 +311,9 @@
         "actions": {
           "addComponent": "Add component",
           "edit": "Edit component",
-          "delete": "Delete component"
+          "delete": "Delete component",
+          "fullWidth": "Full width",
+          "halfWidth": "Half width"
         },
         "controls": {
           "dragOn": "Reorder enabled",

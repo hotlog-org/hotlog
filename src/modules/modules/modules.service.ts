@@ -3,10 +3,24 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useTranslations } from 'next-intl'
 
-import { moduleSchemas, modulesMock } from './mock-data'
+import {
+  useBatchComponentsMutation,
+  useLayoutsQuery,
+  useUpdateLayoutMutation,
+} from '@/shared/api/layout'
+import { useSchemasQuery } from '@/shared/api/schema'
+import type {
+  IBatchComponentCreate,
+  IBatchComponentUpdate,
+  ILayoutDto,
+} from '@/shared/api/interface'
+import { useUserPermissions } from '@/shared/api/user-permission/user-permission.hook'
+import { useDashboardProject } from '@/shared/store/dashboard-project.store'
+
 import type {
   ModuleBinding,
   ModuleComponent,
+  ModuleComponentSpan,
   ModuleDefinition,
   ModuleSchemaDefinition,
   ModuleVisualizationDefinition,
@@ -31,6 +45,28 @@ const normalizeBindings = (
     return { inputId: input.id, fieldKey: existing?.fieldKey ?? null }
   })
 
+function layoutDtoToModule(dto: ILayoutDto): ModuleDefinition {
+  return {
+    id: String(dto.id),
+    name: dto.name,
+    description: dto.description,
+    color: dto.color,
+    heroTitle: dto.name,
+    heroDescription: dto.description,
+    components: dto.components.map((c) => ({
+      id: c.id,
+      kind: 'chart' as const,
+      visualization: c.visualization as ModuleVisualizationType,
+      schemaId: c.schemaId ?? '',
+      bindings: c.bindings,
+      title: c.title,
+      description: c.description,
+      order: c.index,
+      span: (c.span === 'half' ? 'half' : 'full') as ModuleComponentSpan,
+    })),
+  }
+}
+
 interface ModulesServiceParams {
   moduleId?: string
 }
@@ -38,9 +74,12 @@ interface ModulesServiceParams {
 export interface ModulesService {
   t: TFunction
   module: ModuleDefinition | null
+  modules: ModuleDefinition[]
   schemas: ModuleSchemaDefinition[]
   visualizations: ModuleVisualizationDefinition[]
   isDirty: boolean
+  isSaving: boolean
+  isLoading: boolean
   reorderEnabled: boolean
   editor: {
     open: boolean
@@ -48,6 +87,12 @@ export interface ModulesService {
     component: ModuleComponent | null
   }
   editingField: 'name' | 'heroDescription' | null
+  canCreateLayouts: boolean
+  canUpdateLayouts: boolean
+  canDeleteLayouts: boolean
+  canCreateComponents: boolean
+  canUpdateComponents: boolean
+  canDeleteComponents: boolean
   setEditingField: (field: 'name' | 'heroDescription' | null) => void
   setReorderEnabled: (value: boolean) => void
   openCreateComponent: () => void
@@ -60,6 +105,7 @@ export interface ModulesService {
   saveModule: () => void
   cancelChanges: () => void
   selectModule: (id: string) => void
+  toggleComponentSpan: (componentId: string) => void
   deleteComponent: (componentId: string) => void
 }
 
@@ -67,9 +113,17 @@ export const useModulesService = (
   params: ModulesServiceParams = {},
 ): ModulesService => {
   const t = useTranslations('modules.dashboard.modules')
-  const [draftModule, setDraftModule] = useState<ModuleDefinition | null>(
-    modulesMock[0] ? cloneModule(modulesMock[0]) : null,
+  const selectedProjectId = useDashboardProject(
+    (state) => state.selectedProjectId,
   )
+
+  const layoutsQuery = useLayoutsQuery(selectedProjectId)
+  const schemasQuery = useSchemasQuery(selectedProjectId)
+  const updateLayoutMutation = useUpdateLayoutMutation(selectedProjectId)
+  const batchComponentsMutation = useBatchComponentsMutation(selectedProjectId)
+  const { can } = useUserPermissions(selectedProjectId)
+
+  const [draftModule, setDraftModule] = useState<ModuleDefinition | null>(null)
   const [isDirty, setIsDirty] = useState(false)
   const [reorderEnabled, setReorderEnabled] = useState(false)
   const [editingField, setEditingField] = useState<
@@ -81,8 +135,22 @@ export const useModulesService = (
     component: null,
   })
 
-  const { modules, selectedModuleId, setSelectedModuleId, updateModule } =
-    useModulesStore()
+  const { selectedModuleId, setSelectedModuleId } = useModulesStore()
+
+  const modules = useMemo<ModuleDefinition[]>(
+    () => (layoutsQuery.data?.data ?? []).map(layoutDtoToModule),
+    [layoutsQuery.data],
+  )
+
+  const schemas = useMemo<ModuleSchemaDefinition[]>(
+    () =>
+      (schemasQuery.data?.data ?? []).map((s) => ({
+        id: s.id,
+        name: s.displayName || s.key,
+        fields: [],
+      })),
+    [schemasQuery.data],
+  )
 
   const visualizationInputs = useMemo<
     Record<ModuleVisualizationType, ModuleVisualizationInput[]>
@@ -229,7 +297,16 @@ export const useModulesService = (
   }, [params.moduleId, setSelectedModuleId])
 
   useEffect(() => {
-    if (!currentModuleFromStore) return
+    if (!selectedModuleId && !params.moduleId && modules.length > 0) {
+      setSelectedModuleId(modules[0].id)
+    }
+  }, [modules, selectedModuleId, params.moduleId, setSelectedModuleId])
+
+  useEffect(() => {
+    if (!currentModuleFromStore) {
+      setDraftModule(null)
+      return
+    }
 
     setDraftModule(cloneModule(currentModuleFromStore))
     setIsDirty(false)
@@ -270,7 +347,7 @@ export const useModulesService = (
 
   const openCreateComponent = () => {
     const defaultVisualization = visualizations[0]?.id ?? 'line'
-    const defaultSchema = moduleSchemas[0]?.id ?? ''
+    const defaultSchema = schemas[0]?.id ?? ''
 
     const draft: ModuleComponent = {
       id: createId('component'),
@@ -283,6 +360,7 @@ export const useModulesService = (
       ),
       title: '',
       description: '',
+      span: 'full',
     }
 
     setEditor({ open: true, mode: 'create', component: draft })
@@ -341,6 +419,17 @@ export const useModulesService = (
     })
   }
 
+  const toggleComponentSpan = (componentId: string) => {
+    setDirtyModule((current) => ({
+      ...current,
+      components: current.components.map((item) =>
+        item.id === componentId
+          ? { ...item, span: item.span === 'half' ? 'full' : 'half' }
+          : item,
+      ),
+    }))
+  }
+
   const deleteComponent = (componentId: string) => {
     setDirtyModule((current) => ({
       ...current,
@@ -348,9 +437,75 @@ export const useModulesService = (
     }))
   }
 
-  const saveModule = () => {
-    if (!draftModule) return
-    updateModule(draftModule)
+  const saveModule = async () => {
+    if (!draftModule || !currentModuleFromStore) return
+
+    const layoutId = Number(draftModule.id)
+
+    const metadataChanged =
+      draftModule.name !== currentModuleFromStore.name ||
+      draftModule.color !== currentModuleFromStore.color ||
+      (draftModule.heroDescription ?? '') !==
+        (currentModuleFromStore.heroDescription ?? '')
+
+    if (metadataChanged) {
+      await updateLayoutMutation.mutateAsync({
+        id: layoutId,
+        name: draftModule.name,
+        color: draftModule.color,
+        description: draftModule.heroDescription ?? draftModule.description ?? '',
+      })
+    }
+
+    const originalIds = new Set(
+      currentModuleFromStore.components.map((c) => c.id),
+    )
+    const draftIds = new Set(draftModule.components.map((c) => c.id))
+
+    const normalizeBindingsForApi = (bindings: ModuleBinding[]) =>
+      bindings.map((b) => ({ inputId: b.inputId, fieldKey: b.fieldKey ?? null }))
+
+    const creates: IBatchComponentCreate[] = draftModule.components
+      .filter((c) => !originalIds.has(c.id))
+      .map((c) => ({
+        visualization: c.visualization,
+        schema_id: c.schemaId || null,
+        bindings: normalizeBindingsForApi(c.bindings),
+        title: c.title ?? '',
+        description: c.description ?? '',
+        index: draftModule.components.indexOf(c),
+        span: c.span ?? 'full',
+      }))
+
+    const updates: IBatchComponentUpdate[] = draftModule.components
+      .filter((c) => originalIds.has(c.id))
+      .map((c) => ({
+        id: c.id,
+        visualization: c.visualization,
+        schema_id: c.schemaId || null,
+        bindings: normalizeBindingsForApi(c.bindings),
+        title: c.title ?? '',
+        description: c.description ?? '',
+        index: draftModule.components.indexOf(c),
+        span: c.span ?? 'full',
+      }))
+
+    const deletes = currentModuleFromStore.components
+      .filter((c) => !draftIds.has(c.id))
+      .map((c) => c.id)
+
+    const hasComponentChanges =
+      creates.length > 0 || updates.length > 0 || deletes.length > 0
+
+    if (hasComponentChanges) {
+      await batchComponentsMutation.mutateAsync({
+        layout_id: layoutId,
+        creates,
+        updates,
+        deletes,
+      })
+    }
+
     setIsDirty(false)
     setReorderEnabled(false)
     setEditingField(null)
@@ -368,12 +523,22 @@ export const useModulesService = (
   return {
     t,
     module: draftModule,
-    schemas: moduleSchemas,
+    modules,
+    schemas,
     visualizations,
     isDirty,
+    isSaving:
+      updateLayoutMutation.isPending || batchComponentsMutation.isPending,
+    isLoading: layoutsQuery.isLoading,
     reorderEnabled,
     editor,
     editingField,
+    canCreateLayouts: can('create:layouts'),
+    canUpdateLayouts: can('update:layouts'),
+    canDeleteLayouts: can('delete:layouts'),
+    canCreateComponents: can('create:components'),
+    canUpdateComponents: can('update:components'),
+    canDeleteComponents: can('delete:components'),
     setEditingField,
     setReorderEnabled,
     openCreateComponent,
@@ -386,6 +551,7 @@ export const useModulesService = (
     saveModule,
     cancelChanges,
     selectModule,
+    toggleComponentSpan,
     deleteComponent,
   }
 }

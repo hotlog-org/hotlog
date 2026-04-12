@@ -28,12 +28,12 @@ const DashboardSidebarNavbarComponent = () => {
                 const href =
                   ERoutes.DASHBOARD +
                   '/' +
-                  service.pathSegments.slice(1, index + 1).join('/')
+                  service.rawSegments.slice(1, index + 1).join('/')
                 const isLast = index === service.pathSegments.length - 1
                 const isFirst = index === 0
 
                 return (
-                  <React.Fragment key={href}>
+                  <React.Fragment key={index}>
                     {!isFirst && <BreadcrumbSeparator />}
                     <BreadcrumbItem>
                       {isLast ? (
