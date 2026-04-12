@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import { devtools } from 'zustand/middleware'
+import { devtools, persist } from 'zustand/middleware'
 
 interface IState {
   selectedProjectId?: string
@@ -11,15 +11,21 @@ interface IStore extends IState {
 
 export const useDashboardProject = create<IStore>()(
   devtools(
-    (set) => ({
-      selectedProjectId: undefined,
+    persist(
+      (set) => ({
+        selectedProjectId: undefined,
 
-      handleDashboardProject: (params: Partial<IState>) =>
-        set((state) => ({
-          ...state,
-          ...params,
-        })),
-    }),
+        handleDashboardProject: (params: Partial<IState>) =>
+          set((state) => ({
+            ...state,
+            ...params,
+          })),
+      }),
+      {
+        name: 'hotlog-selected-project',
+        partialize: (state) => ({ selectedProjectId: state.selectedProjectId }),
+      },
+    ),
     {
       enabled:
         process.env.NODE_ENV !== 'production' && typeof window !== 'undefined',

@@ -34,12 +34,15 @@ import {
 import { HugeiconsIcon } from '@hugeicons/react'
 
 import { useState } from 'react'
+import { useProjectRealtime } from '@/shared/hooks/use-project-realtime'
 import { useDashboardSidebarHeaderService } from './dashboard-sidebar-header.service'
 
 const DashboardSidebarHeaderComponent = () => {
   const service = useDashboardSidebarHeaderService()
   const { state, isMobile } = useSidebar()
   const [projectName, setProjectName] = useState('')
+
+  useProjectRealtime(service.selectedProjectId)
 
   return (
     <>

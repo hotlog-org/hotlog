@@ -15,6 +15,7 @@ export interface UsersTableProps {
   roles: OverviewRole[]
   roleOptions: RoleOption[]
   currentUserId: string
+  canUpdateRoles: boolean
   onChangeRole: (userId: string, roleId: string) => void
   onRemove: (userId: string) => void
   onRevoke: (userId: string) => void

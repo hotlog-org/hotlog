@@ -155,6 +155,50 @@ export async function POST(request: NextRequest) {
   )
 }
 
+export async function PATCH(request: NextRequest) {
+  const supabase = await createClient()
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser()
+
+  if (userError || !user) {
+    return NextResponse.json<IApiErrorResponse>(
+      { error: { message: 'Unauthorized' } },
+      { status: 401 },
+    )
+  }
+
+  const body = await request.json()
+  const { project_id, user_id, role_id } = body
+
+  if (!project_id || !user_id || !role_id) {
+    return NextResponse.json<IApiErrorResponse>(
+      { error: { message: 'project_id, user_id, and role_id are required' } },
+      { status: 400 },
+    )
+  }
+
+  // Use security definer function to swap role (bypasses RLS)
+  const { error } = await supabase.rpc(
+    'update_user_role' as never,
+    {
+      p_project_id: project_id,
+      p_user_id: user_id,
+      p_role_id: role_id,
+    } as never,
+  )
+
+  if (error) {
+    return NextResponse.json<IApiErrorResponse>(
+      { error: { message: error.message } },
+      { status: 500 },
+    )
+  }
+
+  return NextResponse.json({ data: { userId: user_id, roleId: role_id } })
+}
+
 export async function DELETE(request: NextRequest) {
   const { searchParams } = new URL(request.url)
   const projectId = searchParams.get('project_id')

@@ -11,11 +11,13 @@ export const useInviteMemberModalService = ({
   onSubmit,
 }: InviteMemberModalProps) => {
   const [email, setEmail] = useState('')
+  const [roleId, setRoleId] = useState('')
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     if (!open) {
       setEmail('')
+      setRoleId('')
       setError(null)
     }
   }, [open])
@@ -28,14 +30,17 @@ export const useInviteMemberModalService = ({
     }
 
     setError(null)
-    onSubmit(parsed.data.email)
+    onSubmit(parsed.data.email, roleId || undefined)
     setEmail('')
+    setRoleId('')
   }
 
   return {
     email,
+    roleId,
     error,
     setEmail,
+    setRoleId,
     handleSubmit,
   }
 }

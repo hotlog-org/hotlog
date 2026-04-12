@@ -9,9 +9,11 @@ export const envServer = createEnv({
       .enum(['development', 'production'])
       .optional()
       .default('development'),
+    RESEND_API_KEY: z.string().optional(),
   },
   emptyStringAsUndefined: true,
   runtimeEnv: {
     NODE_ENV: process.env.NODE_ENV,
+    RESEND_API_KEY: process.env.RESEND_API_KEY,
   },
 })

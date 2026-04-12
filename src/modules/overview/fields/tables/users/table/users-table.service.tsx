@@ -79,6 +79,7 @@ export const useUsersTableService = ({
   roleOptions,
   roles,
   currentUserId,
+  canUpdateRoles,
   onChangeRole,
   onRemove,
   onRevoke,
@@ -105,10 +106,25 @@ export const useUsersTableService = ({
       {
         id: 'role',
         header: t('users.table.role'),
-        cell: ({ row }) =>
-          renderRoleSelector(row.original, roleOptions, roleLookup, (roleId) =>
-            onChangeRole(row.original.id, roleId),
-          ),
+        cell: ({ row }) => {
+          const selected = roleLookup[row.original.roleId]
+          if (!canUpdateRoles) {
+            return (
+              <Badge
+                variant='outline'
+                className='border-border/50 bg-muted/30 text-muted-foreground'
+              >
+                {selected?.name ?? t('users.table.noRole')}
+              </Badge>
+            )
+          }
+          return renderRoleSelector(
+            row.original,
+            roleOptions,
+            roleLookup,
+            (roleId) => onChangeRole(row.original.id, roleId),
+          )
+        },
       },
       {
         id: 'status',

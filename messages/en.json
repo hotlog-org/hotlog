@@ -255,13 +255,16 @@
             "role": "Role",
             "status": "Status",
             "remove": "Remove",
-            "revoke": "Revoke invite"
+            "revoke": "Revoke invite",
+            "noRole": "No role"
           },
           "inviteModal": {
             "title": "Invite member",
             "description": "Send a workspace invite to a teammate.",
             "emailLabel": "Work email",
             "placeholder": "name@company.com",
+            "roleLabel": "Assign role",
+            "noRole": "No role (assign later)",
             "help": "Pending invites can be revoked anytime.",
             "cancel": "Cancel",
             "submit": "Send invite"

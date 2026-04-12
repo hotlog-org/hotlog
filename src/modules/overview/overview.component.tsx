@@ -156,6 +156,7 @@ export function OverviewComponent() {
                   roles={service.roles}
                   roleOptions={service.roleOptions}
                   currentUserId={service.currentUserId}
+                  canUpdateRoles={service.canUpdateRoles}
                   onChangeRole={service.updateUserRole}
                   onRemove={service.removeUser}
                   onRevoke={service.revokeInvite}
@@ -184,10 +185,10 @@ export function OverviewComponent() {
           <InviteMemberModal
             open={service.inviteModalOpen}
             onClose={service.closeInviteModal}
-            onSubmit={(email) => {
-              service.inviteMember(email)
-              service.closeInviteModal()
+            onSubmit={(email, roleId) => {
+              service.inviteMember(email, roleId)
             }}
+            roleOptions={service.roleOptions}
             t={service.t}
           />
 

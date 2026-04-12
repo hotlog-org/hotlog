@@ -7,6 +7,7 @@ import {
   type IAddMemberPayload,
   type IProjectMembersResponse,
   type IRemoveMemberPayload,
+  type IUpdateMemberRolePayload,
 } from '../interface'
 
 export const projectMembersQueryApi = async (
@@ -28,6 +29,14 @@ export const addMemberApi = async (
   payload: IAddMemberPayload,
 ): Promise<void> => {
   await restApiFetcher.post(EProjectMemberApi.PROJECT_MEMBERS_API, {
+    json: payload,
+  })
+}
+
+export const updateMemberRoleApi = async (
+  payload: IUpdateMemberRolePayload,
+): Promise<void> => {
+  await restApiFetcher.patch(EProjectMemberApi.PROJECT_MEMBERS_API, {
     json: payload,
   })
 }

@@ -20,7 +20,13 @@ import {
 import {
   useProjectMembersQuery,
   useRemoveMemberMutation,
+  useUpdateMemberRoleMutation,
 } from '@/shared/api/project-member'
+import {
+  useInvitationsQuery,
+  useCreateInvitationMutation,
+  useRevokeInvitationMutation,
+} from '@/shared/api/invitation'
 import { useProjectPermissionsQuery } from '@/shared/api/project-permission'
 import {
   useCreateApiKeyMutation,
@@ -72,7 +78,8 @@ export interface OverviewService {
   inviteModalOpen: boolean
   openInviteModal: () => void
   closeInviteModal: () => void
-  inviteMember: (email: string) => void
+  inviteMember: (email: string, roleId?: string) => void
+  isInviting: boolean
   addRoleModalOpen: boolean
   openAddRoleModal: () => void
   closeAddRoleModal: () => void
@@ -132,6 +139,11 @@ const useOverviewService = (): OverviewService => {
     canReadApiKey ? selectedProjectId : undefined,
   )
 
+  // Invitation query
+  const invitationsQuery = useInvitationsQuery(
+    canReadUsers ? selectedProjectId : undefined,
+  )
+
   // Mutations
   const createRoleMutation = useCreateRoleMutation(selectedProjectId)
   const deleteRoleMutation = useDeleteRoleMutation(selectedProjectId)
@@ -140,6 +152,9 @@ const useOverviewService = (): OverviewService => {
   const removeRolePermissionMutation =
     useRemoveRolePermissionMutation(selectedProjectId)
   const removeMemberMutation = useRemoveMemberMutation(selectedProjectId)
+  const updateMemberRoleMutation = useUpdateMemberRoleMutation(selectedProjectId)
+  const createInvitationMutation = useCreateInvitationMutation(selectedProjectId)
+  const revokeInvitationMutation = useRevokeInvitationMutation(selectedProjectId)
   const deleteProjectMutation = useDeleteProjectMutation()
   const createApiKeyMutation = useCreateApiKeyMutation(selectedProjectId)
   const deleteApiKeyMutation = useDeleteApiKeyMutation(selectedProjectId)
@@ -196,17 +211,28 @@ const useOverviewService = (): OverviewService => {
     }))
   }, [rolesQuery.data])
 
-  // Map DB members to OverviewUser format
+  // Map DB members + pending invitations to OverviewUser format
   const users: OverviewUser[] = useMemo(() => {
     const dbMembers = membersQuery.data?.data ?? []
-    return dbMembers.map((member) => ({
+    const activeUsers: OverviewUser[] = dbMembers.map((member) => ({
       id: member.id,
       email: member.email,
       roleId: member.roleId ?? '',
       status: 'active' as const,
       isCreator: member.isCreator,
     }))
-  }, [membersQuery.data])
+
+    const pendingInvitations = invitationsQuery.data?.data ?? []
+    const pendingUsers: OverviewUser[] = pendingInvitations.map((inv) => ({
+      id: inv.id, // invitation id for revoke actions
+      email: inv.email,
+      roleId: inv.roleId ?? '',
+      status: 'pending' as const,
+      isCreator: false,
+    }))
+
+    return [...activeUsers, ...pendingUsers]
+  }, [membersQuery.data, invitationsQuery.data])
 
   const roleOptions = useMemo<RoleOption[]>(
     () => roles.map((role) => ({ label: role.name, value: role.id })),
@@ -274,9 +300,17 @@ const useOverviewService = (): OverviewService => {
     selectedProjectId,
   ])
 
-  const updateUserRole = useCallback((_userId: string, _roleId: string) => {
-    // TODO: implement update user role mutation
-  }, [])
+  const updateUserRole = useCallback(
+    (userId: string, roleId: string) => {
+      if (!selectedProjectId) return
+      updateMemberRoleMutation.mutate({
+        project_id: selectedProjectId,
+        user_id: userId,
+        role_id: roleId,
+      })
+    },
+    [selectedProjectId, updateMemberRoleMutation],
+  )
 
   const removeUser = useCallback(
     (userId: string) => {
@@ -294,15 +328,30 @@ const useOverviewService = (): OverviewService => {
   )
 
   const revokeInvite = useCallback(
-    (userId: string) => {
-      removeUser(userId)
+    (invitationId: string) => {
+      revokeInvitationMutation.mutate({ invitation_id: invitationId })
     },
-    [removeUser],
+    [revokeInvitationMutation],
   )
 
-  const inviteMember = useCallback((_email: string) => {
-    // TODO: implement invite member flow
-  }, [])
+  const inviteMember = useCallback(
+    (email: string, roleId?: string) => {
+      if (!selectedProjectId) return
+      createInvitationMutation.mutate(
+        {
+          project_id: selectedProjectId,
+          email,
+          role_id: roleId,
+        },
+        {
+          onSuccess: () => {
+            setInviteModalOpen(false)
+          },
+        },
+      )
+    },
+    [createInvitationMutation, selectedProjectId],
+  )
 
   const addRole = useCallback(
     (payload: { name: string; permissionIds: string[] }) => {
@@ -385,6 +434,7 @@ const useOverviewService = (): OverviewService => {
     openInviteModal: () => setInviteModalOpen(true),
     closeInviteModal: () => setInviteModalOpen(false),
     inviteMember,
+    isInviting: createInvitationMutation.isPending,
     addRoleModalOpen,
     openAddRoleModal: () => setAddRoleModalOpen(true),
     closeAddRoleModal: () => setAddRoleModalOpen(false),

@@ -97,7 +97,7 @@ export function ApiKeyCard(props: ApiKeyCardProps) {
                 className='font-mono text-sm'
               />
               <Button
-                variant='ghost'
+                variant='outline'
                 size='icon'
                 className='shrink-0'
                 onClick={service.handleToggleVisibility}

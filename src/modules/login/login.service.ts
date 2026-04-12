@@ -13,6 +13,7 @@ import {
 
 import { ERoutes } from '@/config/routes'
 import { useRouter } from '@/i18n/navigation'
+import { useSearchParams } from 'next/navigation'
 import { DiscordIcon, GithubIcon, GoogleIcon } from '@hugeicons/core-free-icons'
 
 const loginProviders: LoginProviderOption[] = [
@@ -39,6 +40,8 @@ export const useLoginService = () => {
   const locale = useLocale()
 
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const nextUrl = searchParams.get('next')
   const [isLoading, setIsLoading] = useState(false)
   const [success, setSuccess] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -65,7 +68,7 @@ export const useLoginService = () => {
       const result = await loginAction(data)
 
       if (result.success) {
-        router.push(ERoutes.DASHBOARD)
+        router.push(nextUrl ?? ERoutes.DASHBOARD)
         setSuccess(true)
         setError(null)
         form.reset()
