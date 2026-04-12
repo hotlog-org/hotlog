@@ -266,16 +266,16 @@ export function EventsExtraComponent(props: EventsExtraComponentProps) {
         </>
       ) : (
         <Menubar
-          className='h-9 border-border'
+          className='h-9 border-border bg-transparent p-0 shadow-none'
           value={filterMenu.open ? 'filter' : ''}
           onValueChange={(v) => filterMenu.openChange(v === 'filter')}
         >
           <MenubarMenu value='filter'>
-            <MenubarTrigger className='gap-2 hover:bg-transparent focus:bg-transparent'>
+            <MenubarTrigger className='h-full gap-2 rounded-md border border-border bg-card px-3 data-[state=open]:bg-muted'>
               <HugeiconsIcon icon={FilterAddIcon} className='size-4' />
               {t('filter.button')}
             </MenubarTrigger>
-            <MenubarContent className='w-96 space-y-3 p-3'>
+            <MenubarContent className='w-96 space-y-3 p-3' sideOffset={8} align='end'>
               {filterMenu.step === 'schema' && (
                 <div className='space-y-2'>
                   <div className='flex items-center gap-2 text-sm font-medium'>
