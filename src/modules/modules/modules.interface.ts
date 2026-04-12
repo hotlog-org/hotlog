@@ -70,6 +70,7 @@ export interface ModuleDefinition {
   color: string
   heroTitle?: string
   heroDescription?: string
+  roleIds: string[]
   components: ModuleComponent[]
 }
 

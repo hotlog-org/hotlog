@@ -4,10 +4,13 @@ import { useEffect, useMemo, useState } from 'react'
 import { useTranslations } from 'next-intl'
 
 import {
+  useAddRoleLayoutMutation,
   useBatchComponentsMutation,
   useLayoutsQuery,
+  useRemoveRoleLayoutMutation,
   useUpdateLayoutMutation,
 } from '@/shared/api/layout'
+import { useProjectRolesQuery } from '@/shared/api/project-role/project-role.hook'
 import { useSchemasQuery } from '@/shared/api/schema'
 import type {
   IBatchComponentCreate,
@@ -53,6 +56,7 @@ function layoutDtoToModule(dto: ILayoutDto): ModuleDefinition {
     color: dto.color,
     heroTitle: dto.name,
     heroDescription: dto.description,
+    roleIds: dto.roleIds ?? [],
     components: dto.components.map((c) => ({
       id: c.id,
       kind: 'chart' as const,
@@ -108,6 +112,11 @@ export interface ModulesService {
   selectModule: (id: string) => void
   toggleComponentSpan: (componentId: string) => void
   deleteComponent: (componentId: string) => void
+  projectRoles: Array<{ id: string; name: string }>
+  currentUserRoleIds: string[]
+  addLayoutRole: (roleId: string) => void
+  removeLayoutRole: (roleId: string) => void
+  canRemoveRole: (roleId: string) => boolean
 }
 
 export const useModulesService = (
@@ -120,8 +129,11 @@ export const useModulesService = (
 
   const layoutsQuery = useLayoutsQuery(selectedProjectId)
   const schemasQuery = useSchemasQuery(selectedProjectId)
+  const rolesQuery = useProjectRolesQuery(selectedProjectId)
   const updateLayoutMutation = useUpdateLayoutMutation(selectedProjectId)
   const batchComponentsMutation = useBatchComponentsMutation(selectedProjectId)
+  const addRoleLayoutMutation = useAddRoleLayoutMutation(selectedProjectId)
+  const removeRoleLayoutMutation = useRemoveRoleLayoutMutation(selectedProjectId)
   const { can } = useUserPermissions(selectedProjectId)
 
   const [draftModule, setDraftModule] = useState<ModuleDefinition | null>(null)
@@ -141,6 +153,13 @@ export const useModulesService = (
   const modules = useMemo<ModuleDefinition[]>(
     () => (layoutsQuery.data?.data ?? []).map(layoutDtoToModule),
     [layoutsQuery.data],
+  )
+
+  const currentUserRoleIds = layoutsQuery.data?.currentUserRoleIds ?? []
+
+  const projectRoles = useMemo(
+    () => (rolesQuery.data?.data ?? []).map((r) => ({ id: r.id, name: r.name })),
+    [rolesQuery.data],
   )
 
   const schemas = useMemo<ModuleSchemaDefinition[]>(
@@ -441,6 +460,33 @@ export const useModulesService = (
     }))
   }
 
+  const addLayoutRole = (roleId: string) => {
+    if (!draftModule) return
+    const layoutId = Number(draftModule.id)
+    addRoleLayoutMutation.mutate({ role_id: roleId, layout_id: layoutId })
+  }
+
+  const removeLayoutRole = (roleId: string) => {
+    if (!draftModule) return
+    const layoutId = Number(draftModule.id)
+    removeRoleLayoutMutation.mutate({ role_id: roleId, layout_id: layoutId })
+  }
+
+  const canRemoveRole = (roleId: string) => {
+    if (!draftModule) return false
+    // Creator and users with read:layouts can always remove any role
+    if (can('read:layouts')) return true
+    // Check if this is the user's only matching role for this layout
+    const layoutRoleIds = draftModule.roleIds
+    const userMatchingRoles = layoutRoleIds.filter((id) =>
+      currentUserRoleIds.includes(id),
+    )
+    // If user has more than one matching role, they can remove any one
+    if (userMatchingRoles.length > 1) return true
+    // If this is the only matching role, prevent removal
+    return !currentUserRoleIds.includes(roleId)
+  }
+
   const saveModule = async () => {
     if (!draftModule || !currentModuleFromStore) return
 
@@ -558,6 +604,11 @@ export const useModulesService = (
     selectModule,
     toggleComponentSpan,
     deleteComponent,
+    projectRoles,
+    currentUserRoleIds,
+    addLayoutRole,
+    removeLayoutRole,
+    canRemoveRole,
   }
 }
 

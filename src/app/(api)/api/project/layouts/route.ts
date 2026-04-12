@@ -14,6 +14,10 @@ interface ComponentRow {
   span: string
 }
 
+interface RoleLayoutRow {
+  role_id: string
+}
+
 interface LayoutRow {
   id: number
   name: string
@@ -21,6 +25,7 @@ interface LayoutRow {
   color: string
   created_at: string
   components: ComponentRow[]
+  role_layouts: RoleLayoutRow[]
 }
 
 const mapComponent = (row: ComponentRow) => ({
@@ -40,6 +45,7 @@ const mapLayout = (row: LayoutRow) => ({
   description: row.description,
   color: row.color,
   createdAt: row.created_at,
+  roleIds: (row.role_layouts ?? []).map((rl) => rl.role_id),
   components: (row.components ?? [])
     .sort((a, b) => a.index - b.index)
     .map(mapComponent),
@@ -73,7 +79,8 @@ export async function GET(request: NextRequest) {
     .from('layouts')
     .select(
       `id, name, description, color, created_at,
-       components(id, name, description, visualization, schema_id, inputs_ids, index, span)` as '*',
+       components(id, name, description, visualization, schema_id, inputs_ids, index, span),
+       role_layouts(role_id)` as '*',
     )
     .eq('project_id', projectId)
     .order('created_at', { ascending: true })
@@ -85,9 +92,19 @@ export async function GET(request: NextRequest) {
     )
   }
 
+  // Fetch current user's role IDs for this project
+  const { data: userRoles } = await supabase
+    .from('user_roles')
+    .select('role_id, roles!inner(project_id)' as '*')
+    .eq('user_id', user.id)
+
+  const currentUserRoleIds = ((userRoles ?? []) as any[])
+    .filter((ur: any) => ur.roles?.project_id === projectId)
+    .map((ur: any) => ur.role_id as string)
+
   const result = ((data ?? []) as unknown as LayoutRow[]).map(mapLayout)
 
-  return NextResponse.json({ data: result })
+  return NextResponse.json({ data: result, currentUserRoleIds })
 }
 
 export async function POST(request: NextRequest) {
@@ -142,6 +159,7 @@ export async function POST(request: NextRequest) {
         description: row.description,
         color: row.color,
         createdAt: row.created_at,
+        roleIds: [],
         components: [],
       },
     },
@@ -194,19 +212,31 @@ export async function PATCH(request: NextRequest) {
     )
   }
 
-  const { data, error } = await supabase
+  const { error } = await supabase
     .from('layouts')
     .update(updates as any)
     .eq('id', id)
+
+  if (error) {
+    return NextResponse.json<IApiErrorResponse>(
+      { error: { message: error.message } },
+      { status: 500 },
+    )
+  }
+
+  const { data, error: fetchError } = await supabase
+    .from('layouts')
     .select(
       `id, name, description, color, created_at,
-       components(id, name, description, visualization, schema_id, inputs_ids, index, span)` as '*',
+       components(id, name, description, visualization, schema_id, inputs_ids, index, span),
+       role_layouts(role_id)` as '*',
     )
+    .eq('id', id)
     .single()
 
-  if (error || !data) {
+  if (fetchError || !data) {
     return NextResponse.json<IApiErrorResponse>(
-      { error: { message: error?.message ?? 'Failed to update layout' } },
+      { error: { message: fetchError?.message ?? 'Failed to fetch layout' } },
       { status: 500 },
     )
   }

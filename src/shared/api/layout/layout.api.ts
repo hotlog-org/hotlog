@@ -9,6 +9,7 @@ import {
   type ICreateLayoutPayload,
   type ILayoutListResponse,
   type ILayoutResponse,
+  type IRoleLayoutPayload,
   type IUpdateLayoutPayload,
 } from '../interface'
 
@@ -64,4 +65,16 @@ export const batchComponentsApi = async (
   )
 
   return response.json()
+}
+
+export const addRoleLayoutApi = async (
+  payload: IRoleLayoutPayload,
+): Promise<void> => {
+  await restApiFetcher.post(ELayoutApi.ROLE_LAYOUTS_API, { json: payload })
+}
+
+export const removeRoleLayoutApi = async (
+  payload: IRoleLayoutPayload,
+): Promise<void> => {
+  await restApiFetcher.delete(ELayoutApi.ROLE_LAYOUTS_API, { json: payload })
 }

@@ -1,6 +1,7 @@
 export enum ELayoutApi {
   LAYOUTS_API = 'project/layouts',
   LAYOUTS_COMPONENTS_API = 'project/layouts/components',
+  ROLE_LAYOUTS_API = 'project/role-layouts',
 }
 
 export enum ELayoutKey {
@@ -24,11 +25,13 @@ export interface ILayoutDto {
   description: string
   color: string
   components: ILayoutComponentDto[]
+  roleIds: string[]
   createdAt: string
 }
 
 export interface ILayoutListResponse {
   data: ILayoutDto[]
+  currentUserRoleIds: string[]
 }
 
 export interface ILayoutResponse {
@@ -47,6 +50,11 @@ export interface IUpdateLayoutPayload {
   name?: string
   color?: string
   description?: string
+}
+
+export interface IRoleLayoutPayload {
+  role_id: string
+  layout_id: number
 }
 
 export interface IBatchComponentCreate {

@@ -9,8 +9,14 @@ import { ModulesEditor } from './fields/editor/modules-editor.component'
 import { ModulesSaveButton } from './fields/save-button/modules-save-button.component'
 import { ModulesView } from './fields/view/modules-view.component'
 import useModulesService from './modules.service'
+import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
 import { Input } from '@/shared/ui/input'
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/shared/ui/popover'
 import { cn } from '@/shared/utils/shadcn.utils'
 import { useRef } from 'react'
 
@@ -103,6 +109,75 @@ export function ModulesComponent({ moduleId }: ModulesComponentProps) {
                 service.t('placeholders.description')}
             </p>
           )}
+
+          {service.canUpdateLayouts ? (
+            <div className='flex flex-wrap items-center gap-1.5'>
+              {currentModule.roleIds.length === 0 ? (
+                <Badge variant='secondary' className='text-xs'>
+                  Public
+                </Badge>
+              ) : (
+                currentModule.roleIds.map((roleId) => {
+                  const role = service.projectRoles.find((r) => r.id === roleId)
+                  const removable = service.canRemoveRole(roleId)
+                  return (
+                    <Badge
+                      key={roleId}
+                      variant='outline'
+                      className={cn(
+                        'gap-1 text-xs',
+                        removable && 'cursor-pointer hover:bg-destructive/10',
+                      )}
+                      onClick={() => removable && service.removeLayoutRole(roleId)}
+                    >
+                      {role?.name ?? roleId}
+                      {removable ? ' ×' : null}
+                    </Badge>
+                  )
+                })
+              )}
+              <Popover>
+                <PopoverTrigger asChild>
+                  <button className='rounded-md border border-dashed border-border px-2 py-0.5 text-xs text-muted-foreground hover:border-primary hover:text-primary'>
+                    + role
+                  </button>
+                </PopoverTrigger>
+                <PopoverContent className='w-48 p-2' align='start'>
+                  <div className='space-y-1'>
+                    {service.projectRoles
+                      .filter((r) => !currentModule.roleIds.includes(r.id))
+                      .map((role) => (
+                        <button
+                          key={role.id}
+                          className='w-full rounded px-2 py-1 text-left text-sm hover:bg-accent'
+                          onClick={() => service.addLayoutRole(role.id)}
+                        >
+                          {role.name}
+                        </button>
+                      ))}
+                    {service.projectRoles.filter(
+                      (r) => !currentModule.roleIds.includes(r.id),
+                    ).length === 0 ? (
+                      <p className='px-2 py-1 text-xs text-muted-foreground'>
+                        All roles assigned
+                      </p>
+                    ) : null}
+                  </div>
+                </PopoverContent>
+              </Popover>
+            </div>
+          ) : currentModule.roleIds.length > 0 ? (
+            <div className='flex flex-wrap items-center gap-1.5'>
+              {currentModule.roleIds.map((roleId) => {
+                const role = service.projectRoles.find((r) => r.id === roleId)
+                return (
+                  <Badge key={roleId} variant='outline' className='text-xs'>
+                    {role?.name ?? roleId}
+                  </Badge>
+                )
+              })}
+            </div>
+          ) : null}
         </div>
 
         <div className='flex flex-wrap items-center gap-2'>

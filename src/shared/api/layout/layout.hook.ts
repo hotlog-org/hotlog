@@ -3,15 +3,18 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   type IBatchComponentsPayload,
   type ICreateLayoutPayload,
+  type IRoleLayoutPayload,
   type IUpdateLayoutPayload,
   ELayoutKey,
 } from '../interface'
 
 import {
+  addRoleLayoutApi,
   batchComponentsApi,
   createLayoutApi,
   deleteLayoutApi,
   layoutsQueryApi,
+  removeRoleLayoutApi,
   updateLayoutApi,
 } from './layout.api'
 
@@ -73,6 +76,32 @@ export const useBatchComponentsMutation = (projectId?: string) => {
   return useMutation({
     mutationFn: (payload: IBatchComponentsPayload) =>
       batchComponentsApi(payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: layoutsKey(projectId),
+      })
+    },
+  })
+}
+
+export const useAddRoleLayoutMutation = (projectId?: string) => {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (payload: IRoleLayoutPayload) => addRoleLayoutApi(payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: layoutsKey(projectId),
+      })
+    },
+  })
+}
+
+export const useRemoveRoleLayoutMutation = (projectId?: string) => {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (payload: IRoleLayoutPayload) => removeRoleLayoutApi(payload),
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: layoutsKey(projectId),
