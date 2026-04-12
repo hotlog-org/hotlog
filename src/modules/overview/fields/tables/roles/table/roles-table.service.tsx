@@ -148,6 +148,7 @@ function PermissionsList(props: {
   permissions: OverviewPermission[]
   permissionLookup: Record<string, OverviewPermission>
   permissionColors: Record<PermissionCategory | string, string>
+  canUpdate: boolean
   onAddPermission: (roleId: string, permissionId: string) => void
   onRemovePermission: (roleId: string, permissionId: string) => void
   t: TFunction
@@ -173,10 +174,10 @@ function PermissionsList(props: {
           renderPermissionBadge(
             permission,
             props.permissionColors,
-            props.pending
-              ? undefined
-              : () =>
-                  props.onRemovePermission(props.role.id, permission.id),
+            props.canUpdate && !props.pending
+              ? () =>
+                  props.onRemovePermission(props.role.id, permission.id)
+              : undefined,
           ),
         )}
         {shouldTruncate && (
@@ -200,14 +201,16 @@ function PermissionsList(props: {
           </Button>
         )}
       </div>
-      <PermissionPicker
-        role={props.role}
-        pending={props.pending}
-        permissions={props.permissions}
-        permissionColors={props.permissionColors}
-        onAddPermission={props.onAddPermission}
-        t={props.t}
-      />
+      {props.canUpdate && (
+        <PermissionPicker
+          role={props.role}
+          pending={props.pending}
+          permissions={props.permissions}
+          permissionColors={props.permissionColors}
+          onAddPermission={props.onAddPermission}
+          t={props.t}
+        />
+      )}
     </div>
   )
 }
@@ -216,6 +219,8 @@ export const useRolesTableService = ({
   rows,
   permissions,
   permissionColors,
+  canUpdateRoles,
+  canDeleteRoles,
   onAddPermission,
   onRemovePermission,
   onDelete,
@@ -264,34 +269,39 @@ export const useRolesTableService = ({
             permissions={permissions}
             permissionLookup={permissionLookup}
             permissionColors={permissionColors}
+            canUpdate={canUpdateRoles}
             onAddPermission={onAddPermission}
             onRemovePermission={onRemovePermission}
             t={t}
           />
         ),
       },
-      {
-        id: 'actions',
-        header: '',
-        cell: ({ row }) => {
-          const pending = isOptimisticId(row.original.id)
-          return (
-            <Button
-              variant='ghost'
-              size='icon'
-              className='text-destructive hover:text-destructive disabled:opacity-40'
-              disabled={rows.length <= 1 || pending}
-              onClick={(event) => {
-                event.stopPropagation()
-                onDelete(row.original.id)
-              }}
-              aria-label={t('roles.table.delete')}
-            >
-              <HugeiconsIcon icon={Delete02Icon} className='size-5' />
-            </Button>
-          )
-        },
-      },
+      ...(canDeleteRoles
+        ? [
+            {
+              id: 'actions',
+              header: '',
+              cell: ({ row }: { row: { original: OverviewRole } }) => {
+                const pending = isOptimisticId(row.original.id)
+                return (
+                  <Button
+                    variant='ghost'
+                    size='icon'
+                    className='text-destructive hover:text-destructive disabled:opacity-40'
+                    disabled={rows.length <= 1 || pending}
+                    onClick={(event: React.MouseEvent) => {
+                      event.stopPropagation()
+                      onDelete(row.original.id)
+                    }}
+                    aria-label={t('roles.table.delete')}
+                  >
+                    <HugeiconsIcon icon={Delete02Icon} className='size-5' />
+                  </Button>
+                )
+              },
+            } satisfies ColumnDef<OverviewRole>,
+          ]
+        : []),
     ],
     [
       onAddPermission,

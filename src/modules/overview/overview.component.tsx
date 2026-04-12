@@ -157,6 +157,7 @@ export function OverviewComponent() {
                   roleOptions={service.roleOptions}
                   currentUserId={service.currentUserId}
                   canUpdateRoles={service.canUpdateRoles}
+                  canDeleteUsers={service.canDeleteUsers}
                   onChangeRole={service.updateUserRole}
                   onRemove={service.removeUser}
                   onRevoke={service.revokeInvite}
@@ -172,6 +173,8 @@ export function OverviewComponent() {
                 rows={service.filteredRoles}
                 permissions={service.permissions}
                 permissionColors={service.permissionColors}
+                canUpdateRoles={service.canUpdateRoles}
+                canDeleteRoles={service.canDeleteRoles}
                 onAddPermission={service.addPermissionToRole}
                 onRemovePermission={service.removePermissionFromRole}
                 onDelete={service.deleteRole}

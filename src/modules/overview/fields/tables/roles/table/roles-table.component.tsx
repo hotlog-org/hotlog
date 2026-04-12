@@ -14,6 +14,8 @@ export interface RolesTableProps {
   rows: OverviewRole[]
   permissions: OverviewPermission[]
   permissionColors: Record<PermissionCategory | string, string>
+  canUpdateRoles: boolean
+  canDeleteRoles: boolean
   onAddPermission: (roleId: string, permissionId: string) => void
   onRemovePermission: (roleId: string, permissionId: string) => void
   onDelete: (roleId: string) => void
