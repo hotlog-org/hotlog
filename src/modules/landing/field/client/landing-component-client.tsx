@@ -279,62 +279,15 @@ export default function LandingComponent({ t }: LandingProps) {
       </section>
 
       {/* ── Final CTA Section ── */}
-      <section className='py-24 px-6'>
-        <div className='mx-auto max-w-4xl'>
-          <div className='text-center pt-12 px-8'>
-            <h2 className='text-3xl font-light tracking-tight mb-6 text-foreground/80 leading-tight'>
-              {t('cta.band.title') ?? 'Start observing what matters'}
-            </h2>
-
-            <div className='flex flex-col sm:flex-row items-center justify-center gap-4'>
-              {isLogged ? (
-                <Button
-                  asChild
-                  variant='ghost'
-                  className='px-8 py-3 text-sm font-medium hover:bg-primary/5 transition-all duration-300 border border-primary/10 hover:border-primary/20 group'
-                >
-                  <Link href='/dashboard' className='flex items-center gap-2'>
-                    <span>{t('dashboard.goTo') ?? 'Open Dashboard'}</span>
-                    <HugeiconsIcon
-                      icon={ArrowRight01Icon}
-                      className='size-4 opacity-50 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all duration-300'
-                    />
-                  </Link>
-                </Button>
-              ) : (
-                <>
-                  <Button
-                    asChild
-                    variant='ghost'
-                    className='px-8 py-3 text-sm font-medium hover:bg-primary/5 transition-all duration-300 border border-primary/10 hover:border-primary/20 group'
-                  >
-                    <Link href='/sign-up' className='flex items-center gap-2'>
-                      <span>{t('cta.getStarted') ?? 'Get Started'}</span>
-                      <HugeiconsIcon
-                        icon={ArrowRight01Icon}
-                        className='size-4 opacity-50 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all duration-300'
-                      />
-                    </Link>
-                  </Button>
-
-                  <Button
-                    asChild
-                    variant='ghost'
-                    className='px-8 py-3 text-sm font-medium hover:bg-primary/5 transition-all duration-300 group'
-                  >
-                    <Link href='/sign-in' className='flex items-center gap-2'>
-                      <span>{t('cta.signIn') ?? 'Sign In'}</span>
-                      <HugeiconsIcon
-                        icon={ArrowRight01Icon}
-                        className='size-4 opacity-30 group-hover:opacity-60 group-hover:translate-x-0.5 transition-all duration-300'
-                      />
-                    </Link>
-                  </Button>
-                </>
-              )}
-            </div>
-          </div>
-        </div>
+      <section className='py-24 px-6 flex flex-col items-center justify-center gap-6'>
+        <h2 className='text-3xl font-light tracking-tight text-foreground/80 text-center'>
+          {t('cta.band.title') ?? 'Start observing what matters'}
+        </h2>
+        <Button asChild size='sm'>
+          <Link href={isLogged ? '/dashboard' : '/sign-up'}>
+            {isLogged ? (t('dashboard.goTo') ?? 'Open Dashboard') : (t('cta.getStarted') ?? 'Get Started')}
+          </Link>
+        </Button>
       </section>
     </div>
   )
