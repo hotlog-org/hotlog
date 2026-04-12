@@ -48,7 +48,7 @@ const LoginComponent = () => {
               onSubmit={service.form.handleSubmit(service.onSubmit)}
               className='space-y-4'
             >
-              <div className='grid grid-cols-2 gap-3'>
+              <div className='grid grid-cols-1 sm:grid-cols-2 gap-3'>
                 <FormField
                   control={service.form.control}
                   name='email'

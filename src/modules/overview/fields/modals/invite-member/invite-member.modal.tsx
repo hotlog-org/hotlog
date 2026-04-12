@@ -58,7 +58,7 @@ export function InviteMemberModal(props: InviteMemberModalProps) {
           )}
         </Field>
 
-        <DialogFooter className='flex items-center justify-end gap-2 pt-2 sm:space-x-0'>
+        <DialogFooter className='flex flex-row items-center justify-end gap-2 pt-2'>
           <Button variant='ghost' onClick={props.onClose}>
             {props.t('users.inviteModal.cancel')}
           </Button>
