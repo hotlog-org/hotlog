@@ -12,6 +12,7 @@ import useModulesService from './modules.service'
 import { Button } from '@/shared/ui/button'
 import { Input } from '@/shared/ui/input'
 import { cn } from '@/shared/utils/shadcn.utils'
+import { useRef } from 'react'
 
 export interface ModulesComponentProps {
   moduleId?: string
@@ -20,6 +21,7 @@ export interface ModulesComponentProps {
 export function ModulesComponent({ moduleId }: ModulesComponentProps) {
   const service = useModulesService({ moduleId })
   const currentModule = service.module
+  const colorInputRef = useRef<HTMLInputElement>(null)
 
   if (service.isLoading) {
     return (
@@ -46,10 +48,19 @@ export function ModulesComponent({ moduleId }: ModulesComponentProps) {
         <div className='space-y-2'>
           <div className='flex items-center gap-2'>
             <span
-              className='inline-block h-3 w-3 rounded-full'
+              className='relative inline-block h-3 w-3 cursor-pointer rounded-full'
               style={{ backgroundColor: currentModule.color }}
-              aria-hidden
-            />
+              onDoubleClick={() => colorInputRef.current?.click()}
+            >
+              <input
+                ref={colorInputRef}
+                type='color'
+                value={currentModule.color}
+                onChange={(e) => service.updateColor(e.target.value)}
+                className='absolute inset-0 h-0 w-0 cursor-pointer opacity-0'
+                tabIndex={-1}
+              />
+            </span>
             {isNameEditing ? (
               <Input
                 value={currentModule.name}

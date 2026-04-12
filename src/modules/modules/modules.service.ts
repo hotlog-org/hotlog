@@ -101,6 +101,7 @@ export interface ModulesService {
   submitComponent: (component: ModuleComponent) => void
   reorderComponent: (fromId: string, toId: string) => void
   updateName: (value: string) => void
+  updateColor: (value: string) => void
   updateHeroDescription: (value: string) => void
   saveModule: () => void
   cancelChanges: () => void
@@ -342,6 +343,9 @@ export const useModulesService = (
   const updateName = (value: string) =>
     setDirtyModule((current) => ({ ...current, name: value }))
 
+  const updateColor = (value: string) =>
+    setDirtyModule((current) => ({ ...current, color: value }))
+
   const updateHeroDescription = (value: string) =>
     setDirtyModule((current) => ({ ...current, heroDescription: value }))
 
@@ -547,6 +551,7 @@ export const useModulesService = (
     submitComponent,
     reorderComponent,
     updateName,
+    updateColor,
     updateHeroDescription,
     saveModule,
     cancelChanges,
