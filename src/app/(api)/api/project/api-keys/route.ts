@@ -1,4 +1,5 @@
 import { type NextRequest, NextResponse } from 'next/server'
+import { createHash, randomUUID } from 'node:crypto'
 
 import { createClient } from '@/lib/supabase/server'
 import type { IApiErrorResponse } from '@/shared/api/interface'
@@ -67,9 +68,21 @@ export async function POST(request: NextRequest) {
     )
   }
 
+  // Generate the key in Node so we can compute hash + prefix in the same insert.
+  // Stored as UUID (column type), hashed into key_hash for fast/safe lookups
+  // by the public ingestion endpoint.
+  const key = randomUUID()
+  const keyHash = createHash('sha256').update(key).digest('hex')
+  const keyPrefix = key.slice(0, 8)
+
   const { data, error } = await supabase
     .from('api_keys')
-    .insert({ project_id })
+    .insert({
+      project_id,
+      key,
+      key_hash: keyHash,
+      key_prefix: keyPrefix,
+    })
     .select('id, key, project_id')
     .single()
 

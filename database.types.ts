@@ -12,23 +12,60 @@ export type Database = {
   __InternalSupabase: {
     PostgrestVersion: "14.4"
   }
+  graphql_public: {
+    Tables: {
+      [_ in never]: never
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      graphql: {
+        Args: {
+          extensions?: Json
+          operationName?: string
+          query?: string
+          variables?: Json
+        }
+        Returns: Json
+      }
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+  }
   public: {
     Tables: {
       api_keys: {
         Row: {
           id: number
           key: string
+          key_hash: string | null
+          key_prefix: string | null
+          last_used_at: string | null
           project_id: string
+          revoked_at: string | null
         }
         Insert: {
           id?: number
           key?: string
+          key_hash?: string | null
+          key_prefix?: string | null
+          last_used_at?: string | null
           project_id: string
+          revoked_at?: string | null
         }
         Update: {
           id?: number
           key?: string
+          key_hash?: string | null
+          key_prefix?: string | null
+          last_used_at?: string | null
           project_id?: string
+          revoked_at?: string | null
         }
         Relationships: [
           {
@@ -183,6 +220,57 @@ export type Database = {
           },
         ]
       }
+      invitations: {
+        Row: {
+          created_at: string
+          email: string
+          expires_at: string
+          id: string
+          invited_by: string
+          project_id: string
+          role_id: string | null
+          status: string
+          token: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          expires_at?: string
+          id?: string
+          invited_by: string
+          project_id: string
+          role_id?: string | null
+          status?: string
+          token?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          expires_at?: string
+          id?: string
+          invited_by?: string
+          project_id?: string
+          role_id?: string | null
+          status?: string
+          token?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invitations_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invitations_role_id_fkey"
+            columns: ["role_id"]
+            isOneToOne: false
+            referencedRelation: "roles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       layouts: {
         Row: {
           color: string
@@ -256,6 +344,39 @@ export type Database = {
           name?: string
         }
         Relationships: []
+      }
+      role_layouts: {
+        Row: {
+          id: string
+          layout_id: number
+          role_id: string
+        }
+        Insert: {
+          id?: string
+          layout_id: number
+          role_id: string
+        }
+        Update: {
+          id?: string
+          layout_id?: number
+          role_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "role_layouts_layout_id_fkey"
+            columns: ["layout_id"]
+            isOneToOne: false
+            referencedRelation: "layouts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "role_layouts_role_id_fkey"
+            columns: ["role_id"]
+            isOneToOne: false
+            referencedRelation: "roles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       role_permissions: {
         Row: {
@@ -414,6 +535,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      accept_invitation: { Args: { p_token: string }; Returns: Json }
       events_daily_counts: {
         Args: { p_days: number; p_project_id: string }
         Returns: {
@@ -421,7 +543,24 @@ export type Database = {
           day: string
         }[]
       }
+      get_active_fields_for_ingest: {
+        Args: { p_api_key: string; p_schema_key: string }
+        Returns: {
+          key: string
+          metadata: Json
+          required: boolean
+          type: Database["public"]["Enums"]["FieldTypes"]
+        }[]
+      }
+      get_project_id_for_invitation: {
+        Args: { p_invitation_id: string }
+        Returns: string
+      }
       get_project_id_for_layout: {
+        Args: { p_layout_id: number }
+        Returns: string
+      }
+      get_project_id_for_layout_unchecked: {
         Args: { p_layout_id: number }
         Returns: string
       }
@@ -436,12 +575,27 @@ export type Database = {
           user_id: string
         }[]
       }
+      get_project_schemas_for_sdk: {
+        Args: { p_api_key: string }
+        Returns: Json
+      }
       has_permission: {
         Args: { p_action: string; p_project_id: string; p_subject: string }
         Returns: boolean
       }
+      ingest_event: {
+        Args: { p_api_key: string; p_schema_key: string; p_value: Json }
+        Returns: {
+          created_at: string
+          id: number
+        }[]
+      }
       is_project_creator: { Args: { p_project_id: string }; Returns: boolean }
       is_project_member: { Args: { p_project_id: string }; Returns: boolean }
+      update_user_role: {
+        Args: { p_project_id: string; p_role_id: string; p_user_id: string }
+        Returns: undefined
+      }
     }
     Enums: {
       ComponentTypes: "TIME_SERIES"
@@ -580,6 +734,9 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
+  graphql_public: {
+    Enums: {},
+  },
   public: {
     Enums: {
       ComponentTypes: ["TIME_SERIES"],

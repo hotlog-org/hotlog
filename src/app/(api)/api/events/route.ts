@@ -3,7 +3,11 @@ import { type NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { validateEventValue, type ValidatorField } from '@/lib/schema-validator'
 import type { IApiErrorResponse } from '@/shared/api/interface'
-import type { Database } from '../../../../../database.types'
+
+export const runtime = 'nodejs'
+export const dynamic = 'force-dynamic'
+
+const MAX_BODY_BYTES = 64 * 1024
 
 interface IngestErrorResponse {
   error: {
@@ -12,10 +16,37 @@ interface IngestErrorResponse {
   }
 }
 
+function mapPgError(err: { code?: string; message: string }) {
+  if (err.message.includes('invalid_api_key')) {
+    return NextResponse.json<IApiErrorResponse>(
+      { error: { message: 'Invalid API key' } },
+      { status: 401 },
+    )
+  }
+  if (err.message.includes('schema_not_found')) {
+    return NextResponse.json<IApiErrorResponse>(
+      { error: { message: 'Schema not found or not active' } },
+      { status: 404 },
+    )
+  }
+  return NextResponse.json<IApiErrorResponse>(
+    { error: { message: err.message } },
+    { status: 500 },
+  )
+}
+
 export async function POST(request: NextRequest) {
+  const ct = request.headers.get('content-type') ?? ''
+  if (!ct.toLowerCase().includes('application/json')) {
+    return NextResponse.json<IApiErrorResponse>(
+      { error: { message: 'Content-Type must be application/json' } },
+      { status: 415 },
+    )
+  }
+
   const authHeader = request.headers.get('authorization') ?? ''
-  const apiKey = authHeader.toLowerCase().startsWith('bearer ')
-    ? authHeader.slice(7).trim()
+  const apiKey = /^bearer\s+/i.test(authHeader)
+    ? authHeader.replace(/^bearer\s+/i, '').trim()
     : ''
 
   if (!apiKey) {
@@ -25,7 +56,24 @@ export async function POST(request: NextRequest) {
     )
   }
 
-  const body = await request.json().catch(() => null)
+  const raw = await request.text()
+  if (raw.length > MAX_BODY_BYTES) {
+    return NextResponse.json<IApiErrorResponse>(
+      { error: { message: 'Payload too large' } },
+      { status: 413 },
+    )
+  }
+
+  let body: { schema_key?: unknown; value?: unknown }
+  try {
+    body = JSON.parse(raw)
+  } catch {
+    return NextResponse.json<IApiErrorResponse>(
+      { error: { message: 'Body must be valid JSON' } },
+      { status: 400 },
+    )
+  }
+
   if (!body || typeof body !== 'object') {
     return NextResponse.json<IApiErrorResponse>(
       { error: { message: 'Body must be a JSON object' } },
@@ -33,10 +81,8 @@ export async function POST(request: NextRequest) {
     )
   }
 
-  const { schema_key: schemaKey, value } = body as {
-    schema_key?: unknown
-    value?: unknown
-  }
+  const schemaKey = body.schema_key
+  const value = body.value
 
   if (typeof schemaKey !== 'string' || !schemaKey) {
     return NextResponse.json<IApiErrorResponse>(
@@ -47,69 +93,20 @@ export async function POST(request: NextRequest) {
 
   const supabase = await createClient()
 
-  // Resolve project from API key
-  const { data: keyRow, error: keyError } = await supabase
-    .from('api_keys')
-    .select('project_id')
-    .eq('key', apiKey)
-    .maybeSingle()
+  // Load active fields via SECURITY DEFINER fn (also validates the key/schema).
+  const { data: fieldRows, error: fieldsError } = await supabase.rpc(
+    'get_active_fields_for_ingest',
+    { p_api_key: apiKey, p_schema_key: schemaKey },
+  )
 
-  if (keyError) {
-    return NextResponse.json<IApiErrorResponse>(
-      { error: { message: keyError.message } },
-      { status: 500 },
-    )
-  }
+  if (fieldsError) return mapPgError(fieldsError)
 
-  if (!keyRow) {
-    return NextResponse.json<IApiErrorResponse>(
-      { error: { message: 'Invalid API key' } },
-      { status: 401 },
-    )
-  }
-
-  // Resolve active schema by (project_id, key)
-  const { data: schemaRow, error: schemaError } = await supabase
-    .from('schemas')
-    .select('id, key')
-    .eq('project_id', keyRow.project_id)
-    .eq('key', schemaKey)
-    .eq('status', 'active')
-    .maybeSingle()
-
-  if (schemaError) {
-    return NextResponse.json<IApiErrorResponse>(
-      { error: { message: schemaError.message } },
-      { status: 500 },
-    )
-  }
-
-  if (!schemaRow) {
-    return NextResponse.json<IApiErrorResponse>(
-      {
-        error: {
-          message: `No active schema with key "${schemaKey}" found in this project`,
-        },
-      },
-      { status: 404 },
-    )
-  }
-
-  // Load active fields for the schema
-  const { data: fieldRows, error: fieldsError } = await supabase
-    .from('fields')
-    .select('key, type, required, metadata')
-    .eq('schema_id', schemaRow.id)
-    .eq('status', 'active')
-
-  if (fieldsError) {
-    return NextResponse.json<IApiErrorResponse>(
-      { error: { message: fieldsError.message } },
-      { status: 500 },
-    )
-  }
-
-  const validatorFields: ValidatorField[] = (fieldRows ?? []).map((row) => ({
+  const validatorFields = ((fieldRows ?? []) as Array<{
+    key: string
+    type: ValidatorField['type']
+    required: boolean
+    metadata: ValidatorField['metadata']
+  }>).map((row) => ({
     key: row.key,
     type: row.type,
     required: row.required,
@@ -129,21 +126,26 @@ export async function POST(request: NextRequest) {
     )
   }
 
-  const { data: insertedEvent, error: insertError } = await supabase
-    .from('events')
-    .insert({
-      project_id: keyRow.project_id,
-      schema_id: schemaRow.id,
-      value: value as Database['public']['Tables']['events']['Insert']['value'],
-    })
-    .select('id, created_at')
-    .single()
+  const { data: ingested, error: ingestError } = await supabase.rpc(
+    'ingest_event',
+    {
+      p_api_key: apiKey,
+      p_schema_key: schemaKey,
+      p_value: value as never,
+    },
+  )
 
-  if (insertError || !insertedEvent) {
+  if (ingestError) return mapPgError(ingestError)
+
+  const rows = (ingested ?? []) as Array<{
+    id: number
+    created_at: string
+  }>
+  const row = rows[0]
+
+  if (!row) {
     return NextResponse.json<IApiErrorResponse>(
-      {
-        error: { message: insertError?.message ?? 'Failed to store event' },
-      },
+      { error: { message: 'Failed to store event' } },
       { status: 500 },
     )
   }
@@ -151,8 +153,8 @@ export async function POST(request: NextRequest) {
   return NextResponse.json(
     {
       data: {
-        id: insertedEvent.id,
-        createdAt: insertedEvent.created_at,
+        id: row.id,
+        createdAt: row.created_at,
       },
     },
     { status: 201 },
