@@ -1,6 +1,11 @@
 'use client'
 
-import { BrushIcon, Delete02Icon } from '@hugeicons/core-free-icons'
+import {
+  BrushIcon,
+  Delete02Icon,
+  LeftToRightBlockQuoteIcon,
+  TextAlignJustifyCenterIcon,
+} from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
 
 import {
@@ -35,6 +40,7 @@ export interface ModulesViewProps {
   onReorder: (fromId: string, toId: string) => void
   onEdit: (componentId: string) => void
   onDelete?: (componentId: string) => void
+  onToggleSpan?: (componentId: string) => void
   t: TFunction
 }
 
@@ -119,7 +125,7 @@ export const ModulesView = (props: ModulesViewProps) => {
   }
 
   return (
-    <div className='grid grid-cols-1 gap-4'>
+    <div className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
       {service.items.map((item) => (
         <div
           key={item.component.id}
@@ -136,6 +142,9 @@ export const ModulesView = (props: ModulesViewProps) => {
           onDragEnd={service.handleDragEnd}
           className={cn(
             'rounded-lg border border-border/80 bg-card/70 p-4 shadow-sm transition',
+            item.component.span === 'full'
+              ? 'col-span-1 sm:col-span-2'
+              : 'col-span-1',
             props.reorderEnabled &&
               'cursor-grab border-dashed hover:border-primary',
             service.draggingId === item.component.id &&
@@ -161,6 +170,27 @@ export const ModulesView = (props: ModulesViewProps) => {
 
           {props.reorderEnabled ? (
             <div className='w-full flex justify-end gap-3 pr-3'>
+              {props.onToggleSpan ? (
+                <Button
+                  variant='outline'
+                  size='icon'
+                  onClick={() => props.onToggleSpan?.(item.component.id)}
+                  aria-label={
+                    item.component.span === 'half'
+                      ? props.t('actions.fullWidth')
+                      : props.t('actions.halfWidth')
+                  }
+                >
+                  <HugeiconsIcon
+                    icon={
+                      item.component.span === 'half'
+                        ? TextAlignJustifyCenterIcon
+                        : LeftToRightBlockQuoteIcon
+                    }
+                    className='size-5'
+                  />
+                </Button>
+              ) : null}
               <Button
                 variant='outline'
                 size='icon'
@@ -169,15 +199,16 @@ export const ModulesView = (props: ModulesViewProps) => {
               >
                 <HugeiconsIcon icon={BrushIcon} className='size-5' />
               </Button>
-              <Button
-                variant='destructive'
-                size='icon'
-                onClick={() => props.onDelete?.(item.component.id)}
-                aria-label={props.t('actions.delete')}
-                disabled={!props.onDelete}
-              >
-                <HugeiconsIcon icon={Delete02Icon} className='size-5' />
-              </Button>
+              {props.onDelete ? (
+                <Button
+                  variant='destructive'
+                  size='icon'
+                  onClick={() => props.onDelete?.(item.component.id)}
+                  aria-label={props.t('actions.delete')}
+                >
+                  <HugeiconsIcon icon={Delete02Icon} className='size-5' />
+                </Button>
+              ) : null}
             </div>
           ) : null}
         </div>

@@ -69,10 +69,11 @@ export const useEventsTableService = ({
             <span>{t('table.date')}</span>
           </div>
         ),
+        minSize: 160,
         cell: ({ row }) => {
           const createdAt = new Date(row.original.createdAt)
           return (
-            <div className='flex flex-col text-sm text-muted-foreground'>
+            <div className='flex flex-col whitespace-nowrap text-sm text-muted-foreground'>
               <span className='flex items-center gap-2 text-foreground'>
                 {format(createdAt, 'MMM d, yyyy HH:mm')}
               </span>

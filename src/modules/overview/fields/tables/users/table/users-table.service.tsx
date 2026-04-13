@@ -79,6 +79,8 @@ export const useUsersTableService = ({
   roleOptions,
   roles,
   currentUserId,
+  canUpdateRoles,
+  canDeleteUsers,
   onChangeRole,
   onRemove,
   onRevoke,
@@ -105,10 +107,25 @@ export const useUsersTableService = ({
       {
         id: 'role',
         header: t('users.table.role'),
-        cell: ({ row }) =>
-          renderRoleSelector(row.original, roleOptions, roleLookup, (roleId) =>
-            onChangeRole(row.original.id, roleId),
-          ),
+        cell: ({ row }) => {
+          const selected = roleLookup[row.original.roleId]
+          if (!canUpdateRoles) {
+            return (
+              <Badge
+                variant='outline'
+                className='border-border/50 bg-muted/30 text-muted-foreground'
+              >
+                {selected?.name ?? t('users.table.noRole')}
+              </Badge>
+            )
+          }
+          return renderRoleSelector(
+            row.original,
+            roleOptions,
+            roleLookup,
+            (roleId) => onChangeRole(row.original.id, roleId),
+          )
+        },
       },
       {
         id: 'status',
@@ -126,47 +143,53 @@ export const useUsersTableService = ({
           </Badge>
         ),
       },
-      {
-        id: 'actions',
-        header: '',
-        cell: ({ row }) => {
-          const isPending = row.original.status === 'pending'
-          const isSelf = row.original.id === currentUserId
-          const isCreator = row.original.isCreator
-          const disabled = isSelf || isCreator
-          return (
-            <div className='flex items-center'>
-              <Button
-                variant='ghost'
-                size='icon'
-                className='text-destructive hover:text-destructive disabled:opacity-40'
-                disabled={disabled}
-                onClick={(event) => {
-                  event.stopPropagation()
-                  if (disabled) return
-                  if (isPending) onRevoke(row.original.id)
-                  else onRemove(row.original.id)
-                }}
-                aria-label={
-                  isPending ? t('users.table.revoke') : t('users.table.remove')
-                }
-                title={
-                  isCreator
-                    ? 'Project owner cannot be removed'
-                    : isSelf
-                      ? 'You cannot remove yourself'
-                      : undefined
-                }
-              >
-                <HugeiconsIcon
-                  icon={isPending ? UserBlock01Icon : Delete02Icon}
-                  className='size-5'
-                />
-              </Button>
-            </div>
-          )
-        },
-      },
+      ...(canDeleteUsers
+        ? [
+            {
+              id: 'actions',
+              header: '',
+              cell: ({ row }: { row: { original: OverviewUser } }) => {
+                const isPending = row.original.status === 'pending'
+                const isSelf = row.original.id === currentUserId
+                const isCreator = row.original.isCreator
+                const disabled = isSelf || isCreator
+                return (
+                  <div className='flex items-center'>
+                    <Button
+                      variant='ghost'
+                      size='icon'
+                      className='text-destructive hover:text-destructive disabled:opacity-40'
+                      disabled={disabled}
+                      onClick={(event: React.MouseEvent) => {
+                        event.stopPropagation()
+                        if (disabled) return
+                        if (isPending) onRevoke(row.original.id)
+                        else onRemove(row.original.id)
+                      }}
+                      aria-label={
+                        isPending
+                          ? t('users.table.revoke')
+                          : t('users.table.remove')
+                      }
+                      title={
+                        isCreator
+                          ? 'Project owner cannot be removed'
+                          : isSelf
+                            ? 'You cannot remove yourself'
+                            : undefined
+                      }
+                    >
+                      <HugeiconsIcon
+                        icon={isPending ? UserBlock01Icon : Delete02Icon}
+                        className='size-5'
+                      />
+                    </Button>
+                  </div>
+                )
+              },
+            } satisfies ColumnDef<OverviewUser>,
+          ]
+        : []),
     ],
     [currentUserId, onChangeRole, onRemove, onRevoke, roleLookup, roleOptions, t],
   )

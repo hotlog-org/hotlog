@@ -24,7 +24,7 @@ export function UsersAction(props: UsersActionProps) {
       onClick={service.handleInvite}
     >
       <HugeiconsIcon icon={UserAdd01Icon} className='size-4' />
-      {props.t('users.invite')}
+      <span className='hidden sm:inline'>{props.t('users.invite')}</span>
     </Button>
   )
 }

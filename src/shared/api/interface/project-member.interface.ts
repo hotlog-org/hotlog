@@ -24,6 +24,12 @@ export interface IAddMemberPayload {
   role_id?: string
 }
 
+export interface IUpdateMemberRolePayload {
+  project_id: string
+  user_id: string
+  role_id: string
+}
+
 export interface IRemoveMemberPayload {
   project_id: string
   user_id: string

@@ -1,5 +1,6 @@
 'use client'
 
+import { useIsMobile } from '@/shared/hooks/use-mobile'
 import {
   Drawer,
   DrawerContent,
@@ -17,7 +18,7 @@ import { Skeleton } from '@/shared/ui/skeleton'
 import { HugeiconsIcon } from '@hugeicons/react'
 
 import { FieldCard } from './cards/schema-field-card.component'
-import { Delete02FreeIcons } from '@hugeicons/core-free-icons'
+import { Delete02FreeIcons, Tick02Icon } from '@hugeicons/core-free-icons'
 import { SchemaDefinition, SchemaFieldType } from '../../schema.interface'
 import { FieldWithMeta, TFunction } from '../../schema.service'
 
@@ -26,6 +27,7 @@ export interface SchemaEditorProps {
   schema: SchemaDefinition | null
   fields: FieldWithMeta[]
   fieldCount: number
+  archivedFieldCount: number
   t: TFunction
   selectedFieldId: string | null
   isDirty: boolean
@@ -59,38 +61,36 @@ export interface SchemaEditorProps {
 
 export function SchemaEditor(props: SchemaEditorProps) {
   const isOpen = Boolean(props.schema) && props.open
+  const isMobile = useIsMobile()
 
   return (
     <Drawer
       open={isOpen}
-      direction='right'
+      direction={isMobile ? 'bottom' : 'right'}
       onOpenChange={(open) => {
         if (!open) props.onClose()
       }}
     >
-      <DrawerContent className='sm:max-w-3xl lg:max-w-5xl w-[92vw]'>
+      <DrawerContent className={isMobile ? 'max-h-[90vh]' : 'sm:max-w-3xl lg:max-w-5xl w-[92vw]'}>
         {props.schema ? (
           <>
             <DrawerHeader>
               <DrawerTitle className='sr-only'>
                 {props.schema.displayName || props.schema.key}
               </DrawerTitle>
-              <div className='flex items-center gap-2 mb-2'>
-                <Badge
-                  variant='outline'
-                  className='font-mono text-[10px] uppercase'
-                >
-                  {props.schema.key}
-                </Badge>
-                <span className='text-xs text-muted-foreground'>
-                  {props.t('editor.schemaKeyHint')}
-                </span>
-              </div>
               <div className='flex items-end gap-3'>
                 <Field className='w-full'>
-                  <FieldLabel className='text-xs uppercase tracking-wide text-muted-foreground'>
-                    {props.t('editor.schemaName')}
-                  </FieldLabel>
+                  <div className='flex items-center gap-2'>
+                    <FieldLabel className='text-xs uppercase tracking-wide text-muted-foreground'>
+                      {props.t('editor.schemaName')}
+                    </FieldLabel>
+                    <Badge
+                      variant='outline'
+                      className='font-mono text-[10px] uppercase'
+                    >
+                      {props.schema.key}
+                    </Badge>
+                  </div>
                   <FieldControl>
                     <Input
                       value={props.schema.displayName}
@@ -125,6 +125,14 @@ export function SchemaEditor(props: SchemaEditorProps) {
                   {props.t('editor.activeFields', {
                     count: props.fieldCount,
                   })}
+                  {props.showArchived && props.archivedFieldCount > 0 && (
+                    <span className='text-muted-foreground/60'>
+                      {' · '}
+                      {props.t('editor.archivedFields', {
+                        count: props.archivedFieldCount,
+                      })}
+                    </span>
+                  )}
                 </span>
               </div>
               <Separator className='my-3' />
@@ -193,7 +201,9 @@ export function SchemaEditor(props: SchemaEditorProps) {
                     disabled={!props.canArchive}
                   >
                     <HugeiconsIcon icon={Delete02FreeIcons} size={18} />
-                    {props.t('editor.archiveSchema')}
+                    <span className='hidden sm:inline'>
+                      {props.t('editor.archiveSchema')}
+                    </span>
                   </Button>
                   <div className='flex items-center gap-2'>
                     <Button
@@ -209,9 +219,16 @@ export function SchemaEditor(props: SchemaEditorProps) {
                         !props.isDirty || props.isSaving || !props.canEdit
                       }
                     >
-                      {props.isSaving
-                        ? props.t('editor.saving')
-                        : props.t('editor.save')}
+                      <HugeiconsIcon
+                        icon={Tick02Icon}
+                        size={18}
+                        className='sm:hidden'
+                      />
+                      <span className='hidden sm:inline'>
+                        {props.isSaving
+                          ? props.t('editor.saving')
+                          : props.t('editor.save')}
+                      </span>
                     </Button>
                   </div>
                 </div>

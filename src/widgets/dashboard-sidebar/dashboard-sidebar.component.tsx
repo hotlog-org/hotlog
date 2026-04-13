@@ -12,7 +12,7 @@ const DashboardSidebarComponent = ({ children }: IProps) => {
       <DashboardSidebarContentComponent />
       <main className='w-full'>
         <DashboardSidebarNavbarComponent />
-        <div className='p-4 h-[calc(80vh)] w-full'>{children}</div>
+        <div className='p-4 min-h-[calc(100vh-3.5rem)] w-full bg-grid'>{children}</div>
       </main>
     </SidebarProvider>
   )

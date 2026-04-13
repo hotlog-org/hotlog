@@ -1,5 +1,6 @@
 'use client'
 
+import { useIsMobile } from '@/shared/hooks/use-mobile'
 import {
   Drawer,
   DrawerClose,
@@ -49,7 +50,7 @@ const FieldRow = ({
           {field.type}
         </Badge>
       </div>
-      <div className='text-right md:text-left'>
+      <div className='text-left'>
         {Renderer ? Renderer(value, t) : null}
       </div>
     </div>
@@ -58,6 +59,7 @@ const FieldRow = ({
 
 export function DetailDrawer(props: DetailDrawerProps) {
   const service = useDetailDrawerService(props)
+  const isMobile = useIsMobile()
 
   if (!service.event || !service.schema) return null
 
@@ -65,10 +67,10 @@ export function DetailDrawer(props: DetailDrawerProps) {
     <Drawer
       open={service.open}
       onOpenChange={(isOpen) => !isOpen && service.onClose()}
-      direction='right'
+      direction={isMobile ? 'bottom' : 'right'}
     >
-      <DrawerContent className='sm:max-w-xl lg:max-w-3xl'>
-        <DrawerHeader className='px-6 pb-2'>
+      <DrawerContent className={isMobile ? 'max-h-[90vh]' : 'sm:max-w-xl lg:max-w-3xl'}>
+        <DrawerHeader className='px-6 pb-2 text-left'>
           <div className='flex items-start justify-between gap-3'>
             <div className='space-y-1'>
               <DrawerTitle className='text-xl'>

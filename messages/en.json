@@ -229,7 +229,7 @@
         "apiRequests": {
           "title": "API requests",
           "subtitle": "Requests in the last 30 days",
-          "empty": "No events in the last 30 days yet. Send one through the ingest API to see activity here."
+          "empty": "No events in the last 30 days"
         },
         "apiKey": {
           "title": "API Key",
@@ -255,13 +255,16 @@
             "role": "Role",
             "status": "Status",
             "remove": "Remove",
-            "revoke": "Revoke invite"
+            "revoke": "Revoke invite",
+            "noRole": "No role"
           },
           "inviteModal": {
             "title": "Invite member",
             "description": "Send a workspace invite to a teammate.",
             "emailLabel": "Work email",
             "placeholder": "name@company.com",
+            "roleLabel": "Assign role",
+            "noRole": "No role (assign later)",
             "help": "Pending invites can be revoked anytime.",
             "cancel": "Cancel",
             "submit": "Send invite"
@@ -311,7 +314,9 @@
         "actions": {
           "addComponent": "Add component",
           "edit": "Edit component",
-          "delete": "Delete component"
+          "delete": "Delete component",
+          "fullWidth": "Full width",
+          "halfWidth": "Half width"
         },
         "controls": {
           "dragOn": "Reorder enabled",
@@ -458,6 +463,7 @@
           "showArchived": "Show archived fields",
           "hideArchived": "Hide archived fields",
           "activeFields": "{count} active fields",
+          "archivedFields": "{count} archived",
           "noFields": "No fields yet. Click \"Add field\" to start building this schema.",
           "save": "Save changes",
           "saving": "Saving...",

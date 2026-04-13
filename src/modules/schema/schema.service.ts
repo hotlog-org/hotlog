@@ -57,6 +57,7 @@ export interface SchemaService {
   selectedSchema: SchemaDefinition | null
   fields: FieldWithMeta[]
   fieldCount: number
+  archivedFieldCount: number
   isFieldsLoading: boolean
   isDirty: boolean
   isSaving: boolean
@@ -527,6 +528,11 @@ const useSchemaService = (): SchemaService => {
     [draftFields],
   )
 
+  const archivedFieldCount = useMemo(
+    () => draftFields.filter((f) => f.status === 'archived').length,
+    [draftFields],
+  )
+
   const isDirty = useMemo(() => {
     if (draftDisplayName !== originalDisplayName) return true
     if (draftFields.some((f) => f.isNew || f.isDirty)) return true
@@ -665,6 +671,7 @@ const useSchemaService = (): SchemaService => {
     selectedSchema,
     fields,
     fieldCount,
+    archivedFieldCount,
     isFieldsLoading: fieldsQuery.isLoading,
     isDirty,
     isSaving: saveDraftMutation.isPending || updateSchemaMutation.isPending,

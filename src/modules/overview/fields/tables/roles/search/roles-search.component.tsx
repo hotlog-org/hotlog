@@ -1,9 +1,6 @@
 'use client'
 
-import { Search01Icon } from '@hugeicons/core-free-icons'
-import { HugeiconsIcon } from '@hugeicons/react'
-
-import { Input } from '@/shared/ui/input'
+import { ExpandableSearch } from '@/shared/ui/expandable-search'
 
 import type { TFunction } from '../../../../overview.service'
 
@@ -15,17 +12,10 @@ export interface RolesSearchProps {
 
 export function RolesSearch(props: RolesSearchProps) {
   return (
-    <div className='relative'>
-      <Input
-        value={props.value}
-        onChange={(event) => props.onChange(event.target.value)}
-        placeholder={props.t('roles.searchPlaceholder')}
-        className='pl-9'
-      />
-      <HugeiconsIcon
-        icon={Search01Icon}
-        className='text-muted-foreground absolute left-3 top-1/2 size-4 -translate-y-1/2'
-      />
-    </div>
+    <ExpandableSearch
+      value={props.value}
+      onChange={props.onChange}
+      placeholder={props.t('roles.searchPlaceholder')}
+    />
   )
 }

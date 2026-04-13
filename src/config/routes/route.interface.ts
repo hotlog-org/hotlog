@@ -6,4 +6,5 @@ export enum ERoutes {
   DASHBOARD_EVENTS = '/dashboard/events',
   DASHBOARD_SCHEMA = '/dashboard/schema',
   DASHBOARD_MODULES = '/dashboard/modules',
+  INVITE_ACCEPT = '/invite/accept',
 }

@@ -7,6 +7,7 @@ import z from 'zod'
 import { ERoutes } from '@/config/routes'
 
 import { useRouter } from '@/i18n/navigation'
+import { useSearchParams } from 'next/navigation'
 import { signUpAction } from './sign-up.action'
 import { type SignUpData } from './sign-up.interface'
 
@@ -15,6 +16,8 @@ export const useSignUpService = () => {
   const tErrors = useTranslations('errors.auth')
 
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const nextUrl = searchParams.get('next')
   const [isLoading, setIsLoading] = useState(false)
   const [success, setSuccess] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -43,7 +46,7 @@ export const useSignUpService = () => {
       if (result.success) {
         setSuccess(true)
         form.reset()
-        router.push(ERoutes.DASHBOARD)
+        router.push(nextUrl ?? ERoutes.DASHBOARD)
       } else {
         setError(
           result.errorCode

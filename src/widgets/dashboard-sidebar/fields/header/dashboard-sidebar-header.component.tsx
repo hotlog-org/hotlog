@@ -34,12 +34,15 @@ import {
 import { HugeiconsIcon } from '@hugeicons/react'
 
 import { useState } from 'react'
+import { useProjectRealtime } from '@/shared/hooks/use-project-realtime'
 import { useDashboardSidebarHeaderService } from './dashboard-sidebar-header.service'
 
 const DashboardSidebarHeaderComponent = () => {
   const service = useDashboardSidebarHeaderService()
-  const { state } = useSidebar()
+  const { state, isMobile } = useSidebar()
   const [projectName, setProjectName] = useState('')
+
+  useProjectRealtime(service.selectedProjectId)
 
   return (
     <>
@@ -79,7 +82,7 @@ const DashboardSidebarHeaderComponent = () => {
             <DropdownMenuContent
               className='w-(--radix-dropdown-menu-trigger-width) min-w-56 rounded-lg'
               align='start'
-              side='left'
+              side={isMobile ? 'bottom' : 'left'}
               sideOffset={4}
             >
               <DropdownMenuLabel className='text-xs text-muted-foreground'>

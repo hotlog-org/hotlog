@@ -24,11 +24,12 @@ export default async function LocaleLayout({
     notFound()
   }
 
-  const messages = (await import(`../../../../messages/${locale}.json`)).default
+  const { getMessages } = await import('next-intl/server')
+  const messages = await getMessages()
 
   return (
     <html lang={locale} suppressHydrationWarning className={cn(geist.variable)}>
-      <body>
+      <body className='bg-background'>
         <ApiProvider>
           <NextIntlClientProvider locale={locale} messages={messages}>
             <ThemeProvider

@@ -15,13 +15,15 @@ import {
 import { Field, FieldControl, FieldLabel, FieldMessage } from '@/shared/ui/field'
 import { Input } from '@/shared/ui/input'
 
+import type { RoleOption } from '../../../overview.interface'
 import type { TFunction } from '../../../overview.service'
 import { useInviteMemberModalService } from './invite-member.modal.service'
 
 export interface InviteMemberModalProps {
   open: boolean
   onClose: () => void
-  onSubmit: (email: string) => void
+  onSubmit: (email: string, roleId?: string) => void
+  roleOptions: RoleOption[]
   t: TFunction
 }
 
@@ -58,7 +60,25 @@ export function InviteMemberModal(props: InviteMemberModalProps) {
           )}
         </Field>
 
-        <DialogFooter className='flex items-center justify-end gap-2 pt-2 sm:space-x-0'>
+        <Field className='space-y-2'>
+          <FieldLabel>{props.t('users.inviteModal.roleLabel')}</FieldLabel>
+          <FieldControl>
+            <select
+              value={service.roleId}
+              onChange={(event) => service.setRoleId(event.target.value)}
+              className='flex h-9 w-full rounded-md border border-border/70 bg-muted/40 px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring'
+            >
+              <option value=''>{props.t('users.inviteModal.noRole')}</option>
+              {props.roleOptions.map((role) => (
+                <option key={role.value} value={role.value}>
+                  {role.label}
+                </option>
+              ))}
+            </select>
+          </FieldControl>
+        </Field>
+
+        <DialogFooter className='flex flex-row items-center justify-end gap-2 pt-2'>
           <Button variant='ghost' onClick={props.onClose}>
             {props.t('users.inviteModal.cancel')}
           </Button>

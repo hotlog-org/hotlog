@@ -90,28 +90,26 @@ export function OverviewComponent() {
         t={service.t}
       />
 
-      <Card>
+      <Card className='overflow-hidden'>
         <CardHeader>
-          <div className='space-y-3'>
-            <div className='flex flex-wrap items-center justify-between gap-3'>
-              <div className='flex items-center gap-2'>
-                <Button
-                  size='sm'
-                  variant={service.tab === 'users' ? 'secondary' : 'ghost'}
-                  onClick={() => service.setTab('users')}
-                >
-                  {service.t('tabs.users')}
-                </Button>
-                <Button
-                  size='sm'
-                  variant={service.tab === 'roles' ? 'secondary' : 'ghost'}
-                  onClick={() => service.setTab('roles')}
-                >
-                  {service.t('tabs.roles')}
-                </Button>
-              </div>
+          <div className='min-w-0 space-y-3'>
+            <div className='flex items-center gap-2'>
+              <Button
+                size='sm'
+                variant={service.tab === 'users' ? 'secondary' : 'ghost'}
+                onClick={() => service.setTab('users')}
+              >
+                {service.t('tabs.users')}
+              </Button>
+              <Button
+                size='sm'
+                variant={service.tab === 'roles' ? 'secondary' : 'ghost'}
+                onClick={() => service.setTab('roles')}
+              >
+                {service.t('tabs.roles')}
+              </Button>
 
-              <div className='flex flex-wrap items-center gap-2'>
+              <div className='ml-auto flex items-center gap-2'>
                 {service.tab === 'users' &&
                   canViewUsersTab &&
                   !service.isLoading && (
@@ -158,6 +156,8 @@ export function OverviewComponent() {
                   roles={service.roles}
                   roleOptions={service.roleOptions}
                   currentUserId={service.currentUserId}
+                  canUpdateRoles={service.canUpdateRoles}
+                  canDeleteUsers={service.canDeleteUsers}
                   onChangeRole={service.updateUserRole}
                   onRemove={service.removeUser}
                   onRevoke={service.revokeInvite}
@@ -173,6 +173,8 @@ export function OverviewComponent() {
                 rows={service.filteredRoles}
                 permissions={service.permissions}
                 permissionColors={service.permissionColors}
+                canUpdateRoles={service.canUpdateRoles}
+                canDeleteRoles={service.canDeleteRoles}
                 onAddPermission={service.addPermissionToRole}
                 onRemovePermission={service.removePermissionFromRole}
                 onDelete={service.deleteRole}
@@ -186,10 +188,10 @@ export function OverviewComponent() {
           <InviteMemberModal
             open={service.inviteModalOpen}
             onClose={service.closeInviteModal}
-            onSubmit={(email) => {
-              service.inviteMember(email)
-              service.closeInviteModal()
+            onSubmit={(email, roleId) => {
+              service.inviteMember(email, roleId)
             }}
+            roleOptions={service.roleOptions}
             t={service.t}
           />
 

@@ -24,7 +24,7 @@ export function RolesAction(props: RolesActionProps) {
       onClick={service.handleAddRole}
     >
       <HugeiconsIcon icon={AddSquareIcon} className='size-4' />
-      {props.t('roles.add')}
+      <span className='hidden sm:inline'>{props.t('roles.add')}</span>
     </Button>
   )
 }

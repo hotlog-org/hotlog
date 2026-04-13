@@ -175,20 +175,43 @@ interface Segment {
   group: KeywordGroup | null
 }
 
+// Split a plain-text gap to find `and` / `or` keywords and tag them
+// with the 'connector' group so they get colored inline.
+const AND_OR_RE = /\b(and|or)\b/gi
+
+const splitConnectors = (plain: string): Segment[] => {
+  const result: Segment[] = []
+  let last = 0
+  let m: RegExpExecArray | null
+  AND_OR_RE.lastIndex = 0
+  while ((m = AND_OR_RE.exec(plain)) !== null) {
+    if (m.index > last) {
+      result.push({ text: plain.slice(last, m.index), group: null })
+    }
+    result.push({ text: m[0], group: 'connector' })
+    last = m.index + m[0].length
+  }
+  if (last < plain.length) {
+    result.push({ text: plain.slice(last), group: null })
+  }
+  return result
+}
+
 // Build the highlighted segments by walking the original text and the
 // sorted clause ranges. Each segment is either plain text or a badge
 // matching one parsed clause; the badge carries the clause's color
-// group.
+// group. Gaps between clauses are further scanned for `and`/`or`
+// keywords so they also get highlighted.
 const buildSegments = (text: string, clauses: ValueClause[]): Segment[] => {
   if (!text) return []
-  if (clauses.length === 0) return [{ text, group: null }]
+  if (clauses.length === 0) return splitConnectors(text)
 
   const sorted = [...clauses].sort((a, b) => a.start - b.start)
   const segments: Segment[] = []
   let cursor = 0
   for (const clause of sorted) {
     if (clause.start > cursor) {
-      segments.push({ text: text.slice(cursor, clause.start), group: null })
+      segments.push(...splitConnectors(text.slice(cursor, clause.start)))
     }
     segments.push({
       text: text.slice(clause.start, clause.end),
@@ -197,7 +220,7 @@ const buildSegments = (text: string, clauses: ValueClause[]): Segment[] => {
     cursor = clause.end
   }
   if (cursor < text.length) {
-    segments.push({ text: text.slice(cursor), group: null })
+    segments.push(...splitConnectors(text.slice(cursor)))
   }
   return segments
 }

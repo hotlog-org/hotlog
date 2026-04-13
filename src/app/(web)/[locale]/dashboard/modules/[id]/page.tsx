@@ -1,5 +1,5 @@
 import { ERoutes } from '@/config/routes'
-import { createClient } from '@/lib/supabase/client'
+import { createClient } from '@/lib/supabase/server'
 import { ModulesComponent } from '@/modules/modules'
 import { redirect } from 'next/navigation'
 
@@ -10,7 +10,7 @@ interface ModulesDetailPageProps {
 export default async function ModulesDetailPage({
   params,
 }: ModulesDetailPageProps) {
-  const supabase = createClient()
+  const supabase = await createClient()
 
   const {
     data: { user },
