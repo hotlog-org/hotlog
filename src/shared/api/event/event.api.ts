@@ -71,22 +71,5 @@ export const deleteEventsApi = async (
     },
   })
 
-  // The shared restApiFetcher is configured with `throwHttpErrors: false`,
-  // so we have to translate non-2xx responses into thrown errors ourselves
-  // — otherwise the mutation's onError handler never fires and the UI
-  // shows a phantom success when RLS silently blocks the delete.
-  if (!response.ok) {
-    let message = `Request failed with status ${response.status}`
-    try {
-      const body = (await response.json()) as {
-        error?: { message?: string }
-      }
-      if (body?.error?.message) message = body.error.message
-    } catch {
-      // ignore JSON parse failures and fall back to the status message
-    }
-    throw new Error(message)
-  }
-
   return response.json() as Promise<IDeleteEventsResponse>
 }

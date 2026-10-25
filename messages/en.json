@@ -8,6 +8,35 @@
     "goBack": "Go Back Home"
   },
   "modules": {
+    "forgot-password": {
+      "title": "Forgot password",
+      "description": "Enter your email to receive a reset link.",
+      "email": "Email",
+      "sending": "Sending…",
+      "submit": "Send reset link",
+      "success": "If an account exists for this email, check your inbox for a reset link.",
+      "error": "Failed to send reset link. Please try again.",
+      "invalidEmail": "Please enter a valid email",
+      "signIn": "Back to sign in",
+      "signUp": "Create account"
+    },
+    "reset-password": {
+      "title": "Reset password",
+      "description": "Choose a new password, then sign in again.",
+      "password": "New password",
+      "confirmation": "Confirm password",
+      "mismatch": "Passwords do not match.",
+      "checking": "Checking reset session…",
+      "saving": "Saving…",
+      "submit": "Save password",
+      "invalid": "This reset link is invalid or expired. Request a new link from Forgot password.",
+      "error": "Could not update your password. Try again or request a new reset link.",
+      "updated": "Password updated. Signing out…",
+      "success": "Password updated. Sign in with your new password.",
+      "signOutError": "Password updated, but sign-out failed. Try again to return to sign-in.",
+      "signIn": "Return to sign in",
+      "requestLink": "Request a new reset link"
+    },
     "home": {
       "welcome": "Welcome to HotLog!",
       "getStarted": "Get Started",
@@ -233,14 +262,25 @@
         },
         "apiKey": {
           "title": "API Key",
-          "subtitle": "Keep it secret. Rotate and share only when needed.",
+          "subtitle": "Keys are stored as hashes. Only a newly issued secret can be shown or copied.",
           "label": "API key",
           "copy": "Copy",
           "copied": "Copied to clipboard",
           "reveal": "Show",
           "hide": "Hide",
           "generate": "Generate new",
-          "hint": "Use this key for SDKs. Rotate before sharing."
+          "hint": "Use this key for SDKs. Rotate before sharing.",
+          "lostResponse": "Rotation immediately revokes only the selected active key. If a response is lost, the change may already have completed and the secret cannot be recovered. Refresh the list, then rotate that key again or revoke it and generate a new one. Do not blindly retry.",
+          "once": "Save this secret now. It disappears when dismissed, changing selection, leaving this project, or reloading.",
+          "select": "Select an active API key",
+          "secret": "New API key secret",
+          "dismiss": "Dismiss secret",
+          "rotate": "Rotate selected key",
+          "revoke": "Revoke selected key",
+          "loading": "Loading keys…",
+          "empty": "No active API keys.",
+          "noRead": "You do not have permission to list API keys.",
+          "failed": "API key operation failed."
         },
         "users": {
           "invite": "Invite member",
@@ -303,6 +343,17 @@
         }
       },
       "modules": {
+        "visibility": {
+          "label": "Visibility",
+          "public": "Public",
+          "publicDescription": "Public — visible to all members",
+          "restricted": "Restricted to {count, plural, one {# role} other {# roles}}",
+          "noRoles": "No roles available",
+          "addRole": "+ role",
+          "allRolesAssigned": "All roles assigned",
+          "owner": "Owner",
+          "admin": "Admin"
+        },
         "title": "Modules",
         "empty": "No components yet. Add a visualization to start.",
         "emptyModule": "No module found. Create one from the sidebar.",
@@ -384,6 +435,51 @@
           "submit": "Create"
         }
       },
+      "settings": {
+        "title": "Settings",
+        "description": "Manage your account, language, and project memberships.",
+        "tabs": {
+          "account": "Account",
+          "language": "Language",
+          "projects": "Projects"
+        },
+        "profile": "Profile",
+        "logout": "Log out",
+        "loggingOut": "Logging out…",
+        "displayName": "Display name",
+        "email": "Email",
+        "save": "Save changes",
+        "saving": "Saving…",
+        "nameSaved": "Display name updated.",
+        "nameInvalid": "Enter a display name of 1–80 characters without control characters.",
+        "deleteAccount": "Delete account",
+        "deleteAccountDescription": "Permanently delete your account and remove your project memberships. Your joined projects and their data will not be deleted.",
+        "ownedProjectsBlock": "You own {count, plural, one {# project} other {# projects}}. Delete them explicitly before deleting your account.",
+        "manageProjects": "Manage projects",
+        "ownershipChecking": "Checking project ownership…",
+        "language": "Interface language",
+        "languageDescription": "Choose your language. This browser remembers your choice, and you stay on the current page. Some content may fall back to English.",
+        "changingLanguage": "Changing language…",
+        "yourProjects": "Your projects",
+        "projectsDescription": "Open a project, leave a joined project, or permanently delete a project you are authorized to delete.",
+        "loadingProjects": "Loading projects…",
+        "noProjects": "You have no projects.",
+        "owner": "Owner",
+        "member": "Member",
+        "current": "Current",
+        "openProject": "Open project",
+        "leaveProject": "Leave project",
+        "deleteProject": "Delete project",
+        "ownerCannotLeave": "Owners cannot leave. Delete the project explicitly if you no longer need it.",
+        "accountConfirmDescription": "This cannot be undone. You must have signed in within the last 15 minutes; otherwise, sign out and sign in again before continuing.",
+        "projectDeleteDescription": "This permanently deletes the project and all its data for everyone, including members, roles, schemas, events, and API keys. It cannot be undone.",
+        "projectLeaveDescription": "You will lose access to this project. The project and its data remain available to its other members. You will need a new invitation to rejoin.",
+        "typeToConfirm": "Type {value} to confirm",
+        "cancel": "Cancel",
+        "confirm": "Confirm",
+        "working": "Working…",
+        "failed": "The operation failed. Please try again."
+      },
       "schema": {
         "title": "Schema builder",
         "subtitle": "Design event schemas and share deep links to fields.",
@@ -412,7 +508,13 @@
           "displayNamePlaceholder": "e.g. Order Created",
           "keyPreview": "Key:",
           "create": "Create",
-          "creating": "Creating..."
+          "creating": "Creating...",
+          "archivedKey": "This key belongs to an archived schema. Restore it or change the display name to use a different key.",
+          "restoreDescription": "Restore the original schema with its existing fields and event history. Individually archived fields stay archived. This also allows ingestion under this key again.",
+          "restoreNoPermission": "You do not have permission to restore this schema. Ask a project administrator or change the display name to use a different key.",
+          "restore": "Restore archived schema",
+          "restoring": "Restoring…",
+          "restoreFailed": "Failed to restore schema."
         },
         "validation": {
           "displayNameRequired": "Display name is required.",
@@ -494,7 +596,12 @@
           }
         },
         "footer": {
-          "logout": "Log out"
+          "logout": "Log out",
+          "accountMenu": "Account menu",
+          "settings": "Settings",
+          "projects": "My projects",
+          "language": "Language",
+          "logoutFailed": "Failed to sign out. Try again."
         }
       }
     },

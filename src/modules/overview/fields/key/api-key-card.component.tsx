@@ -1,151 +1,167 @@
 'use client'
 
-import {
-  ArrowReloadVerticalIcon,
-  Copy01Icon,
-  Loading03Icon,
-  ViewIcon,
-  ViewOffIcon,
-} from '@hugeicons/core-free-icons'
+import { Loading03Icon } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
-
 import { Button } from '@/shared/ui/button'
 import { Card } from '@/shared/ui/card'
-import {
-  Field,
-  FieldControl,
-  FieldLabel,
-  FieldMessage,
-} from '@/shared/ui/field'
 import { Input } from '@/shared/ui/input'
-
+import { Skeleton } from '@/shared/ui/skeleton'
+import type { IProjectApiKeyDto } from '@/shared/api/interface'
 import type { TFunction } from '../../overview.service'
 import { useApiKeyCardService } from './api-key-card.service'
 
 export interface ApiKeyCardProps {
   keyValue: string | null
+  keys: IProjectApiKeyDto[]
+  selectedId: number | null
+  onSelect: (id: number | null) => void
+  onDismiss: () => void
+  onRevoke: () => void
+  error: string | null
   loading: boolean
   canRead: boolean
   canCreate: boolean
+  canDelete: boolean
   isRegenerating: boolean
   t: TFunction
+  onCreate: () => void
   onRegenerate: () => void
 }
 
 export function ApiKeyCard(props: ApiKeyCardProps) {
   const service = useApiKeyCardService(props)
+  const activeKeys = props.keys.filter((key) => !key.revoked_at)
+  const selected = activeKeys.find((key) => key.id === props.selectedId)
+  const disabled = props.loading || props.isRegenerating
 
   return (
     <Card className='p-4 md:p-6'>
       <div className='flex flex-col gap-4'>
-        <div>
-          <h2 className='text-lg font-semibold text-foreground'>
-            {props.t('apiKey.title')}
-          </h2>
-          <p className='text-sm text-muted-foreground'>
-            {props.t('apiKey.subtitle')}
-          </p>
+        <div className='flex items-center gap-2'>
+          <h2 className='text-lg font-semibold'>{props.t('apiKey.title')}</h2>
+          {props.isRegenerating && (
+            <HugeiconsIcon
+              icon={Loading03Icon}
+              className='size-4 animate-spin'
+              aria-hidden='true'
+            />
+          )}
         </div>
-
-        {!props.canRead ? (
-          <p className='text-sm text-muted-foreground'>
-            You don&apos;t have permission to view API keys.
+        <p className='text-sm text-muted-foreground'>
+          {props.t('apiKey.subtitle')}
+        </p>
+        <p className='text-sm text-muted-foreground'>
+          {props.t('apiKey.lostResponse')}
+        </p>
+        {props.error && (
+          <p role='alert' className='text-sm text-destructive'>
+            {props.error}
           </p>
-        ) : props.loading ? (
-          <div className='flex items-center gap-2 text-sm text-muted-foreground'>
+        )}
+        {props.canRead && activeKeys.length > 0 && (
+          <label className='flex flex-col gap-2'>
+            {props.t('apiKey.select')}
+            <select
+              value={selected?.id ?? ''}
+              onChange={(event) =>
+                props.onSelect(
+                  event.target.value ? Number(event.target.value) : null,
+                )
+              }
+              disabled={disabled}
+              className='rounded border bg-background p-2'
+            >
+              <option value=''>{props.t('apiKey.select')}</option>
+              {activeKeys.map((key) => (
+                <option key={key.id} value={key.id}>
+                  #{key.id} · {key.key_prefix}…
+                </option>
+              ))}
+            </select>
+          </label>
+        )}
+        {props.loading && props.canRead && (
+          <div
+            role='status'
+            aria-label={props.t('apiKey.loading')}
+            className='space-y-2'
+          >
+            <Skeleton className='h-4 w-32' />
+            <Skeleton className='h-10 w-full' />
+          </div>
+        )}
+        {props.loading && !props.canRead && (
+          <div
+            role='status'
+            className='flex items-center gap-2 text-sm text-muted-foreground'
+          >
             <HugeiconsIcon
               icon={Loading03Icon}
               className='size-4 animate-spin'
             />
-            Loading...
+            {props.t('apiKey.loading')}
           </div>
-        ) : !props.keyValue ? (
-          <>
-            <p className='text-sm text-muted-foreground'>
-              No API key yet.{' '}
-              {props.canCreate
-                ? 'Click Generate to create one.'
-                : 'Ask an admin to generate one.'}
-            </p>
-            {props.canCreate && (
-              <Button
-                variant='outline'
-                size='sm'
-                className='ml-auto inline-flex items-center gap-2'
-                onClick={service.handleRegenerate}
-                disabled={props.isRegenerating || props.loading}
-              >
-                <HugeiconsIcon
-                  icon={
-                    props.isRegenerating
-                      ? Loading03Icon
-                      : ArrowReloadVerticalIcon
-                  }
-                  className={`size-4 ${props.isRegenerating ? 'animate-spin' : ''}`}
-                />
-                {props.t('apiKey.generate')}
-              </Button>
-            )}
-          </>
-        ) : (
-          <Field>
-            <FieldControl>
-              <Input
-                readOnly
-                value={service.maskedKey}
-                type={service.visible ? 'text' : 'password'}
-                className='font-mono text-sm'
-              />
-              <Button
-                variant='outline'
-                size='icon'
-                className='shrink-0'
-                onClick={service.handleToggleVisibility}
-                aria-label={props.t(
-                  service.visible ? 'apiKey.hide' : 'apiKey.reveal',
-                )}
-              >
-                <HugeiconsIcon
-                  icon={service.visible ? ViewOffIcon : ViewIcon}
-                  className='size-5'
-                />
-              </Button>
-              <Button
-                variant='outline'
-                size='icon'
-                className='shrink-0'
-                onClick={service.handleCopy}
-                aria-label={props.t('apiKey.copy')}
-              >
-                <HugeiconsIcon icon={Copy01Icon} className='size-5' />
-              </Button>
-              {props.canCreate && (
-                <Button
-                  variant='outline'
-                  size='icon'
-                  className='shrink-0'
-                  onClick={service.handleRegenerate}
-                  disabled={props.isRegenerating || props.loading}
-                  aria-label={props.t('apiKey.generate')}
-                >
-                  <HugeiconsIcon
-                    icon={
-                      props.isRegenerating
-                        ? Loading03Icon
-                        : ArrowReloadVerticalIcon
-                    }
-                    className={`size-5 ${props.isRegenerating ? 'animate-spin' : ''}`}
-                  />
-                </Button>
-              )}
-            </FieldControl>
-            {service.copied && (
-              <FieldMessage className='text-xs'>
-                {props.t('apiKey.copied')}
-              </FieldMessage>
-            )}
-          </Field>
         )}
+        {!props.loading && props.canRead && activeKeys.length === 0 && (
+          <p>{props.t('apiKey.empty')}</p>
+        )}
+        {!props.loading && !props.canRead && <p>{props.t('apiKey.noRead')}</p>}
+        {props.keyValue && (
+          <div className='flex flex-col gap-2'>
+            <p>{props.t('apiKey.once')}</p>
+            <Input
+              aria-label={props.t('apiKey.secret')}
+              readOnly
+              value={props.keyValue}
+              type={service.visible ? 'text' : 'password'}
+              className='font-mono text-sm'
+            />
+            <div className='flex gap-2'>
+              <Button
+                variant='outline'
+                onClick={service.handleToggleVisibility}
+              >
+                {props.t(service.visible ? 'apiKey.hide' : 'apiKey.reveal')}
+              </Button>
+              <Button variant='outline' onClick={service.handleCopy}>
+                {props.t('apiKey.copy')}
+              </Button>
+              <Button variant='outline' onClick={props.onDismiss}>
+                {props.t('apiKey.dismiss')}
+              </Button>
+            </div>
+            {service.copied && <p role='status'>{props.t('apiKey.copied')}</p>}
+          </div>
+        )}
+        <div className='flex gap-2'>
+          {props.canCreate && (
+            <Button
+              variant='outline'
+              disabled={disabled}
+              onClick={props.onCreate}
+            >
+              {props.t('apiKey.generate')}
+            </Button>
+          )}
+          {props.canCreate && props.canDelete && activeKeys.length > 0 && (
+            <Button
+              variant='outline'
+              disabled={disabled || !selected}
+              onClick={service.handleRegenerate}
+            >
+              {props.t('apiKey.rotate')}
+            </Button>
+          )}
+          {props.canDelete && activeKeys.length > 0 && (
+            <Button
+              variant='outline'
+              disabled={disabled || !selected}
+              onClick={props.onRevoke}
+            >
+              {props.t('apiKey.revoke')}
+            </Button>
+          )}
+        </div>
       </div>
     </Card>
   )

@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslations } from 'next-intl'
 
 import {
@@ -16,6 +16,7 @@ import type {
   IBatchComponentCreate,
   IBatchComponentUpdate,
   ILayoutDto,
+  ILayoutComponentDto,
 } from '@/shared/api/interface'
 import { useUserPermissions } from '@/shared/api/user-permission/user-permission.hook'
 import { useDashboardProject } from '@/shared/store/dashboard-project.store'
@@ -48,6 +49,20 @@ const normalizeBindings = (
     return { inputId: input.id, fieldKey: existing?.fieldKey ?? null }
   })
 
+const layoutComponentDtoToModule = (
+  c: ILayoutComponentDto,
+): ModuleComponent => ({
+  id: c.id,
+  kind: 'chart' as const,
+  visualization: c.visualization as ModuleVisualizationType,
+  schemaId: c.schemaId ?? '',
+  bindings: c.bindings,
+  title: c.title,
+  description: c.description,
+  order: c.index,
+  span: (c.span === 'half' ? 'half' : 'full') as ModuleComponentSpan,
+})
+
 function layoutDtoToModule(dto: ILayoutDto): ModuleDefinition {
   return {
     id: String(dto.id),
@@ -57,17 +72,7 @@ function layoutDtoToModule(dto: ILayoutDto): ModuleDefinition {
     heroTitle: dto.name,
     heroDescription: dto.description,
     roleIds: dto.roleIds ?? [],
-    components: dto.components.map((c) => ({
-      id: c.id,
-      kind: 'chart' as const,
-      visualization: c.visualization as ModuleVisualizationType,
-      schemaId: c.schemaId ?? '',
-      bindings: c.bindings,
-      title: c.title,
-      description: c.description,
-      order: c.index,
-      span: (c.span === 'half' ? 'half' : 'full') as ModuleComponentSpan,
-    })),
+    components: dto.components.map(layoutComponentDtoToModule),
   }
 }
 
@@ -82,7 +87,10 @@ export interface ModulesService {
   schemas: ModuleSchemaDefinition[]
   visualizations: ModuleVisualizationDefinition[]
   isDirty: boolean
+  saveError: string | null
+  loadError: string | null
   isSaving: boolean
+  isEditingLocked: boolean
   isLoading: boolean
   reorderEnabled: boolean
   editor: {
@@ -130,14 +138,22 @@ export const useModulesService = (
   const layoutsQuery = useLayoutsQuery(selectedProjectId)
   const schemasQuery = useSchemasQuery(selectedProjectId)
   const rolesQuery = useProjectRolesQuery(selectedProjectId)
-  const updateLayoutMutation = useUpdateLayoutMutation(selectedProjectId)
-  const batchComponentsMutation = useBatchComponentsMutation(selectedProjectId)
+  const updateLayoutMutation = useUpdateLayoutMutation()
+  const batchComponentsMutation = useBatchComponentsMutation()
   const addRoleLayoutMutation = useAddRoleLayoutMutation(selectedProjectId)
-  const removeRoleLayoutMutation = useRemoveRoleLayoutMutation(selectedProjectId)
+  const removeRoleLayoutMutation =
+    useRemoveRoleLayoutMutation(selectedProjectId)
   const { can } = useUserPermissions(selectedProjectId)
 
   const [draftModule, setDraftModule] = useState<ModuleDefinition | null>(null)
   const [isDirty, setIsDirty] = useState(false)
+  const [saveError, setSaveError] = useState<string | null>(null)
+  const draftIdentity = useRef<string | null>(null)
+  const saving = useRef<number | null>(null)
+  const [isSaving, setIsSaving] = useState(false)
+  const editorOpen = useRef(false)
+  const observedModule = useRef<ModuleDefinition | null>(null)
+  const draftVersion = useRef(0)
   const [reorderEnabled, setReorderEnabled] = useState(false)
   const [editingField, setEditingField] = useState<
     'name' | 'heroDescription' | null
@@ -151,14 +167,19 @@ export const useModulesService = (
   const { selectedModuleId, setSelectedModuleId } = useModulesStore()
 
   const modules = useMemo<ModuleDefinition[]>(
-    () => (layoutsQuery.data?.data ?? []).map(layoutDtoToModule),
-    [layoutsQuery.data],
+    () =>
+      (layoutsQuery.isPlaceholderData
+        ? []
+        : (layoutsQuery.data?.data ?? [])
+      ).map(layoutDtoToModule),
+    [layoutsQuery.data, layoutsQuery.isPlaceholderData],
   )
 
   const currentUserRoleIds = layoutsQuery.data?.currentUserRoleIds ?? []
 
   const projectRoles = useMemo(
-    () => (rolesQuery.data?.data ?? []).map((r) => ({ id: r.id, name: r.name })),
+    () =>
+      (rolesQuery.data?.data ?? []).map((r) => ({ id: r.id, name: r.name })),
     [rolesQuery.data],
   )
 
@@ -323,23 +344,54 @@ export const useModulesService = (
   }, [modules, selectedModuleId, params.moduleId, setSelectedModuleId])
 
   useEffect(() => {
-    if (!currentModuleFromStore) {
-      setDraftModule(null)
+    const identity = `${selectedProjectId}:${params.moduleId ?? selectedModuleId ?? currentModuleFromStore?.id}`
+    const sameIdentity = draftIdentity.current === identity
+    if (!sameIdentity) draftVersion.current += 1
+    const persistedChanged = observedModule.current !== currentModuleFromStore
+    observedModule.current = currentModuleFromStore
+    // Metadata and component writes invalidate independently. A refetch must
+    // not discard the draft while a later step is pending or has failed.
+    if (sameIdentity && isDirty) {
+      // Visibility is saved separately from the metadata/component draft.
+      if (currentModuleFromStore) {
+        setDraftModule(
+          (current) =>
+            current && {
+              ...current,
+              roleIds: currentModuleFromStore.roleIds,
+            },
+        )
+      }
       return
     }
-
-    setDraftModule(cloneModule(currentModuleFromStore))
+    // Dirty -> clean alone is not evidence that a stale query is authoritative.
+    if (sameIdentity && !persistedChanged) return
+    draftIdentity.current = identity
+    setDraftModule(
+      currentModuleFromStore ? cloneModule(currentModuleFromStore) : null,
+    )
     setIsDirty(false)
+    setSaveError(null)
     setReorderEnabled(false)
-  }, [currentModuleFromStore])
+  }, [
+    currentModuleFromStore,
+    isDirty,
+    params.moduleId,
+    selectedModuleId,
+    selectedProjectId,
+  ])
 
   const selectModule = (id: string) => {
     setSelectedModuleId(id)
   }
 
+  // Ref guard closes the event-to-render gap; only the saving draft is locked.
+  const isDraftLocked = () => saving.current === draftVersion.current
+
   const setDirtyModule = (
     updater: (module: ModuleDefinition) => ModuleDefinition,
   ) => {
+    if (isDraftLocked()) return
     setDraftModule((current) => {
       if (!current) return current
       const next = updater(current)
@@ -369,6 +421,7 @@ export const useModulesService = (
     setDirtyModule((current) => ({ ...current, heroDescription: value }))
 
   const openCreateComponent = () => {
+    if (isDraftLocked()) return
     const defaultVisualization = visualizations[0]?.id ?? 'line'
     const defaultSchema = schemas[0]?.id ?? ''
 
@@ -386,16 +439,18 @@ export const useModulesService = (
       span: 'full',
     }
 
+    editorOpen.current = true
     setEditor({ open: true, mode: 'create', component: draft })
   }
 
   const openEditComponent = (componentId: string) => {
-    if (!draftModule) return
+    if (isDraftLocked() || !draftModule) return
     const component = draftModule.components.find(
       (item) => item.id === componentId,
     )
     if (!component) return
 
+    editorOpen.current = true
     setEditor({
       open: true,
       mode: 'edit',
@@ -403,10 +458,13 @@ export const useModulesService = (
     })
   }
 
-  const closeEditor = () =>
+  const closeEditor = () => {
+    editorOpen.current = false
     setEditor({ open: false, mode: 'create', component: null })
+  }
 
   const submitComponent = (component: ModuleComponent) => {
+    if (isDraftLocked()) return
     setDraftModule((current) => {
       if (!current) return current
       const nextComponent = ensureBindings(component)
@@ -461,13 +519,13 @@ export const useModulesService = (
   }
 
   const addLayoutRole = (roleId: string) => {
-    if (!draftModule) return
+    if (isDraftLocked() || !draftModule) return
     const layoutId = Number(draftModule.id)
     addRoleLayoutMutation.mutate({ role_id: roleId, layout_id: layoutId })
   }
 
   const removeLayoutRole = (roleId: string) => {
-    if (!draftModule) return
+    if (isDraftLocked() || !draftModule) return
     const layoutId = Number(draftModule.id)
     removeRoleLayoutMutation.mutate({ role_id: roleId, layout_id: layoutId })
   }
@@ -490,78 +548,115 @@ export const useModulesService = (
   const saveModule = async () => {
     if (!draftModule || !currentModuleFromStore) return
 
-    const layoutId = Number(draftModule.id)
+    if (saving.current !== null || editorOpen.current) return
+    saving.current = draftVersion.current
+    setIsSaving(true)
+    const savingIdentity = draftIdentity.current
+    const savingVersion = draftVersion.current
+    setSaveError(null)
+    try {
+      const layoutId = Number(draftModule.id)
+      let savedModule = cloneModule(draftModule)
 
-    const metadataChanged =
-      draftModule.name !== currentModuleFromStore.name ||
-      draftModule.color !== currentModuleFromStore.color ||
-      (draftModule.heroDescription ?? '') !==
-        (currentModuleFromStore.heroDescription ?? '')
+      const metadataChanged =
+        draftModule.name !== currentModuleFromStore.name ||
+        draftModule.color !== currentModuleFromStore.color ||
+        (draftModule.heroDescription ?? '') !==
+          (currentModuleFromStore.heroDescription ?? '')
 
-    if (metadataChanged) {
-      await updateLayoutMutation.mutateAsync({
-        id: layoutId,
-        name: draftModule.name,
-        color: draftModule.color,
-        description: draftModule.heroDescription ?? draftModule.description ?? '',
-      })
+      if (metadataChanged) {
+        const response = await updateLayoutMutation.mutateAsync({
+          projectId: selectedProjectId,
+          payload: {
+            id: layoutId,
+            name: draftModule.name,
+            color: draftModule.color,
+            description:
+              draftModule.heroDescription ?? draftModule.description ?? '',
+          },
+        })
+        savedModule = layoutDtoToModule(response.data)
+      }
+
+      const originalIds = new Set(
+        currentModuleFromStore.components.map((c) => c.id),
+      )
+      const draftIds = new Set(draftModule.components.map((c) => c.id))
+
+      const normalizeBindingsForApi = (bindings: ModuleBinding[]) =>
+        bindings.map((b) => ({
+          inputId: b.inputId,
+          fieldKey: b.fieldKey ?? null,
+        }))
+
+      const creates: IBatchComponentCreate[] = draftModule.components
+        .filter((c) => !originalIds.has(c.id))
+        .map((c) => ({
+          visualization: c.visualization,
+          schema_id: c.schemaId || null,
+          bindings: normalizeBindingsForApi(c.bindings),
+          title: c.title ?? '',
+          description: c.description ?? '',
+          index: draftModule.components.indexOf(c),
+          span: c.span ?? 'full',
+        }))
+
+      const updates: IBatchComponentUpdate[] = draftModule.components
+        .filter((c) => originalIds.has(c.id))
+        .map((c) => ({
+          id: c.id,
+          visualization: c.visualization,
+          schema_id: c.schemaId || null,
+          bindings: normalizeBindingsForApi(c.bindings),
+          title: c.title ?? '',
+          description: c.description ?? '',
+          index: draftModule.components.indexOf(c),
+          span: c.span ?? 'full',
+        }))
+
+      const deletes = currentModuleFromStore.components
+        .filter((c) => !draftIds.has(c.id))
+        .map((c) => c.id)
+
+      const hasComponentChanges =
+        creates.length > 0 || updates.length > 0 || deletes.length > 0
+
+      if (hasComponentChanges) {
+        const response = await batchComponentsMutation.mutateAsync({
+          projectId: selectedProjectId,
+          payload: { layout_id: layoutId, creates, updates, deletes },
+        })
+        savedModule.components = response.data.map(layoutComponentDtoToModule)
+      }
+
+      if (
+        draftIdentity.current === savingIdentity &&
+        draftVersion.current === savingVersion
+      ) {
+        setDraftModule(savedModule)
+        setSaveError(null)
+        setIsDirty(false)
+        setReorderEnabled(false)
+        setEditingField(null)
+      }
+    } catch (error) {
+      if (
+        draftIdentity.current === savingIdentity &&
+        draftVersion.current === savingVersion
+      ) {
+        setSaveError(
+          error instanceof Error ? error.message : 'Failed to save module',
+        )
+      }
+    } finally {
+      saving.current = null
+      setIsSaving(false)
     }
-
-    const originalIds = new Set(
-      currentModuleFromStore.components.map((c) => c.id),
-    )
-    const draftIds = new Set(draftModule.components.map((c) => c.id))
-
-    const normalizeBindingsForApi = (bindings: ModuleBinding[]) =>
-      bindings.map((b) => ({ inputId: b.inputId, fieldKey: b.fieldKey ?? null }))
-
-    const creates: IBatchComponentCreate[] = draftModule.components
-      .filter((c) => !originalIds.has(c.id))
-      .map((c) => ({
-        visualization: c.visualization,
-        schema_id: c.schemaId || null,
-        bindings: normalizeBindingsForApi(c.bindings),
-        title: c.title ?? '',
-        description: c.description ?? '',
-        index: draftModule.components.indexOf(c),
-        span: c.span ?? 'full',
-      }))
-
-    const updates: IBatchComponentUpdate[] = draftModule.components
-      .filter((c) => originalIds.has(c.id))
-      .map((c) => ({
-        id: c.id,
-        visualization: c.visualization,
-        schema_id: c.schemaId || null,
-        bindings: normalizeBindingsForApi(c.bindings),
-        title: c.title ?? '',
-        description: c.description ?? '',
-        index: draftModule.components.indexOf(c),
-        span: c.span ?? 'full',
-      }))
-
-    const deletes = currentModuleFromStore.components
-      .filter((c) => !draftIds.has(c.id))
-      .map((c) => c.id)
-
-    const hasComponentChanges =
-      creates.length > 0 || updates.length > 0 || deletes.length > 0
-
-    if (hasComponentChanges) {
-      await batchComponentsMutation.mutateAsync({
-        layout_id: layoutId,
-        creates,
-        updates,
-        deletes,
-      })
-    }
-
-    setIsDirty(false)
-    setReorderEnabled(false)
-    setEditingField(null)
   }
 
   const cancelChanges = () => {
+    if (isDraftLocked()) return
+    setSaveError(null)
     if (currentModuleFromStore) {
       setDraftModule(cloneModule(currentModuleFromStore))
     }
@@ -577,9 +672,15 @@ export const useModulesService = (
     schemas,
     visualizations,
     isDirty,
-    isSaving:
-      updateLayoutMutation.isPending || batchComponentsMutation.isPending,
-    isLoading: layoutsQuery.isLoading,
+    saveError:
+      saveError ??
+      addRoleLayoutMutation.error?.message ??
+      removeRoleLayoutMutation.error?.message ??
+      null,
+    loadError: layoutsQuery.error?.message ?? null,
+    isSaving,
+    isEditingLocked: isSaving && isDraftLocked(),
+    isLoading: layoutsQuery.isLoading || layoutsQuery.isPlaceholderData,
     reorderEnabled,
     editor,
     editingField,
@@ -589,8 +690,12 @@ export const useModulesService = (
     canCreateComponents: can('create:components'),
     canUpdateComponents: can('update:components'),
     canDeleteComponents: can('delete:components'),
-    setEditingField,
-    setReorderEnabled,
+    setEditingField: (field) => {
+      if (!isDraftLocked()) setEditingField(field)
+    },
+    setReorderEnabled: (value) => {
+      if (!isDraftLocked()) setReorderEnabled(value)
+    },
     openCreateComponent,
     openEditComponent,
     closeEditor,

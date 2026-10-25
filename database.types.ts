@@ -42,27 +42,24 @@ export type Database = {
       api_keys: {
         Row: {
           id: number
-          key: string
-          key_hash: string | null
-          key_prefix: string | null
+          key_hash: string
+          key_prefix: string
           last_used_at: string | null
           project_id: string
           revoked_at: string | null
         }
         Insert: {
           id?: number
-          key?: string
-          key_hash?: string | null
-          key_prefix?: string | null
+          key_hash: string
+          key_prefix: string
           last_used_at?: string | null
           project_id: string
           revoked_at?: string | null
         }
         Update: {
           id?: number
-          key?: string
-          key_hash?: string | null
-          key_prefix?: string | null
+          key_hash?: string
+          key_prefix?: string
           last_used_at?: string | null
           project_id?: string
           revoked_at?: string | null
@@ -536,6 +533,30 @@ export type Database = {
     }
     Functions: {
       accept_invitation: { Args: { p_token: string }; Returns: Json }
+      batch_layout_components: {
+        Args: {
+          p_layout_id: number
+          p_creates?: Json
+          p_updates?: Json
+          p_deletes?: Json
+        }
+        Returns: Database['public']['Tables']['components']['Row'][]
+      }
+      create_api_key: {
+        Args: { p_project_id: string; p_replace_key_id?: number }
+        Returns: {
+          id: number
+          project_id: string
+          key_prefix: string
+          last_used_at: string | null
+          revoked_at: string | null
+          key: string
+        }[]
+      }
+      create_project: {
+        Args: { p_name: string }
+        Returns: Database['public']['Tables']['projects']['Row'][]
+      }
       events_daily_counts: {
         Args: { p_days: number; p_project_id: string }
         Returns: {
@@ -590,8 +611,28 @@ export type Database = {
           id: number
         }[]
       }
+      leave_project: { Args: { p_project_id: string }; Returns: string }
+      list_user_projects: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          id: string
+          name: string
+          created_at: string
+          creator_id: string
+          can_delete: boolean
+        }[]
+      }
+      prepare_account_deletion: { Args: Record<PropertyKey, never>; Returns: string }
       is_project_creator: { Args: { p_project_id: string }; Returns: boolean }
       is_project_member: { Args: { p_project_id: string }; Returns: boolean }
+      lock_layout_for_component_batch: {
+        Args: { p_layout_id: number; p_schema_ids?: string[] }
+        Returns: undefined
+      }
+      revoke_api_key: {
+        Args: { p_key_id: number }
+        Returns: number
+      }
       update_user_role: {
         Args: { p_project_id: string; p_role_id: string; p_user_id: string }
         Returns: undefined

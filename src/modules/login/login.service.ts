@@ -12,6 +12,7 @@ import {
 } from './login.interface'
 
 import { ERoutes } from '@/config/routes'
+import { authNavigation, safeAuthRedirect } from '@/lib/supabase/auth-redirect'
 import { useRouter } from '@/i18n/navigation'
 import { useSearchParams } from 'next/navigation'
 import { DiscordIcon, GithubIcon, GoogleIcon } from '@hugeicons/core-free-icons'
@@ -38,6 +39,7 @@ export const useLoginService = () => {
   const t = useTranslations('modules.login')
   const tErrors = useTranslations('errors.auth')
   const locale = useLocale()
+  const tRecovery = useTranslations('modules.reset-password')
 
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -68,7 +70,10 @@ export const useLoginService = () => {
       const result = await loginAction(data)
 
       if (result.success) {
-        router.push(nextUrl ?? ERoutes.DASHBOARD)
+        const destination = authNavigation(
+          safeAuthRedirect(nextUrl, window.location.origin, ERoutes.DASHBOARD),
+        )
+        router.push(destination.pathname, { locale: destination.locale })
         setSuccess(true)
         setError(null)
         form.reset()
@@ -119,6 +124,14 @@ export const useLoginService = () => {
     onSubmit,
     handleProviderSignIn,
     providers: loginProviders,
+    authMessage:
+      searchParams.get('recovery') === 'complete'
+        ? tRecovery('success')
+        : searchParams.get('recovery') === 'invalid'
+          ? tRecovery('invalid')
+          : searchParams.get('auth') === 'invalid'
+            ? tErrors('INVALID_TOKEN')
+            : null,
     isLoading,
     error,
     success,

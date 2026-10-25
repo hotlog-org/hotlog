@@ -1,5 +1,6 @@
 'use client'
 
+import { Link } from '@/i18n/navigation'
 import AuthHeader from '@/modules/auth-shared/auth-header'
 import { Button } from '@/shared/ui/button'
 import {
@@ -30,10 +31,10 @@ const ForgotPasswordComponent = () => {
       <Card className='w-full max-w-md border shadow-sm'>
         <CardHeader className='space-y-2'>
           <CardTitle className='text-2xl font-semibold tracking-tight'>
-            Forgot password
+            {service.t('title')}
           </CardTitle>
           <CardDescription className='text-muted-foreground'>
-            Enter your email to receive a reset link.
+            {service.t('description')}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -47,7 +48,7 @@ const ForgotPasswordComponent = () => {
                 name='email'
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Email</FormLabel>
+                    <FormLabel>{service.t('email')}</FormLabel>
                     <FormControl>
                       <div className='relative'>
                         <Mail className='absolute left-3 top-2.5 h-4 w-4 text-muted-foreground' />
@@ -64,15 +65,21 @@ const ForgotPasswordComponent = () => {
                 )}
               />
               {service.error && (
-                <div className='text-sm text-destructive flex gap-1 items-top'>
+                <div
+                  role='alert'
+                  className='text-sm text-destructive flex gap-1 items-top'
+                >
                   <CircleX size={18} />
                   {service.error}
                 </div>
               )}
               {service.success && (
-                <div className='text-sm text-green-600 flex gap-1 items-top'>
+                <div
+                  role='status'
+                  className='text-sm text-green-600 flex gap-1 items-top'
+                >
                   <CircleCheck size={18} />
-                  Check your inbox for the reset link.
+                  {service.t('success')}
                 </div>
               )}
               <Button
@@ -80,22 +87,22 @@ const ForgotPasswordComponent = () => {
                 className='w-full'
                 disabled={service.isLoading}
               >
-                {service.isLoading ? 'Sending…' : 'Send reset link'}
+                {service.isLoading ? service.t('sending') : service.t('submit')}
               </Button>
               <div className='text-center text-sm text-muted-foreground'>
-                <a
+                <Link
                   href='/sign-in'
                   className='hover:underline underline-offset-4'
                 >
-                  Back to sign in
-                </a>
+                  {service.t('signIn')}
+                </Link>
                 <span className='px-2'>·</span>
-                <a
+                <Link
                   href='/sign-up'
                   className='hover:underline underline-offset-4'
                 >
-                  Create account
-                </a>
+                  {service.t('signUp')}
+                </Link>
               </div>
             </form>
           </Form>

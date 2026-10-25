@@ -11,6 +11,7 @@ export interface IUserProjectDto {
   name: string
   createdAt: string
   isCreator: boolean
+  canDelete?: boolean
 }
 
 export interface IUserProjectsResponse {

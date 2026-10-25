@@ -5,6 +5,7 @@ import { useForm } from 'react-hook-form'
 import z from 'zod'
 
 import { ERoutes } from '@/config/routes'
+import { authNavigation, safeAuthRedirect } from '@/lib/supabase/auth-redirect'
 
 import { useRouter } from '@/i18n/navigation'
 import { useSearchParams } from 'next/navigation'
@@ -46,7 +47,10 @@ export const useSignUpService = () => {
       if (result.success) {
         setSuccess(true)
         form.reset()
-        router.push(nextUrl ?? ERoutes.DASHBOARD)
+        const destination = authNavigation(
+          safeAuthRedirect(nextUrl, window.location.origin, ERoutes.DASHBOARD),
+        )
+        router.push(destination.pathname, { locale: destination.locale })
       } else {
         setError(
           result.errorCode

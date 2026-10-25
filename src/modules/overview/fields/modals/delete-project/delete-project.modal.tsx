@@ -24,6 +24,7 @@ import type { TFunction } from '../../../overview.service'
 import { useDeleteProjectModalService } from './delete-project.modal.service'
 
 export interface DeleteProjectModalProps {
+  error?: string
   open: boolean
   onClose: () => void
   onSubmit: () => void
@@ -79,6 +80,11 @@ export function DeleteProjectModal(props: DeleteProjectModalProps) {
           )}
         </Field>
 
+        {props.error && (
+          <p role='alert' className='text-sm text-destructive'>
+            {props.error}
+          </p>
+        )}
         <DialogFooter className='flex items-center justify-end gap-2 pt-2 sm:space-x-0'>
           <Button
             variant='ghost'

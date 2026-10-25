@@ -29,14 +29,9 @@ export const invitationsQueryApi = async (
 export const createInvitationApi = async (
   payload: ICreateInvitationPayload,
 ): Promise<void> => {
-  const response = await restApiFetcher.post(EInvitationApi.INVITATIONS_API, {
+  await restApiFetcher.post(EInvitationApi.INVITATIONS_API, {
     json: payload,
   })
-
-  if (!response.ok) {
-    const body = await response.json<{ error: { message: string } }>()
-    throw new Error(body.error.message)
-  }
 }
 
 export const revokeInvitationApi = async (
@@ -54,11 +49,6 @@ export const acceptInvitationApi = async (
     EInvitationApi.ACCEPT_INVITATION_API,
     { json: payload },
   )
-
-  if (!response.ok) {
-    const body = await response.json<{ error: { message: string } }>()
-    throw new Error(body.error.message)
-  }
 
   return response.json()
 }

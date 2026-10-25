@@ -1,6 +1,7 @@
 import { type NextRequest, NextResponse } from 'next/server'
 
 import { createClient } from '@/lib/supabase/server'
+import { readBoundedBody } from '@/lib/rest-api/read-bounded-body'
 import { validateEventValue, type ValidatorField } from '@/lib/schema-validator'
 import type { IApiErrorResponse } from '@/shared/api/interface'
 
@@ -16,7 +17,46 @@ interface IngestErrorResponse {
   }
 }
 
-function mapPgError(err: { code?: string; message: string }) {
+function mapPgError(err: {
+  code?: string
+  message: string
+  details?: string | null
+}) {
+  if (
+    err.code === '22023' &&
+    ['event_value_invalid', 'event_schema_invalid'].includes(err.message)
+  ) {
+    let fieldErrors: IngestErrorResponse['error']['field_errors']
+    try {
+      const details: unknown = JSON.parse(err.details ?? '')
+      if (
+        Array.isArray(details) &&
+        details.every(
+          (item) =>
+            item &&
+            typeof item === 'object' &&
+            typeof item.field_key === 'string' &&
+            typeof item.reason === 'string',
+        )
+      ) {
+        fieldErrors = details.map(({ field_key, reason }) => ({
+          field_key,
+          reason,
+        }))
+      }
+    } catch {
+      // Missing/malformed Postgres details must never expose SQL internals.
+    }
+    return NextResponse.json<IngestErrorResponse>(
+      {
+        error: {
+          message: 'Event value failed schema validation',
+          ...(fieldErrors ? { field_errors: fieldErrors } : {}),
+        },
+      },
+      { status: 400 },
+    )
+  }
   if (err.message.includes('invalid_api_key')) {
     return NextResponse.json<IApiErrorResponse>(
       { error: { message: 'Invalid API key' } },
@@ -30,7 +70,7 @@ function mapPgError(err: { code?: string; message: string }) {
     )
   }
   return NextResponse.json<IApiErrorResponse>(
-    { error: { message: err.message } },
+    { error: { message: 'Failed to store event' } },
     { status: 500 },
   )
 }
@@ -56,8 +96,8 @@ export async function POST(request: NextRequest) {
     )
   }
 
-  const raw = await request.text()
-  if (raw.length > MAX_BODY_BYTES) {
+  const raw = await readBoundedBody(request.body, MAX_BODY_BYTES)
+  if (raw === null) {
     return NextResponse.json<IApiErrorResponse>(
       { error: { message: 'Payload too large' } },
       { status: 413 },

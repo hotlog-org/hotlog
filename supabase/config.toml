@@ -1,0 +1,48 @@
+# Isolated LOCAL development only. This identifier is NOT a hosted project ref.
+# NEVER reset linked Hotlog mcpsycjnnjmdobrhvstr or replay its historic migrations.
+project_id = "hotlog-local"
+
+[api]
+enabled = true
+port = 54321
+schemas = ["public"]
+extra_search_path = ["public", "extensions"]
+max_rows = 1000
+
+[db]
+port = 54322
+shadow_port = 54320
+major_version = 17
+
+[db.migrations]
+enabled = true
+
+[db.seed]
+enabled = true
+sql_paths = ["./seed.sql"]
+
+[studio]
+enabled = true
+port = 54323
+api_url = "http://127.0.0.1"
+
+[inbucket]
+enabled = true
+port = 54324
+
+[auth]
+enabled = true
+site_url = "http://localhost:3001"
+additional_redirect_urls = [
+  "http://localhost:3001/en/auth/callback",
+  "http://localhost:3001/ru/auth/callback",
+  "http://localhost:3001/am/auth/callback",
+  "http://localhost:3001/en/auth/callback?recovery=1",
+  "http://localhost:3001/ru/auth/callback?recovery=1",
+  "http://localhost:3001/am/auth/callback?recovery=1",
+]
+enable_signup = true
+
+[auth.email]
+enable_signup = true
+enable_confirmations = true

@@ -14,6 +14,7 @@ import {
   SidebarMenuItem,
 } from '@/shared/ui/sidebar'
 import { cn } from '@/shared/utils/shadcn.utils'
+import { Skeleton } from '@/shared/ui/skeleton'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { DashboardSidebarFooterComponent } from '../footer'
 import { DashboardSidebarHeaderComponent } from '../header'
@@ -74,13 +75,22 @@ const DashboardSidebarContentComponent = () => {
           <SidebarGroupContent>
             <SidebarGroupLabel>{service.t('groups.label')}</SidebarGroupLabel>
             <SidebarMenu>
+              {service.isModulesLoading && service.modules.length === 0
+                ? [0, 1, 2].map((index) => (
+                    <SidebarMenuItem key={index} aria-hidden='true'>
+                      <Skeleton className='h-8 w-full' />
+                    </SidebarMenuItem>
+                  ))
+                : null}
               {service.modules.map((module) => (
                 <ModuleRow
                   key={module.id}
                   module={module}
                   sidebarState={service.sidebarState}
                   selectedModuleId={service.selectedModuleId}
-                  onDelete={service.canDeleteLayouts ? service.deleteModule : undefined}
+                  onDelete={
+                    service.canDeleteLayouts ? service.deleteModule : undefined
+                  }
                   onSelect={service.setSelectedModuleId}
                 />
               ))}

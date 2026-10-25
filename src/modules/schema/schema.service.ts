@@ -1,12 +1,21 @@
 'use client'
 
-import { createElement, useCallback, useEffect, useMemo, useState } from 'react'
+import {
+  createElement,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react'
 import { useTranslations } from 'next-intl'
+import { HTTPError } from 'ky'
 
 import { useDashboardNavbarExtra } from '@/shared/store/dashboard-navbar-extra.store'
 import { useDashboardProject } from '@/shared/store/dashboard-project.store'
 import { useUserPermissions } from '@/shared/api/user-permission'
 import {
+  type IArchivedSchemaConflict,
   type IBatchFieldCreate,
   type IBatchFieldUpdate,
   type IFieldDto,
@@ -44,6 +53,7 @@ export interface SchemaService {
   setSearch: (value: string) => void
   rows: SchemaRow[]
   isLoading: boolean
+  loadError: string | null
   hasNoProject: boolean
   canRead: boolean
   canCreate: boolean
@@ -75,6 +85,12 @@ export interface SchemaService {
   submitCreateSchema: (displayName: string) => Promise<void>
   isCreatingSchema: boolean
   createSchemaError: string | null
+  createSchemaSession: number
+  archivedSchemaConflict: IArchivedSchemaConflict | null
+  clearCreateSchemaConflict: () => void
+  restoreConflictingSchema: (key: string) => Promise<void>
+  canRestoreSchema: boolean
+  isRestoringSchema: boolean
 
   archiveSchema: (id: string) => void
   updateSchemaDisplayName: (value: string) => void
@@ -169,7 +185,11 @@ const useSchemaService = (): SchemaService => {
   )
 
   const selectedProjectId = useDashboardProject((s) => s.selectedProjectId)
-  const { can } = useUserPermissions(selectedProjectId)
+  const {
+    can,
+    isPending: permissionsPending,
+    isPlaceholderData: permissionsPlaceholder,
+  } = useUserPermissions(selectedProjectId)
 
   const canRead = can('read:schemas')
   const canCreate = can('create:schemas')
@@ -188,6 +208,21 @@ const useSchemaService = (): SchemaService => {
   const [draftDisplayName, setDraftDisplayName] = useState('')
   const [originalDisplayName, setOriginalDisplayName] = useState('')
   const [createSchemaOpen, setCreateSchemaOpen] = useState(false)
+  const [createSchemaSession, setCreateSchemaSession] = useState(0)
+  const [archivedSchemaConflict, setArchivedSchemaConflict] = useState<
+    (IArchivedSchemaConflict & { projectId: string }) | null
+  >(null)
+  const creationProject = useRef(selectedProjectId)
+  const creationEpoch = useRef(0)
+  const creationBusy = useRef(false)
+  const currentProject = useRef(selectedProjectId)
+  currentProject.current = selectedProjectId
+  useEffect(() => {
+    creationEpoch.current += 1
+    setCreateSchemaOpen(false)
+    setCreateSchemaError(null)
+    setArchivedSchemaConflict(null)
+  }, [selectedProjectId])
   const [createSchemaError, setCreateSchemaError] = useState<string | null>(
     null,
   )
@@ -201,16 +236,18 @@ const useSchemaService = (): SchemaService => {
     includeArchived: showArchived,
   })
 
-  const createSchemaMutation = useCreateSchemaMutation(selectedProjectId)
+  const createSchemaMutation = useCreateSchemaMutation()
   const updateSchemaMutation = useUpdateSchemaMutation(selectedProjectId)
+  const restoreSchemaMutation = useUpdateSchemaMutation(selectedProjectId)
   const saveDraftMutation = useSaveSchemaDraftMutation(
     selectedSchemaId ?? undefined,
     selectedProjectId,
   )
 
   const schemas: ISchemaDto[] = useMemo(
-    () => schemasQuery.data?.data ?? [],
-    [schemasQuery.data],
+    () =>
+      schemasQuery.isPlaceholderData ? [] : (schemasQuery.data?.data ?? []),
+    [schemasQuery.data, schemasQuery.isPlaceholderData],
   )
 
   const filteredSchemas = useMemo(() => {
@@ -288,18 +325,32 @@ const useSchemaService = (): SchemaService => {
   }, [])
 
   const addSchema = useCallback(() => {
+    if (creationBusy.current) return
+    creationProject.current = selectedProjectId
+    creationEpoch.current += 1
+    setCreateSchemaSession((session) => session + 1)
     setCreateSchemaError(null)
+    setArchivedSchemaConflict(null)
     setCreateSchemaOpen(true)
-  }, [])
+  }, [selectedProjectId])
 
   const closeCreateSchema = useCallback(() => {
+    if (creationBusy.current) return
+    creationEpoch.current += 1
     setCreateSchemaOpen(false)
+    setCreateSchemaError(null)
+    setArchivedSchemaConflict(null)
+  }, [])
+
+  const clearCreateSchemaConflict = useCallback(() => {
+    if (creationBusy.current) return
+    setArchivedSchemaConflict(null)
     setCreateSchemaError(null)
   }, [])
 
   const submitCreateSchema = useCallback(
     async (displayName: string) => {
-      if (!selectedProjectId) return
+      if (!selectedProjectId || !canCreate || creationBusy.current) return
       const trimmed = displayName.trim()
       if (!trimmed) {
         setCreateSchemaError(t('validation.displayNameRequired'))
@@ -311,22 +362,101 @@ const useSchemaService = (): SchemaService => {
         return
       }
 
+      const epoch = creationEpoch.current
+      const isCurrent = () =>
+        currentProject.current === selectedProjectId &&
+        creationEpoch.current === epoch
+      creationBusy.current = true
       setCreateSchemaError(null)
+      setArchivedSchemaConflict(null)
       try {
         const result = await createSchemaMutation.mutateAsync({
           project_id: selectedProjectId,
           key,
           display_name: trimmed,
         })
+        if (!isCurrent()) return
         setCreateSchemaOpen(false)
         setSelectedSchemaId(result.data.id)
       } catch (err) {
+        if (err instanceof HTTPError && err.response.status === 409) {
+          try {
+            const body = await err.response.clone().json()
+            const conflict = body?.error?.schema
+            if (!isCurrent()) return
+            if (
+              body?.error?.code === 'SCHEMA_KEY_ARCHIVED' &&
+              typeof conflict?.id === 'string' &&
+              conflict.key === key &&
+              typeof conflict.displayName === 'string'
+            ) {
+              setArchivedSchemaConflict({
+                ...conflict,
+                projectId: selectedProjectId,
+              })
+              setCreateSchemaError(t('createDialog.archivedKey'))
+              return
+            }
+          } catch {
+            // Fall back to the normalized HTTP error for malformed responses.
+          }
+        }
+        if (!isCurrent()) return
         setCreateSchemaError(
           err instanceof Error ? err.message : t('validation.createFailed'),
         )
+      } finally {
+        creationBusy.current = false
       }
     },
-    [createSchemaMutation, selectedProjectId, t],
+    [canCreate, createSchemaMutation, selectedProjectId, t],
+  )
+
+  const restoreConflictingSchema = useCallback(
+    async (key: string) => {
+      const conflict = archivedSchemaConflict
+      if (
+        !conflict ||
+        !canRead ||
+        !canUpdate ||
+        creationBusy.current ||
+        conflict.projectId !== selectedProjectId ||
+        conflict.key !== key
+      )
+        return
+      const epoch = creationEpoch.current
+      const isCurrent = () =>
+        currentProject.current === selectedProjectId &&
+        creationEpoch.current === epoch
+      creationBusy.current = true
+      setCreateSchemaError(null)
+      try {
+        // Restore only the original schema; do not replace its name, fields or history.
+        const result = await restoreSchemaMutation.mutateAsync({
+          id: conflict.id,
+          status: 'active',
+        })
+        if (!isCurrent()) return
+        setArchivedSchemaConflict(null)
+        setCreateSchemaOpen(false)
+        setSelectedSchemaId(result.data.id)
+      } catch (err) {
+        if (!isCurrent()) return
+        setCreateSchemaError(
+          err instanceof Error ? err.message : t('createDialog.restoreFailed'),
+        )
+      } finally {
+        creationBusy.current = false
+      }
+    },
+    [
+      archivedSchemaConflict,
+      canRead,
+      canUpdate,
+      restoreSchemaMutation,
+      selectedProjectId,
+      t,
+    ],
   )
 
   const archiveSchema = useCallback(
@@ -658,7 +788,11 @@ const useSchemaService = (): SchemaService => {
     search,
     setSearch,
     rows,
-    isLoading: schemasQuery.isLoading,
+    isLoading:
+      (Boolean(selectedProjectId) &&
+        (permissionsPending || permissionsPlaceholder)) ||
+      (canRead && (schemasQuery.isLoading || schemasQuery.isPlaceholderData)),
+    loadError: schemasQuery.error?.message ?? null,
     hasNoProject: !selectedProjectId,
     canRead,
     canCreate,
@@ -683,11 +817,22 @@ const useSchemaService = (): SchemaService => {
     closeSchema,
 
     addSchema,
-    createSchemaOpen,
+    createSchemaOpen:
+      createSchemaOpen && creationProject.current === selectedProjectId,
     closeCreateSchema,
     submitCreateSchema,
-    isCreatingSchema: createSchemaMutation.isPending,
+    isCreatingSchema:
+      createSchemaMutation.isPending || restoreSchemaMutation.isPending,
     createSchemaError,
+    createSchemaSession,
+    archivedSchemaConflict:
+      archivedSchemaConflict?.projectId === selectedProjectId
+        ? archivedSchemaConflict
+        : null,
+    clearCreateSchemaConflict,
+    restoreConflictingSchema,
+    canRestoreSchema: canRead && canUpdate,
+    isRestoringSchema: restoreSchemaMutation.isPending,
 
     archiveSchema,
     updateSchemaDisplayName,

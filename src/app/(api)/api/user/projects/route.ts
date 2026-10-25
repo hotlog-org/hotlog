@@ -25,10 +25,11 @@ export async function GET() {
     )
   }
 
+  // Existing RLS permits only the caller's memberships and owned projects.
+  // Do not make this fundamental read depend on an undeployed settings RPC.
   const { data, error } = await supabase
     .from('projects')
-    .select('id, name, created_at, creator_id, user_projects!inner(user_id)')
-    .eq('user_projects.user_id', user.id)
+    .select('id, name, created_at, creator_id')
     .order('created_at', { ascending: false })
 
   if (error) {
@@ -42,11 +43,30 @@ export async function GET() {
     )
   }
 
-  const projects: IUserProjectDto[] = (data ?? []).map((project) => ({
+  const rows = data ?? []
+  const capabilities = await Promise.all(
+    rows.map((project) =>
+      project.creator_id === user.id
+        ? Promise.resolve({ data: true, error: null })
+        : supabase.rpc('has_permission', {
+            p_project_id: project.id,
+            p_action: 'delete',
+            p_subject: 'projects',
+          }),
+    ),
+  )
+  if (capabilities.some((result) => result.error)) {
+    return NextResponse.json<IApiErrorResponse>(
+      { error: { message: 'Could not load project permissions' } },
+      { status: 500 },
+    )
+  }
+  const projects: IUserProjectDto[] = rows.map((project, index) => ({
     id: project.id,
     name: project.name,
     createdAt: project.created_at,
-    isCreator: project.creator_id == user.id,
+    isCreator: project.creator_id === user.id,
+    canDelete: capabilities[index].data === true,
   }))
 
   return NextResponse.json<IUserProjectsResponse>({
@@ -68,96 +88,42 @@ export async function POST(request: NextRequest) {
     )
   }
 
-  const body = await request.json()
-  const name = body?.name
+  let body: unknown
+  try {
+    body = await request.json()
+  } catch {
+    return NextResponse.json<IApiErrorResponse>(
+      { error: { message: 'Invalid JSON body' } },
+      { status: 400 },
+    )
+  }
+  const name =
+    body && typeof body === 'object' && 'name' in body ? body.name : null
 
-  if (!name || typeof name !== 'string') {
+  if (typeof name !== 'string' || !name.trim()) {
     return NextResponse.json<IApiErrorResponse>(
       { error: { message: 'name is required' } },
       { status: 400 },
     )
   }
 
-  // Create the project
-  const { data: project, error: projectError } = await supabase
-    .from('projects')
-    .insert({ name, creator_id: user.id })
-    .select('id, name, created_at, creator_id')
+  const { data: project, error } = await supabase
+    .rpc('create_project', { p_name: name })
     .single()
 
-  if (projectError || !project) {
+  if (error || !project) {
+    const status =
+      error?.code === '28000'
+        ? 401
+        : error?.code === '42501'
+          ? 403
+          : error?.code === '22023'
+            ? 400
+            : 500
     return NextResponse.json<IApiErrorResponse>(
-      { error: { message: projectError?.message ?? 'Failed to create project' } },
-      { status: 500 },
+      { error: { message: error?.message ?? 'Failed to create project' } },
+      { status },
     )
-  }
-
-  // Add creator as project member
-  const { error: membershipError } = await supabase
-    .from('user_projects')
-    .insert({ user_id: user.id, project_id: project.id })
-
-  if (membershipError) {
-    return NextResponse.json<IApiErrorResponse>(
-      { error: { message: membershipError.message } },
-      { status: 500 },
-    )
-  }
-
-  // Create "Owner" role for the project
-  const { data: role, error: roleError } = await supabase
-    .from('roles')
-    .insert({ name: 'Owner', project_id: project.id })
-    .select('id')
-    .single()
-
-  if (roleError || !role) {
-    return NextResponse.json<IApiErrorResponse>(
-      { error: { message: roleError?.message ?? 'Failed to create role' } },
-      { status: 500 },
-    )
-  }
-
-  // Assign the owner role to the creator
-  const { error: userRoleError } = await supabase
-    .from('user_roles')
-    .insert({ user_id: user.id, role_id: role.id })
-
-  if (userRoleError) {
-    return NextResponse.json<IApiErrorResponse>(
-      { error: { message: userRoleError.message } },
-      { status: 500 },
-    )
-  }
-
-  // Fetch all permissions and link them to the owner role
-  const { data: allPermissions, error: permissionsError } = await supabase
-    .from('permissions')
-    .select('id')
-
-  if (permissionsError) {
-    return NextResponse.json<IApiErrorResponse>(
-      { error: { message: permissionsError.message } },
-      { status: 500 },
-    )
-  }
-
-  if (allPermissions && allPermissions.length > 0) {
-    const rolePermissions = allPermissions.map((p) => ({
-      role_id: role.id,
-      permission_id: p.id,
-    }))
-
-    const { error: rpError } = await supabase
-      .from('role_permissions')
-      .insert(rolePermissions)
-
-    if (rpError) {
-      return NextResponse.json<IApiErrorResponse>(
-        { error: { message: rpError.message } },
-        { status: 500 },
-      )
-    }
   }
 
   const projectDto: IUserProjectDto = {
@@ -197,10 +163,12 @@ export async function DELETE(request: NextRequest) {
     )
   }
 
-  const { error } = await supabase
+  const { data: deleted, error } = await supabase
     .from('projects')
     .delete()
     .eq('id', projectId)
+    .select('id')
+    .maybeSingle()
 
   if (error) {
     return NextResponse.json<IApiErrorResponse>(
@@ -209,5 +177,17 @@ export async function DELETE(request: NextRequest) {
     )
   }
 
-  return NextResponse.json({ data: { id: projectId } })
+  if (!deleted) {
+    return NextResponse.json<IApiErrorResponse>(
+      {
+        error: {
+          message:
+            'Project not found or you do not have permission to delete it',
+        },
+      },
+      { status: 404 },
+    )
+  }
+
+  return NextResponse.json({ data: { id: deleted.id } })
 }

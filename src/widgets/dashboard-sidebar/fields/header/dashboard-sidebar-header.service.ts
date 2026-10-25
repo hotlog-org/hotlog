@@ -17,12 +17,8 @@ export const useDashboardSidebarHeaderService = () => {
   const handleDashboardProject = useDashboardProject(
     (state) => state.handleDashboardProject,
   )
-  const [projects, setProjects] = useState<IUserProjectDto[]>([])
+  const projects = useMemo(() => data?.data ?? [], [data])
   const [createDialogOpen, setCreateDialogOpen] = useState(false)
-
-  useEffect(() => {
-    setProjects(data?.data ?? [])
-  }, [data])
 
   useEffect(() => {
     if (!projects.length) {
@@ -44,15 +40,18 @@ export const useDashboardSidebarHeaderService = () => {
     [projects, selectedProjectId],
   )
 
-  const handleCreateProject = (name: string) => {
-    createProjectMutation.mutate(name, {
-      onSuccess: (response) => {
-        const created = response.data[0]
-        if (created) {
-          handleDashboardProject({ selectedProjectId: created.id })
-        }
-      },
-    })
+  const handleCreateProject = async (name: string): Promise<boolean> => {
+    if (!name.trim() || createProjectMutation.isPending) return false
+    try {
+      const response = await createProjectMutation.mutateAsync(name.trim())
+      const created = response.data[0]
+      if (created) handleDashboardProject({ selectedProjectId: created.id })
+      setCreateDialogOpen(false)
+      return true
+    } catch {
+      // Mutation state supplies the inline error; keep the dialog and draft.
+      return false
+    }
   }
 
   const setSelectedProject = (project: IUserProjectDto) => {
@@ -68,5 +67,7 @@ export const useDashboardSidebarHeaderService = () => {
     createDialogOpen,
     setCreateDialogOpen,
     handleCreateProject,
+    createError: createProjectMutation.error?.message,
+    isCreating: createProjectMutation.isPending,
   }
 }
