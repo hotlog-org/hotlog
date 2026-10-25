@@ -2,7 +2,10 @@ import { type NextRequest, NextResponse } from 'next/server'
 
 import { createClient } from '@/lib/supabase/server'
 import { isValidFieldKey } from '@/lib/schema-validator'
-import type { IApiErrorResponse } from '@/shared/api/interface'
+import type {
+  IApiErrorResponse,
+  ISchemaKeyConflictResponse,
+} from '@/shared/api/interface'
 
 interface SchemaWithCountsRow {
   id: string
@@ -131,15 +134,41 @@ export async function POST(request: NextRequest) {
     .select('id, key, display_name, status, created_at')
     .single()
 
+  if (error?.code === '23505') {
+    // Keep the unique constraint authoritative (including concurrent creates).
+    // This lookup uses the user's RLS client and is confined to this project.
+    const { data: existing } = await supabase
+      .from('schemas')
+      .select('id, key, display_name, status')
+      .eq('project_id', project_id)
+      .eq('key', key)
+      .maybeSingle()
+
+    const archived = existing?.status === 'archived'
+    return NextResponse.json<ISchemaKeyConflictResponse>(
+      {
+        error: {
+          code: archived ? 'SCHEMA_KEY_ARCHIVED' : 'SCHEMA_KEY_EXISTS',
+          message: archived
+            ? 'This key belongs to an archived schema. Restore it or choose a different key.'
+            : 'A schema with this key already exists in this project',
+          ...(archived && {
+            schema: {
+              id: existing.id,
+              key: existing.key,
+              displayName: existing.display_name,
+            },
+          }),
+        },
+      },
+      { status: 409 },
+    )
+  }
+
   if (error || !data) {
-    const status = error?.code === '23505' ? 409 : 500
-    const message =
-      error?.code === '23505'
-        ? 'A schema with this key already exists in this project'
-        : (error?.message ?? 'Failed to create schema')
     return NextResponse.json<IApiErrorResponse>(
-      { error: { message } },
-      { status },
+      { error: { message: error?.message ?? 'Failed to create schema' } },
+      { status: 500 },
     )
   }
 

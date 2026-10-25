@@ -1,6 +1,6 @@
 'use client'
 
-import { Folder02Icon, Loading03Icon } from '@hugeicons/core-free-icons'
+import { Folder02Icon } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
 
 import useOverviewService from './overview.service'
@@ -19,6 +19,7 @@ import { UsersSearch } from './fields/tables/users/search/users-search.component
 import { UsersTable } from './fields/tables/users/table/users-table.component'
 import { Button } from '@/shared/ui/button'
 import { Card, CardHeader } from '@/shared/ui/card'
+import { Skeleton } from '@/shared/ui/skeleton'
 
 function NoPermission({ message }: { message: string }) {
   return (
@@ -28,13 +29,29 @@ function NoPermission({ message }: { message: string }) {
   )
 }
 
-function LoadingSpinner() {
+function MembersTableSkeleton({ label }: { label: string }) {
   return (
-    <div className='flex items-center justify-center py-12'>
-      <HugeiconsIcon
-        icon={Loading03Icon}
-        className='size-6 animate-spin text-muted-foreground'
-      />
+    <div
+      role='status'
+      aria-label={label}
+      aria-busy='true'
+      className='space-y-3'
+      data-testid='members-skeleton'
+    >
+      <span className='sr-only'>{label}</span>
+      <div className='flex gap-4 border-b pb-3'>
+        <Skeleton className='h-4 w-36 flex-1' />
+        <Skeleton className='h-4 w-28' />
+        <Skeleton className='h-4 w-20' />
+      </div>
+      {Array.from({ length: 5 }, (_, index) => (
+        <div key={index} className='flex items-center gap-4 py-2'>
+          <Skeleton className='size-9 shrink-0 rounded-full' />
+          <Skeleton className='h-4 min-w-0 flex-1' />
+          <Skeleton className='h-4 w-28' />
+          <Skeleton className='h-7 w-20' />
+        </div>
+      ))}
     </div>
   )
 }
@@ -74,6 +91,16 @@ export function OverviewComponent() {
 
   return (
     <div className='flex min-h-0 flex-1 flex-col gap-4'>
+      {service.actionError && (
+        <p role='alert' className='text-sm text-destructive'>
+          {service.actionError}
+        </p>
+      )}
+      {service.statsError && (
+        <p role='alert' className='text-sm text-destructive'>
+          {service.statsError}
+        </p>
+      )}
       <ApiRequestsGraph
         data={service.apiRequests}
         loading={service.apiRequestsLoading}
@@ -82,10 +109,18 @@ export function OverviewComponent() {
 
       <ApiKeyCard
         keyValue={service.apiKey}
+        keys={service.apiKeys}
+        selectedId={service.selectedApiKeyId}
+        onSelect={service.selectApiKey}
+        onDismiss={service.dismissApiKey}
+        onRevoke={service.revokeApiKey}
+        error={service.apiKeyError}
+        canDelete={service.canDeleteApiKey}
         loading={service.apiKeyLoading}
         canRead={service.canReadApiKey}
         canCreate={service.canCreateApiKey}
         isRegenerating={service.isRegeneratingApiKey}
+        onCreate={service.createApiKey}
         onRegenerate={service.regenerateApiKey}
         t={service.t}
       />
@@ -147,10 +182,16 @@ export function OverviewComponent() {
               </div>
             </div>
 
+            {service.loadError && (
+              <p role='alert' className='text-sm text-destructive'>
+                {service.loadError}
+              </p>
+            )}
             {service.tab === 'users' ? (
               service.isLoading ? (
-                <LoadingSpinner />
-              ) : canViewUsersTab ? (
+                <MembersTableSkeleton label={service.t('tabs.users')} />
+              ) : service.loadError &&
+                service.filteredUsers.length === 0 ? null : canViewUsersTab ? (
                 <UsersTable
                   rows={service.filteredUsers}
                   roles={service.roles}
@@ -167,8 +208,9 @@ export function OverviewComponent() {
                 <NoPermission message="You don't have enough permissions :(" />
               )
             ) : service.isLoading ? (
-              <LoadingSpinner />
-            ) : canViewRolesTab ? (
+              <MembersTableSkeleton label={service.t('tabs.roles')} />
+            ) : service.loadError &&
+              service.filteredRoles.length === 0 ? null : canViewRolesTab ? (
               <RolesTable
                 rows={service.filteredRoles}
                 permissions={service.permissions}
@@ -191,6 +233,8 @@ export function OverviewComponent() {
             onSubmit={(email, roleId) => {
               service.inviteMember(email, roleId)
             }}
+            error={service.inviteError}
+            isSubmitting={service.isInviting}
             roleOptions={service.roleOptions}
             t={service.t}
           />
@@ -198,10 +242,9 @@ export function OverviewComponent() {
           <AddRoleModal
             open={service.addRoleModalOpen}
             onClose={service.closeAddRoleModal}
-            onSubmit={(payload) => {
-              service.addRole(payload)
-              service.closeAddRoleModal()
-            }}
+            onSubmit={service.addRole}
+            error={service.addRoleError}
+            isSubmitting={service.isAddingRole}
             permissions={service.permissions}
             permissionColors={service.permissionColors}
             t={service.t}
@@ -222,6 +265,7 @@ export function OverviewComponent() {
         onSubmit={service.deleteProject}
         projectName={service.projectName}
         isDeleting={service.isDeletingProject}
+        error={service.deleteProjectError}
         t={service.t}
       />
     </div>

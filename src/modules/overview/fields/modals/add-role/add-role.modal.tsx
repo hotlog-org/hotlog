@@ -21,6 +21,8 @@ import type { TFunction } from '../../../overview.service'
 import { useAddRoleModalService } from './add-role.modal.service'
 
 export interface AddRoleModalProps {
+  error?: string
+  isSubmitting?: boolean
   open: boolean
   onClose: () => void
   onSubmit: (payload: { name: string; permissionIds: string[] }) => void
@@ -145,11 +147,16 @@ export function AddRoleModal(props: AddRoleModalProps) {
           </div>
         </div>
 
+        {props.error && (
+          <p role='alert' className='text-sm text-destructive'>
+            {props.error}
+          </p>
+        )}
         <DialogFooter className='flex items-center justify-end gap-2 pt-2 sm:space-x-0'>
           <Button variant='ghost' onClick={props.onClose}>
             {props.t('roles.modal.cancel')}
           </Button>
-          <Button onClick={service.handleSubmit}>
+          <Button onClick={service.handleSubmit} disabled={props.isSubmitting}>
             {props.t('roles.modal.submit')}
           </Button>
         </DialogFooter>

@@ -2,6 +2,7 @@ import { type NextRequest, NextResponse } from 'next/server'
 
 import { createClient } from '@/lib/supabase/server'
 import type { IApiErrorResponse } from '@/shared/api/interface'
+import type { Json } from '../../../../../../../database.types'
 
 interface ComponentRow {
   id: string
@@ -39,116 +40,70 @@ export async function POST(request: NextRequest) {
     )
   }
 
-  const body = await request.json()
-  const { layout_id, creates, updates, deletes } = body ?? {}
-
-  if (!layout_id || typeof layout_id !== 'number') {
+  let body: unknown
+  try {
+    body = await request.json()
+  } catch {
     return NextResponse.json<IApiErrorResponse>(
-      { error: { message: 'layout_id is required' } },
+      { error: { message: 'Invalid JSON body' } },
+      { status: 400 },
+    )
+  }
+  if (!body || typeof body !== 'object' || Array.isArray(body)) {
+    return NextResponse.json<IApiErrorResponse>(
+      { error: { message: 'Component batch must be an object' } },
+      { status: 400 },
+    )
+  }
+  const {
+    layout_id,
+    creates = [],
+    updates = [],
+    deletes = [],
+  } = body as Record<string, Json | undefined>
+
+  if (
+    typeof layout_id !== 'number' ||
+    !Number.isSafeInteger(layout_id) ||
+    layout_id <= 0
+  ) {
+    return NextResponse.json<IApiErrorResponse>(
+      { error: { message: 'layout_id must be a positive safe integer' } },
+      { status: 400 },
+    )
+  }
+  if (
+    !Array.isArray(creates) ||
+    !Array.isArray(updates) ||
+    !Array.isArray(deletes)
+  ) {
+    return NextResponse.json<IApiErrorResponse>(
+      { error: { message: 'creates, updates, and deletes must be arrays' } },
       { status: 400 },
     )
   }
 
-  if (Array.isArray(deletes) && deletes.length > 0) {
-    const { error } = await supabase
-      .from('components')
-      .delete()
-      .in('id', deletes)
-
-    if (error) {
-      return NextResponse.json<IApiErrorResponse>(
-        { error: { message: `Delete failed: ${error.message}` } },
-        { status: 500 },
-      )
-    }
-  }
-
-  if (Array.isArray(updates) && updates.length > 0) {
-    for (const item of updates) {
-      const updateFields: Record<string, unknown> = {}
-
-      if (item.title !== undefined) updateFields.name = item.title
-      if (item.description !== undefined)
-        updateFields.description = item.description
-      if (item.visualization !== undefined)
-        updateFields.visualization = item.visualization
-      if (item.schema_id !== undefined)
-        updateFields.schema_id = item.schema_id
-      if (item.bindings !== undefined) updateFields.inputs_ids = item.bindings
-      if (item.index !== undefined) updateFields.index = item.index
-      if (item.span !== undefined) updateFields.span = item.span
-
-      if (Object.keys(updateFields).length > 0) {
-        const { error } = await supabase
-          .from('components')
-          .update(updateFields as any)
-          .eq('id', item.id)
-
-        if (error) {
-          return NextResponse.json<IApiErrorResponse>(
-            {
-              error: {
-                message: `Update failed for ${item.id}: ${error.message}`,
-              },
-            },
-            { status: 500 },
-          )
-        }
-      }
-    }
-  }
-
-  if (Array.isArray(creates) && creates.length > 0) {
-    const rows = creates.map(
-      (c: {
-        title: string
-        description: string
-        visualization: string
-        schema_id: string | null
-        bindings: unknown
-        index: number
-        span?: string
-      }) => ({
-        layout_id,
-        name: c.title ?? '',
-        description: c.description ?? '',
-        visualization: c.visualization,
-        schema_id: c.schema_id,
-        inputs_ids: c.bindings ?? [],
-        index: c.index,
-        span: c.span ?? 'full',
-        type: 'TIME_SERIES' as const,
-      }),
-    )
-
-    const { error } = await supabase.from('components').insert(rows as any)
-
-    if (error) {
-      return NextResponse.json<IApiErrorResponse>(
-        { error: { message: `Insert failed: ${error.message}` } },
-        { status: 500 },
-      )
-    }
-  }
-
-  const { data: allComponents, error: fetchError } = await supabase
-    .from('components')
-    .select(
-      'id, name, description, visualization, schema_id, inputs_ids, index, span' as '*',
-    )
-    .eq('layout_id', layout_id)
-    .order('index', { ascending: true })
-
-  if (fetchError) {
-    return NextResponse.json<IApiErrorResponse>(
-      { error: { message: fetchError.message } },
-      { status: 500 },
-    )
-  }
-
-  return NextResponse.json({
-    data: ((allComponents ?? []) as unknown as ComponentRow[]).map(
-      mapComponent,
-    ),
+  const { data, error } = await supabase.rpc('batch_layout_components', {
+    p_layout_id: layout_id,
+    p_creates: creates,
+    p_updates: updates,
+    p_deletes: deletes,
   })
+
+  if (error || !data) {
+    const status =
+      error?.code === '28000'
+        ? 401
+        : error?.code === '42501'
+          ? 403
+          : ['22023', '22P02', '22003'].includes(error?.code ?? '')
+            ? 400
+            : 500
+    return NextResponse.json<IApiErrorResponse>(
+      { error: { message: error?.message ?? 'Failed to save components' } },
+      { status },
+    )
+  }
+
+  return NextResponse.json({ data: data.map(mapComponent) })
 }

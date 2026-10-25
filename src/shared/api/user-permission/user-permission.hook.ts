@@ -24,7 +24,12 @@ export const useUserPermissionsQuery = (projectId?: string) => {
 
 export const useUserPermissions = (projectId?: string) => {
   const query = useUserPermissionsQuery(projectId)
-  const permissions = query.data?.data.permissions ?? []
+  // Global keepPreviousData must never grant the previous project's abilities
+  // while the next project's permission request is pending.
+  const permissions = useMemo(
+    () => (query.isPlaceholderData ? [] : (query.data?.data.permissions ?? [])),
+    [query.data, query.isPlaceholderData],
+  )
 
   const ability = useMemo(() => buildAbility(permissions), [permissions])
 

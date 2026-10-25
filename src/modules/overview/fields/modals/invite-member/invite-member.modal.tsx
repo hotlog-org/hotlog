@@ -20,6 +20,8 @@ import type { TFunction } from '../../../overview.service'
 import { useInviteMemberModalService } from './invite-member.modal.service'
 
 export interface InviteMemberModalProps {
+  error?: string
+  isSubmitting?: boolean
   open: boolean
   onClose: () => void
   onSubmit: (email: string, roleId?: string) => void
@@ -78,11 +80,16 @@ export function InviteMemberModal(props: InviteMemberModalProps) {
           </FieldControl>
         </Field>
 
+        {props.error && (
+          <p role='alert' className='text-sm text-destructive'>
+            {props.error}
+          </p>
+        )}
         <DialogFooter className='flex flex-row items-center justify-end gap-2 pt-2'>
           <Button variant='ghost' onClick={props.onClose}>
             {props.t('users.inviteModal.cancel')}
           </Button>
-          <Button onClick={service.handleSubmit}>
+          <Button onClick={service.handleSubmit} disabled={props.isSubmitting}>
             {props.t('users.inviteModal.submit')}
           </Button>
         </DialogFooter>

@@ -1,0 +1,947 @@
+{
+  "tables": [
+    {
+      "name": "api_keys",
+      "purpose": "Նախագծի արտաքին մուտքի բանալիները",
+      "columns": [
+        {
+          "name": "id",
+          "type": "bigint",
+          "nullable": false
+        },
+        {
+          "name": "key_hash",
+          "type": "text",
+          "nullable": false
+        },
+        {
+          "name": "key_prefix",
+          "type": "text",
+          "nullable": false
+        },
+        {
+          "name": "last_used_at",
+          "type": "timestamptz",
+          "nullable": true
+        },
+        {
+          "name": "project_id",
+          "type": "uuid",
+          "nullable": false
+        },
+        {
+          "name": "revoked_at",
+          "type": "timestamptz",
+          "nullable": true
+        }
+      ],
+      "primaryKey": [
+        "id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "project_id",
+          "table": "projects",
+          "targetColumn": "id"
+        }
+      ]
+    },
+    {
+      "name": "components",
+      "purpose": "Դասավորության պատկերային բաղադրիչները",
+      "columns": [
+        {
+          "name": "created_at",
+          "type": "timestamptz",
+          "nullable": false
+        },
+        {
+          "name": "description",
+          "type": "text",
+          "nullable": false
+        },
+        {
+          "name": "id",
+          "type": "uuid",
+          "nullable": false
+        },
+        {
+          "name": "index",
+          "type": "smallint",
+          "nullable": false
+        },
+        {
+          "name": "inputs_ids",
+          "type": "json",
+          "nullable": false
+        },
+        {
+          "name": "layout_id",
+          "type": "bigint",
+          "nullable": false
+        },
+        {
+          "name": "name",
+          "type": "text",
+          "nullable": false
+        },
+        {
+          "name": "schema_id",
+          "type": "uuid",
+          "nullable": true
+        },
+        {
+          "name": "span",
+          "type": "text",
+          "nullable": false
+        },
+        {
+          "name": "type",
+          "type": "ComponentTypes",
+          "nullable": false
+        },
+        {
+          "name": "visualization",
+          "type": "text",
+          "nullable": false
+        }
+      ],
+      "primaryKey": [
+        "id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "layout_id",
+          "table": "layouts",
+          "targetColumn": "id"
+        },
+        {
+          "column": "schema_id",
+          "table": "schemas",
+          "targetColumn": "id"
+        }
+      ]
+    },
+    {
+      "name": "events",
+      "purpose": "Գրանցված կառուցվածքային իրադարձությունները",
+      "columns": [
+        {
+          "name": "created_at",
+          "type": "timestamptz",
+          "nullable": false
+        },
+        {
+          "name": "id",
+          "type": "bigint",
+          "nullable": false
+        },
+        {
+          "name": "project_id",
+          "type": "uuid",
+          "nullable": false
+        },
+        {
+          "name": "schema_id",
+          "type": "uuid",
+          "nullable": false
+        },
+        {
+          "name": "value",
+          "type": "json",
+          "nullable": false
+        }
+      ],
+      "primaryKey": [
+        "id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "project_id",
+          "table": "projects",
+          "targetColumn": "id"
+        },
+        {
+          "column": "schema_id",
+          "table": "schemas",
+          "targetColumn": "id"
+        }
+      ]
+    },
+    {
+      "name": "fields",
+      "purpose": "Սխեմայի դաշտերն ու կանոնները",
+      "columns": [
+        {
+          "name": "created_at",
+          "type": "timestamptz",
+          "nullable": false
+        },
+        {
+          "name": "display_name",
+          "type": "text",
+          "nullable": false
+        },
+        {
+          "name": "id",
+          "type": "uuid",
+          "nullable": false
+        },
+        {
+          "name": "key",
+          "type": "text",
+          "nullable": false
+        },
+        {
+          "name": "metadata",
+          "type": "json",
+          "nullable": false
+        },
+        {
+          "name": "name",
+          "type": "text",
+          "nullable": false
+        },
+        {
+          "name": "required",
+          "type": "boolean",
+          "nullable": false
+        },
+        {
+          "name": "schema_id",
+          "type": "uuid",
+          "nullable": true
+        },
+        {
+          "name": "status",
+          "type": "field_status",
+          "nullable": false
+        },
+        {
+          "name": "type",
+          "type": "FieldTypes",
+          "nullable": false
+        }
+      ],
+      "primaryKey": [
+        "id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "schema_id",
+          "table": "schemas",
+          "targetColumn": "id"
+        }
+      ]
+    },
+    {
+      "name": "invitations",
+      "purpose": "Նախագծին միանալու հրավերները",
+      "columns": [
+        {
+          "name": "created_at",
+          "type": "timestamptz",
+          "nullable": false
+        },
+        {
+          "name": "email",
+          "type": "text",
+          "nullable": false
+        },
+        {
+          "name": "expires_at",
+          "type": "timestamptz",
+          "nullable": false
+        },
+        {
+          "name": "id",
+          "type": "uuid",
+          "nullable": false
+        },
+        {
+          "name": "invited_by",
+          "type": "uuid",
+          "nullable": false
+        },
+        {
+          "name": "project_id",
+          "type": "uuid",
+          "nullable": false
+        },
+        {
+          "name": "role_id",
+          "type": "uuid",
+          "nullable": true
+        },
+        {
+          "name": "status",
+          "type": "text",
+          "nullable": false
+        },
+        {
+          "name": "token",
+          "type": "uuid",
+          "nullable": false
+        }
+      ],
+      "primaryKey": [
+        "id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "project_id",
+          "table": "projects",
+          "targetColumn": "id"
+        },
+        {
+          "column": "role_id",
+          "table": "roles",
+          "targetColumn": "id"
+        },
+        {
+          "column": "invited_by",
+          "table": "auth.users",
+          "targetColumn": "id"
+        }
+      ]
+    },
+    {
+      "name": "layouts",
+      "purpose": "Վահանակի դասավորության նկարագրությունը",
+      "columns": [
+        {
+          "name": "color",
+          "type": "text",
+          "nullable": false
+        },
+        {
+          "name": "created_at",
+          "type": "timestamptz",
+          "nullable": false
+        },
+        {
+          "name": "description",
+          "type": "text",
+          "nullable": false
+        },
+        {
+          "name": "id",
+          "type": "bigint",
+          "nullable": false
+        },
+        {
+          "name": "name",
+          "type": "text",
+          "nullable": false
+        },
+        {
+          "name": "project_id",
+          "type": "uuid",
+          "nullable": false
+        }
+      ],
+      "primaryKey": [
+        "id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "project_id",
+          "table": "projects",
+          "targetColumn": "id"
+        }
+      ]
+    },
+    {
+      "name": "permissions",
+      "purpose": "Գործողության և ռեսուրսի թույլտվությունները",
+      "columns": [
+        {
+          "name": "action",
+          "type": "text",
+          "nullable": false
+        },
+        {
+          "name": "id",
+          "type": "uuid",
+          "nullable": false
+        },
+        {
+          "name": "subject",
+          "type": "text",
+          "nullable": false
+        }
+      ],
+      "primaryKey": [
+        "id"
+      ],
+      "foreignKeys": []
+    },
+    {
+      "name": "projects",
+      "purpose": "Նախագծի ընդհանուր տվյալները",
+      "columns": [
+        {
+          "name": "created_at",
+          "type": "timestamptz",
+          "nullable": false
+        },
+        {
+          "name": "creator_id",
+          "type": "uuid",
+          "nullable": false
+        },
+        {
+          "name": "id",
+          "type": "uuid",
+          "nullable": false
+        },
+        {
+          "name": "name",
+          "type": "text",
+          "nullable": false
+        }
+      ],
+      "primaryKey": [
+        "id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "creator_id",
+          "table": "auth.users",
+          "targetColumn": "id"
+        }
+      ]
+    },
+    {
+      "name": "role_layouts",
+      "purpose": "Դասավորության հասանելիությունը ըստ դերի",
+      "columns": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "nullable": false
+        },
+        {
+          "name": "layout_id",
+          "type": "bigint",
+          "nullable": false
+        },
+        {
+          "name": "role_id",
+          "type": "uuid",
+          "nullable": false
+        }
+      ],
+      "primaryKey": [
+        "id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "layout_id",
+          "table": "layouts",
+          "targetColumn": "id"
+        },
+        {
+          "column": "role_id",
+          "table": "roles",
+          "targetColumn": "id"
+        }
+      ]
+    },
+    {
+      "name": "role_permissions",
+      "purpose": "Դերի թույլտվությունների կապը",
+      "columns": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "nullable": false
+        },
+        {
+          "name": "permission_id",
+          "type": "uuid",
+          "nullable": false
+        },
+        {
+          "name": "role_id",
+          "type": "uuid",
+          "nullable": false
+        }
+      ],
+      "primaryKey": [
+        "id",
+        "role_id",
+        "permission_id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "permission_id",
+          "table": "permissions",
+          "targetColumn": "id"
+        },
+        {
+          "column": "role_id",
+          "table": "roles",
+          "targetColumn": "id"
+        }
+      ]
+    },
+    {
+      "name": "roles",
+      "purpose": "Նախագծի դերերը",
+      "columns": [
+        {
+          "name": "created_at",
+          "type": "timestamptz",
+          "nullable": false
+        },
+        {
+          "name": "id",
+          "type": "uuid",
+          "nullable": false
+        },
+        {
+          "name": "name",
+          "type": "text",
+          "nullable": false
+        },
+        {
+          "name": "project_id",
+          "type": "uuid",
+          "nullable": false
+        }
+      ],
+      "primaryKey": [
+        "id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "project_id",
+          "table": "projects",
+          "targetColumn": "id"
+        }
+      ]
+    },
+    {
+      "name": "schemas",
+      "purpose": "Իրադարձության կառուցվածքի պայմանագիրը",
+      "columns": [
+        {
+          "name": "created_at",
+          "type": "timestamptz",
+          "nullable": false
+        },
+        {
+          "name": "display_name",
+          "type": "text",
+          "nullable": false
+        },
+        {
+          "name": "id",
+          "type": "uuid",
+          "nullable": false
+        },
+        {
+          "name": "key",
+          "type": "text",
+          "nullable": false
+        },
+        {
+          "name": "name",
+          "type": "text",
+          "nullable": false
+        },
+        {
+          "name": "project_id",
+          "type": "uuid",
+          "nullable": false
+        },
+        {
+          "name": "status",
+          "type": "schema_status",
+          "nullable": false
+        }
+      ],
+      "primaryKey": [
+        "id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "project_id",
+          "table": "projects",
+          "targetColumn": "id"
+        }
+      ]
+    },
+    {
+      "name": "user_projects",
+      "purpose": "Օգտատիրոջ անդամակցությունը նախագծին",
+      "columns": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "nullable": false
+        },
+        {
+          "name": "project_id",
+          "type": "uuid",
+          "nullable": false
+        },
+        {
+          "name": "user_id",
+          "type": "uuid",
+          "nullable": false
+        }
+      ],
+      "primaryKey": [
+        "id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "project_id",
+          "table": "projects",
+          "targetColumn": "id"
+        },
+        {
+          "column": "user_id",
+          "table": "auth.users",
+          "targetColumn": "id"
+        }
+      ]
+    },
+    {
+      "name": "user_roles",
+      "purpose": "Օգտատիրոջը վերագրված դերերը",
+      "columns": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "nullable": false
+        },
+        {
+          "name": "role_id",
+          "type": "uuid",
+          "nullable": false
+        },
+        {
+          "name": "user_id",
+          "type": "uuid",
+          "nullable": false
+        }
+      ],
+      "primaryKey": [
+        "id",
+        "user_id",
+        "role_id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "role_id",
+          "table": "roles",
+          "targetColumn": "id"
+        },
+        {
+          "column": "user_id",
+          "table": "auth.users",
+          "targetColumn": "id"
+        }
+      ]
+    },
+    {
+      "name": "auth.users",
+      "purpose": "Supabase Auth · կիրառվող դաշտերի հատված",
+      "primaryKey": [
+        "id"
+      ],
+      "foreignKeys": [],
+      "columns": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "nullable": false
+        },
+        {
+          "name": "email",
+          "type": "varchar",
+          "nullable": true
+        },
+        {
+          "name": "raw_user_meta_data",
+          "type": "jsonb",
+          "nullable": true
+        }
+      ]
+    }
+  ],
+  "foreignKeys": [
+    {
+      "source": "api_keys",
+      "column": "project_id",
+      "table": "projects",
+      "targetColumn": "id",
+      "onDelete": "CASCADE"
+    },
+    {
+      "source": "components",
+      "column": "layout_id",
+      "table": "layouts",
+      "targetColumn": "id",
+      "onDelete": "CASCADE"
+    },
+    {
+      "source": "components",
+      "column": "schema_id",
+      "table": "schemas",
+      "targetColumn": "id",
+      "onDelete": "SET NULL"
+    },
+    {
+      "source": "events",
+      "column": "project_id",
+      "table": "projects",
+      "targetColumn": "id",
+      "onDelete": "CASCADE"
+    },
+    {
+      "source": "events",
+      "column": "schema_id",
+      "table": "schemas",
+      "targetColumn": "id",
+      "onDelete": "CASCADE"
+    },
+    {
+      "source": "fields",
+      "column": "schema_id",
+      "table": "schemas",
+      "targetColumn": "id",
+      "onDelete": "CASCADE"
+    },
+    {
+      "source": "invitations",
+      "column": "project_id",
+      "table": "projects",
+      "targetColumn": "id",
+      "onDelete": "CASCADE"
+    },
+    {
+      "source": "invitations",
+      "column": "role_id",
+      "table": "roles",
+      "targetColumn": "id",
+      "onDelete": "SET NULL"
+    },
+    {
+      "source": "invitations",
+      "column": "invited_by",
+      "table": "auth.users",
+      "targetColumn": "id",
+      "onDelete": "CASCADE"
+    },
+    {
+      "source": "layouts",
+      "column": "project_id",
+      "table": "projects",
+      "targetColumn": "id",
+      "onDelete": "CASCADE"
+    },
+    {
+      "source": "projects",
+      "column": "creator_id",
+      "table": "auth.users",
+      "targetColumn": "id",
+      "onDelete": "RESTRICT"
+    },
+    {
+      "source": "role_layouts",
+      "column": "layout_id",
+      "table": "layouts",
+      "targetColumn": "id",
+      "onDelete": "CASCADE"
+    },
+    {
+      "source": "role_layouts",
+      "column": "role_id",
+      "table": "roles",
+      "targetColumn": "id",
+      "onDelete": "CASCADE"
+    },
+    {
+      "source": "role_permissions",
+      "column": "permission_id",
+      "table": "permissions",
+      "targetColumn": "id",
+      "onDelete": "CASCADE"
+    },
+    {
+      "source": "role_permissions",
+      "column": "role_id",
+      "table": "roles",
+      "targetColumn": "id",
+      "onDelete": "CASCADE"
+    },
+    {
+      "source": "roles",
+      "column": "project_id",
+      "table": "projects",
+      "targetColumn": "id",
+      "onDelete": "CASCADE"
+    },
+    {
+      "source": "schemas",
+      "column": "project_id",
+      "table": "projects",
+      "targetColumn": "id",
+      "onDelete": "CASCADE"
+    },
+    {
+      "source": "user_projects",
+      "column": "project_id",
+      "table": "projects",
+      "targetColumn": "id",
+      "onDelete": "CASCADE"
+    },
+    {
+      "source": "user_projects",
+      "column": "user_id",
+      "table": "auth.users",
+      "targetColumn": "id",
+      "onDelete": "CASCADE"
+    },
+    {
+      "source": "user_roles",
+      "column": "role_id",
+      "table": "roles",
+      "targetColumn": "id",
+      "onDelete": "CASCADE"
+    },
+    {
+      "source": "user_roles",
+      "column": "user_id",
+      "table": "auth.users",
+      "targetColumn": "id",
+      "onDelete": "CASCADE"
+    }
+  ],
+  "functions": [
+    {
+      "name": "is_project_member",
+      "migration": "20260404_add_rls_policies.sql"
+    },
+    {
+      "name": "has_permission",
+      "migration": "20261004160001_role_security.sql"
+    },
+    {
+      "name": "get_project_id_for_schema",
+      "migration": "20260404_add_rls_policies.sql"
+    },
+    {
+      "name": "get_project_id_for_layout",
+      "migration": "20260404_add_rls_policies.sql"
+    },
+    {
+      "name": "is_project_creator",
+      "migration": "20260404_add_rls_policies.sql"
+    },
+    {
+      "name": "get_project_member_emails",
+      "migration": "20260404_add_rls_policies.sql"
+    },
+    {
+      "name": "events_daily_counts",
+      "migration": "20260411185758_event_stats_rpc.sql"
+    },
+    {
+      "name": "get_project_id_for_layout_unchecked",
+      "migration": "20260416_fix_role_layouts_rls.sql"
+    },
+    {
+      "name": "get_project_id_for_invitation",
+      "migration": "20260417_invitations.sql"
+    },
+    {
+      "name": "accept_invitation",
+      "migration": "20260417_invitations.sql"
+    },
+    {
+      "name": "update_user_role",
+      "migration": "20261004160001_role_security.sql"
+    },
+    {
+      "name": "ingest_event",
+      "migration": "20260424_fix_ingest_event_return_types.sql"
+    },
+    {
+      "name": "get_active_fields_for_ingest",
+      "migration": "20260425_fix_get_fields_return_types.sql"
+    },
+    {
+      "name": "get_project_schemas_for_sdk",
+      "migration": "20260423_fix_sdk_schemas_jsonb_cast.sql"
+    },
+    {
+      "name": "require_user_role_membership",
+      "migration": "20261004160001_role_security.sql"
+    },
+    {
+      "name": "event_number_value",
+      "migration": "20261004160002_event_validation.sql"
+    },
+    {
+      "name": "event_number_text",
+      "migration": "20261004160002_event_validation.sql"
+    },
+    {
+      "name": "event_datetime_valid",
+      "migration": "20261004160002_event_validation.sql"
+    },
+    {
+      "name": "event_primitive_error",
+      "migration": "20261004160002_event_validation.sql"
+    },
+    {
+      "name": "event_value_errors",
+      "migration": "20261004160002_event_validation.sql"
+    },
+    {
+      "name": "lock_event_field_schema",
+      "migration": "20261004160002_event_validation.sql"
+    },
+    {
+      "name": "validate_event_write",
+      "migration": "20261004160002_event_validation.sql"
+    },
+    {
+      "name": "create_project",
+      "migration": "20261004160003_atomic_writes.sql"
+    },
+    {
+      "name": "lock_layout_for_component_batch",
+      "migration": "20261004160003_atomic_writes.sql"
+    },
+    {
+      "name": "batch_layout_components",
+      "migration": "20261004160003_atomic_writes.sql"
+    },
+    {
+      "name": "create_api_key",
+      "migration": "20261004160004_api_keys.sql"
+    },
+    {
+      "name": "revoke_api_key",
+      "migration": "20261004160004_api_keys.sql"
+    },
+    {
+      "name": "prepare_account_deletion",
+      "migration": "20261004160005_account_settings.sql"
+    },
+    {
+      "name": "list_user_projects",
+      "migration": "20261004160005_account_settings.sql"
+    },
+    {
+      "name": "leave_project",
+      "migration": "20261004160005_account_settings.sql"
+    }
+  ]
+}

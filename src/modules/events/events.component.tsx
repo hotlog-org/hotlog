@@ -3,7 +3,7 @@
 import { useRef } from 'react'
 import { X as LucideX } from 'lucide-react'
 import { HugeiconsIcon } from '@hugeicons/react'
-import { Delete02FreeIcons } from '@hugeicons/core-free-icons'
+import { Delete02FreeIcons, Loading03Icon } from '@hugeicons/core-free-icons'
 
 import { Button } from '@/shared/ui/button'
 import {
@@ -173,18 +173,28 @@ export function EventsComponent() {
           </div>
         )}
 
+        {service.loadError && service.rows.length > 0 && (
+          <p role='alert' className='text-sm text-destructive'>
+            {service.loadError}
+          </p>
+        )}
+
         {service.hasNoProject ? (
           <div className='flex flex-1 items-center justify-center text-muted-foreground'>
             {service.t('emptyState.noProject')}
-          </div>
-        ) : !service.canRead ? (
-          <div className='flex flex-1 items-center justify-center text-muted-foreground'>
-            {service.t('emptyState.noPermission')}
           </div>
         ) : service.isLoading && service.rows.length === 0 ? (
           <div className='flex min-h-0 flex-1 flex-col overflow-hidden'>
             <EventsTableSkeleton />
           </div>
+        ) : !service.canRead ? (
+          <div className='flex flex-1 items-center justify-center text-muted-foreground'>
+            {service.t('emptyState.noPermission')}
+          </div>
+        ) : service.loadError && service.rows.length === 0 ? (
+          <p role='alert' className='text-sm text-destructive'>
+            {service.loadError}
+          </p>
         ) : (
           <div
             ref={scrollRef}
@@ -206,13 +216,18 @@ export function EventsComponent() {
                   ref={lastElementRef}
                   className='flex h-12 items-center justify-center text-xs text-muted-foreground'
                 >
-                  {service.isFetchingNextPage
-                    ? service.t('actions.loading')
-                    : service.hasNextPage
-                      ? null
-                      : service.rows.length > 0
-                        ? service.t('actions.endOfList')
-                        : null}
+                  {service.isFetchingNextPage ? (
+                    <span role='status' className='flex items-center gap-2'>
+                      <HugeiconsIcon
+                        icon={Loading03Icon}
+                        className='size-4 animate-spin'
+                        aria-hidden='true'
+                      />
+                      {service.t('actions.loading')}
+                    </span>
+                  ) : service.hasNextPage ? null : service.rows.length > 0 ? (
+                    service.t('actions.endOfList')
+                  ) : null}
                 </div>
               }
             />

@@ -55,6 +55,20 @@ export interface ISchemaResponse {
   data: ISchemaDto
 }
 
+export interface IArchivedSchemaConflict {
+  id: string
+  key: string
+  displayName: string
+}
+
+export interface ISchemaKeyConflictResponse {
+  error: {
+    message: string
+    code: 'SCHEMA_KEY_ARCHIVED' | 'SCHEMA_KEY_EXISTS'
+    schema?: IArchivedSchemaConflict
+  }
+}
+
 export interface IFieldDto {
   id: string
   key: string

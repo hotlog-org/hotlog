@@ -12,11 +12,8 @@ import useModulesService from './modules.service'
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
 import { Input } from '@/shared/ui/input'
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/shared/ui/popover'
+import { Skeleton } from '@/shared/ui/skeleton'
+import { Popover, PopoverContent, PopoverTrigger } from '@/shared/ui/popover'
 import { cn } from '@/shared/utils/shadcn.utils'
 import { useRef } from 'react'
 
@@ -24,16 +21,58 @@ export interface ModulesComponentProps {
   moduleId?: string
 }
 
+function ModulesSkeleton({ label }: { label: string }) {
+  return (
+    <div
+      role='status'
+      aria-label={label}
+      aria-busy='true'
+      className='flex min-w-0 flex-1 flex-col gap-6 pb-4'
+    >
+      <span className='sr-only'>{label}</span>
+      <div className='flex items-start justify-between gap-4'>
+        <div className='space-y-3'>
+          <div className='flex items-center gap-3'>
+            <Skeleton className='size-3 rounded-full' />
+            <Skeleton className='h-8 w-48 max-w-[60vw]' />
+          </div>
+          <Skeleton className='h-4 w-72 max-w-[75vw]' />
+          <Skeleton className='h-5 w-20' />
+        </div>
+        <Skeleton className='h-9 w-32' />
+      </div>
+      <div className='grid gap-4 md:grid-cols-2'>
+        {[0, 1].map((index) => (
+          <div key={index} className='space-y-4 rounded-lg border p-4'>
+            <Skeleton className='h-5 w-36' />
+            <Skeleton className='h-48 w-full' />
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
 export function ModulesComponent({ moduleId }: ModulesComponentProps) {
   const service = useModulesService({ moduleId })
   const currentModule = service.module
   const colorInputRef = useRef<HTMLInputElement>(null)
+  const roleLabel = (name: string) =>
+    name === 'Owner'
+      ? service.t('visibility.owner')
+      : name === 'Admin'
+        ? service.t('visibility.admin')
+        : name
 
   if (service.isLoading) {
+    return <ModulesSkeleton label={service.t('title')} />
+  }
+
+  if (!currentModule && service.loadError) {
     return (
-      <div className='rounded-lg border border-dashed border-border/70 bg-muted/40 p-6 text-sm text-muted-foreground'>
-        Loading...
-      </div>
+      <p role='alert' className='text-sm text-destructive'>
+        {service.loadError}
+      </p>
     )
   }
 
@@ -49,7 +88,10 @@ export function ModulesComponent({ moduleId }: ModulesComponentProps) {
   const isHeroDescriptionEditing = service.editingField === 'heroDescription'
 
   return (
-    <div className='flex min-h-0 flex-1 flex-col gap-4 pb-4'>
+    <fieldset
+      disabled={service.isEditingLocked}
+      className='flex min-w-0 min-h-0 flex-1 flex-col gap-4 pb-4'
+    >
       <div className='flex flex-wrap items-start justify-between gap-3'>
         <div className='space-y-2'>
           <div className='flex items-center gap-2'>
@@ -103,6 +145,7 @@ export function ModulesComponent({ moduleId }: ModulesComponentProps) {
                 'max-w-3xl cursor-text text-sm text-muted-foreground',
                 !currentModule.heroDescription && 'italic',
               )}
+              aria-disabled={service.isEditingLocked}
               onClick={() => service.setEditingField('heroDescription')}
             >
               {currentModule.heroDescription ||
@@ -114,7 +157,7 @@ export function ModulesComponent({ moduleId }: ModulesComponentProps) {
             <div className='flex flex-wrap items-center gap-1.5'>
               {currentModule.roleIds.length === 0 ? (
                 <Badge variant='secondary' className='text-xs'>
-                  Public
+                  {service.t('visibility.public')}
                 </Badge>
               ) : (
                 currentModule.roleIds.map((roleId) => {
@@ -128,9 +171,12 @@ export function ModulesComponent({ moduleId }: ModulesComponentProps) {
                         'gap-1 text-xs',
                         removable && 'cursor-pointer hover:bg-destructive/10',
                       )}
-                      onClick={() => removable && service.removeLayoutRole(roleId)}
+                      aria-disabled={service.isEditingLocked}
+                      onClick={() =>
+                        removable && service.removeLayoutRole(roleId)
+                      }
                     >
-                      {role?.name ?? roleId}
+                      {role ? roleLabel(role.name) : roleId}
                       {removable ? ' ×' : null}
                     </Badge>
                   )
@@ -139,7 +185,7 @@ export function ModulesComponent({ moduleId }: ModulesComponentProps) {
               <Popover>
                 <PopoverTrigger asChild>
                   <button className='rounded-md border border-dashed border-border px-2 py-0.5 text-xs text-muted-foreground hover:border-primary hover:text-primary'>
-                    + role
+                    {service.t('visibility.addRole')}
                   </button>
                 </PopoverTrigger>
                 <PopoverContent className='w-48 p-2' align='start'>
@@ -149,17 +195,18 @@ export function ModulesComponent({ moduleId }: ModulesComponentProps) {
                       .map((role) => (
                         <button
                           key={role.id}
+                          disabled={service.isEditingLocked}
                           className='w-full rounded px-2 py-1 text-left text-sm hover:bg-accent'
                           onClick={() => service.addLayoutRole(role.id)}
                         >
-                          {role.name}
+                          {roleLabel(role.name)}
                         </button>
                       ))}
                     {service.projectRoles.filter(
                       (r) => !currentModule.roleIds.includes(r.id),
                     ).length === 0 ? (
                       <p className='px-2 py-1 text-xs text-muted-foreground'>
-                        All roles assigned
+                        {service.t('visibility.allRolesAssigned')}
                       </p>
                     ) : null}
                   </div>
@@ -172,7 +219,7 @@ export function ModulesComponent({ moduleId }: ModulesComponentProps) {
                 const role = service.projectRoles.find((r) => r.id === roleId)
                 return (
                   <Badge key={roleId} variant='outline' className='text-xs'>
-                    {role?.name ?? roleId}
+                    {role ? roleLabel(role.name) : roleId}
                   </Badge>
                 )
               })}
@@ -184,7 +231,9 @@ export function ModulesComponent({ moduleId }: ModulesComponentProps) {
           {service.canUpdateComponents ? (
             <ModulesDragButton
               active={service.reorderEnabled}
-              onToggle={() => service.setReorderEnabled(!service.reorderEnabled)}
+              onToggle={() =>
+                service.setReorderEnabled(!service.reorderEnabled)
+              }
               t={service.t}
             />
           ) : null}
@@ -208,20 +257,31 @@ export function ModulesComponent({ moduleId }: ModulesComponentProps) {
         </p>
       ) : null}
 
+      {(service.loadError || service.saveError) && (
+        <p role='alert' className='text-sm text-destructive'>
+          {service.loadError || service.saveError}
+        </p>
+      )}
+
       <ModulesView
         components={currentModule.components}
         schemas={service.schemas}
         visualizations={service.visualizations}
-        reorderEnabled={service.reorderEnabled}
+        reorderEnabled={service.reorderEnabled && !service.isEditingLocked}
         onReorder={service.reorderComponent}
         onEdit={service.openEditComponent}
-        onDelete={service.canDeleteComponents ? service.deleteComponent : undefined}
-        onToggleSpan={service.canUpdateComponents ? service.toggleComponentSpan : undefined}
+        onDelete={
+          service.canDeleteComponents ? service.deleteComponent : undefined
+        }
+        onToggleSpan={
+          service.canUpdateComponents ? service.toggleComponentSpan : undefined
+        }
         t={service.t}
       />
 
       <ModulesEditor
         open={service.editor.open}
+        disabled={service.isEditingLocked}
         mode={service.editor.mode}
         component={service.editor.component}
         schemas={service.schemas}
@@ -231,12 +291,18 @@ export function ModulesComponent({ moduleId }: ModulesComponentProps) {
         t={service.t}
       />
 
-      {service.isDirty && (service.canUpdateLayouts || service.canUpdateComponents) ? (
+      {service.isDirty &&
+      (service.canUpdateLayouts || service.canUpdateComponents) ? (
         <div className='fixed bottom-6 right-6 z-40 flex items-center gap-2 rounded-lg border border-border bg-card p-3 shadow-lg'>
           <ModulesCancelButton onCancel={service.cancelChanges} t={service.t} />
-          <ModulesSaveButton onSave={service.saveModule} t={service.t} disabled={service.isSaving} />
+          <ModulesSaveButton
+            onSave={service.saveModule}
+            t={service.t}
+            disabled={service.isSaving || service.editor.open}
+            saving={service.isSaving}
+          />
         </div>
       ) : null}
-    </div>
+    </fieldset>
   )
 }

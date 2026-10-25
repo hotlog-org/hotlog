@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import type { ApiKeyCardProps } from './api-key-card.component'
 
 export const useApiKeyCardService = ({
@@ -8,13 +8,10 @@ export const useApiKeyCardService = ({
   const [visible, setVisible] = useState(false)
   const [copied, setCopied] = useState(false)
 
-  const maskedKey = useMemo(() => {
-    if (!keyValue) return ''
-    if (visible) return keyValue
-    const tail = keyValue.slice(-6)
-    const masked = '•'.repeat(Math.max(12, keyValue.length - tail.length))
-    return `${masked}${tail}`
-  }, [keyValue, visible])
+  useEffect(() => {
+    setVisible(false)
+    setCopied(false)
+  }, [keyValue])
 
   const handleCopy = useCallback(async () => {
     if (!keyValue) return
@@ -39,7 +36,6 @@ export const useApiKeyCardService = ({
   return {
     visible,
     copied,
-    maskedKey,
     handleCopy,
     handleToggleVisibility,
     handleRegenerate,

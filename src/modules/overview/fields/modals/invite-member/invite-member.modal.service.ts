@@ -31,8 +31,6 @@ export const useInviteMemberModalService = ({
 
     setError(null)
     onSubmit(parsed.data.email, roleId || undefined)
-    setEmail('')
-    setRoleId('')
   }
 
   return {

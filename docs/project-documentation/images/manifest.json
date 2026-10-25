@@ -1,0 +1,218 @@
+[
+  {
+    "name": "table-api_keys",
+    "title": "api_keys",
+    "width": 1100,
+    "height": 390,
+    "svg": "images/table-api_keys.svg",
+    "png": "images/table-api_keys.png"
+  },
+  {
+    "name": "table-components",
+    "title": "components",
+    "width": 1100,
+    "height": 489,
+    "svg": "images/table-components.svg",
+    "png": "images/table-components.png"
+  },
+  {
+    "name": "table-events",
+    "title": "events",
+    "width": 1100,
+    "height": 315,
+    "svg": "images/table-events.svg",
+    "png": "images/table-events.png"
+  },
+  {
+    "name": "table-fields",
+    "title": "fields",
+    "width": 1100,
+    "height": 483,
+    "svg": "images/table-fields.svg",
+    "png": "images/table-fields.png"
+  },
+  {
+    "name": "table-invitations",
+    "title": "invitations",
+    "width": 1100,
+    "height": 477,
+    "svg": "images/table-invitations.svg",
+    "png": "images/table-invitations.png"
+  },
+  {
+    "name": "table-layouts",
+    "title": "layouts",
+    "width": 1100,
+    "height": 344,
+    "svg": "images/table-layouts.svg",
+    "png": "images/table-layouts.png"
+  },
+  {
+    "name": "table-permissions",
+    "title": "permissions",
+    "width": 1100,
+    "height": 280,
+    "svg": "images/table-permissions.svg",
+    "png": "images/table-permissions.png"
+  },
+  {
+    "name": "table-projects",
+    "title": "projects",
+    "width": 1100,
+    "height": 588,
+    "svg": "images/table-projects.svg",
+    "png": "images/table-projects.png"
+  },
+  {
+    "name": "table-role_layouts",
+    "title": "role_layouts",
+    "width": 1100,
+    "height": 280,
+    "svg": "images/table-role_layouts.svg",
+    "png": "images/table-role_layouts.png"
+  },
+  {
+    "name": "table-role_permissions",
+    "title": "role_permissions",
+    "width": 1100,
+    "height": 257,
+    "svg": "images/table-role_permissions.svg",
+    "png": "images/table-role_permissions.png"
+  },
+  {
+    "name": "table-roles",
+    "title": "roles",
+    "width": 1100,
+    "height": 390,
+    "svg": "images/table-roles.svg",
+    "png": "images/table-roles.png"
+  },
+  {
+    "name": "table-schemas",
+    "title": "schemas",
+    "width": 1100,
+    "height": 396,
+    "svg": "images/table-schemas.svg",
+    "png": "images/table-schemas.png"
+  },
+  {
+    "name": "table-user_projects",
+    "title": "user_projects",
+    "width": 1100,
+    "height": 257,
+    "svg": "images/table-user_projects.svg",
+    "png": "images/table-user_projects.png"
+  },
+  {
+    "name": "table-user_roles",
+    "title": "user_roles",
+    "width": 1100,
+    "height": 257,
+    "svg": "images/table-user_roles.svg",
+    "png": "images/table-user_roles.png"
+  },
+  {
+    "name": "table-auth-users",
+    "title": "auth.users",
+    "width": 1100,
+    "height": 324,
+    "svg": "images/table-auth-users.svg",
+    "png": "images/table-auth-users.png"
+  },
+  {
+    "name": "database-overview",
+    "title": "Տվյալների բազայի աղյուսակներն ու կապերը",
+    "width": 1600,
+    "height": 1080,
+    "svg": "images/database-overview.svg",
+    "png": "images/database-overview.png"
+  },
+  {
+    "name": "system-architecture",
+    "title": "Hotlog համակարգի ընդհանուր ճարտարապետությունը",
+    "width": 1210,
+    "height": 455,
+    "svg": "images/system-architecture.svg",
+    "png": "images/system-architecture.png"
+  },
+  {
+    "name": "frontend-architecture",
+    "title": "FrontEnd շերտերի բաժանումը",
+    "width": 1160,
+    "height": 415,
+    "svg": "images/frontend-architecture.svg",
+    "png": "images/frontend-architecture.png"
+  },
+  {
+    "name": "data-request-flow",
+    "title": "Վեբ հարցման և պատասխանի ճանապարհը",
+    "width": 1160,
+    "height": 415,
+    "svg": "images/data-request-flow.svg",
+    "png": "images/data-request-flow.png"
+  },
+  {
+    "name": "migrations-contract",
+    "title": "Հավելվածի և Supabase-ի պայմանագրի զարգացումը",
+    "width": 1160,
+    "height": 415,
+    "svg": "images/migrations-contract.svg",
+    "png": "images/migrations-contract.png"
+  },
+  {
+    "name": "sdk-flow",
+    "title": "Python SDK-ի տիպավորված ինտեգրումը",
+    "width": 1160,
+    "height": 415,
+    "svg": "images/sdk-flow.svg",
+    "png": "images/sdk-flow.png"
+  },
+  {
+    "name": "security-access",
+    "title": "Հասանելիության ստուգման շերտերը",
+    "width": 1160,
+    "height": 415,
+    "svg": "images/security-access.svg",
+    "png": "images/security-access.png"
+  },
+  {
+    "name": "invitations-flow",
+    "title": "Հրավերով նախագծին միանալու ընթացքը",
+    "width": 1160,
+    "height": 415,
+    "svg": "images/invitations-flow.svg",
+    "png": "images/invitations-flow.png"
+  },
+  {
+    "name": "event-lifecycle",
+    "title": "Իրադարձության ընդունման և ընթերցման ընթացքը",
+    "width": 1160,
+    "height": 415,
+    "svg": "images/event-lifecycle.svg",
+    "png": "images/event-lifecycle.png"
+  },
+  {
+    "name": "schema-contract",
+    "title": "Կայուն պայմանագիր և խմբագրվող ներկայացում",
+    "width": 1180,
+    "height": 435,
+    "svg": "images/schema-contract.svg",
+    "png": "images/schema-contract.png"
+  },
+  {
+    "name": "layout-composition",
+    "title": "Դասավորության և բաղադրիչների կառուցվածքը",
+    "width": 1200,
+    "height": 445,
+    "svg": "images/layout-composition.svg",
+    "png": "images/layout-composition.png"
+  },
+  {
+    "name": "frontend-user-flow",
+    "title": "Օգտատիրոջ հիմնական աշխատանքային սցենարը",
+    "width": 1160,
+    "height": 415,
+    "svg": "images/frontend-user-flow.svg",
+    "png": "images/frontend-user-flow.png"
+  }
+]

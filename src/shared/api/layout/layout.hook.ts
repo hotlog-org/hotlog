@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   type IBatchComponentsPayload,
   type ICreateLayoutPayload,
+  type ILayoutListResponse,
   type IRoleLayoutPayload,
   type IUpdateLayoutPayload,
   ELayoutKey,
@@ -44,15 +45,33 @@ export const useCreateLayoutMutation = (projectId?: string) => {
   })
 }
 
-export const useUpdateLayoutMutation = (projectId?: string) => {
+export const useUpdateLayoutMutation = () => {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: (payload: IUpdateLayoutPayload) => updateLayoutApi(payload),
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: layoutsKey(projectId),
-      })
+    mutationFn: ({
+      payload,
+    }: {
+      projectId: string | undefined
+      payload: IUpdateLayoutPayload
+    }) => updateLayoutApi(payload),
+    onMutate: ({ projectId }) => ({ queryKey: layoutsKey(projectId) }),
+    onSuccess: async (response, { payload }, context) => {
+      // Publish the confirmed write (including generated component IDs) before
+      // refetching. An older in-flight GET must not replace this result.
+      if (!context) return
+      await queryClient.cancelQueries({ queryKey: context.queryKey })
+      queryClient.setQueryData<ILayoutListResponse>(
+        context.queryKey,
+        (current) =>
+          current && {
+            ...current,
+            data: current.data.map((layout) =>
+              layout.id === payload.id ? response.data : layout,
+            ),
+          },
+      )
+      queryClient.invalidateQueries({ queryKey: context.queryKey })
     },
   })
 }
@@ -70,16 +89,35 @@ export const useDeleteLayoutMutation = (projectId?: string) => {
   })
 }
 
-export const useBatchComponentsMutation = (projectId?: string) => {
+export const useBatchComponentsMutation = () => {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: (payload: IBatchComponentsPayload) =>
-      batchComponentsApi(payload),
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: layoutsKey(projectId),
-      })
+    mutationFn: ({
+      payload,
+    }: {
+      projectId: string | undefined
+      payload: IBatchComponentsPayload
+    }) => batchComponentsApi(payload),
+    onMutate: ({ projectId }) => ({ queryKey: layoutsKey(projectId) }),
+    onSuccess: async (response, { payload }, context) => {
+      // Publish the confirmed write (including generated component IDs) before
+      // refetching. An older in-flight GET must not replace this result.
+      if (!context) return
+      await queryClient.cancelQueries({ queryKey: context.queryKey })
+      queryClient.setQueryData<ILayoutListResponse>(
+        context.queryKey,
+        (current) =>
+          current && {
+            ...current,
+            data: current.data.map((layout) =>
+              layout.id === payload.layout_id
+                ? { ...layout, components: response.data }
+                : layout,
+            ),
+          },
+      )
+      queryClient.invalidateQueries({ queryKey: context.queryKey })
     },
   })
 }

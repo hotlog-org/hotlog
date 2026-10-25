@@ -30,8 +30,12 @@ export const useDashboardSidebarContentService = () => {
   const { can } = useUserPermissions(selectedProjectId)
 
   const modules = useMemo(
-    () => (layoutsQuery.data?.data ?? []).map(layoutToSidebarModule),
-    [layoutsQuery.data],
+    () =>
+      (layoutsQuery.isPlaceholderData
+        ? []
+        : (layoutsQuery.data?.data ?? [])
+      ).map(layoutToSidebarModule),
+    [layoutsQuery.data, layoutsQuery.isPlaceholderData],
   )
 
   const setSelectedModuleId = useModulesStore(
@@ -46,6 +50,9 @@ export const useDashboardSidebarContentService = () => {
   return {
     t,
     modules,
+    isModulesLoading:
+      Boolean(selectedProjectId) &&
+      (layoutsQuery.isLoading || layoutsQuery.isPlaceholderData),
     selectedModuleId,
     setSelectedModuleId,
     deleteModule,

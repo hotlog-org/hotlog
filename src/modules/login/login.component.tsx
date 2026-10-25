@@ -43,6 +43,11 @@ const LoginComponent = () => {
           </CardDescription>
         </CardHeader>
         <CardContent className='space-y-6'>
+          {service.authMessage && (
+            <p role='status' className='text-sm'>
+              {service.authMessage}
+            </p>
+          )}
           <Form {...service.form}>
             <form
               onSubmit={service.form.handleSubmit(service.onSubmit)}

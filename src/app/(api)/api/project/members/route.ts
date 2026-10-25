@@ -169,30 +169,56 @@ export async function PATCH(request: NextRequest) {
     )
   }
 
-  const body = await request.json()
-  const { project_id, user_id, role_id } = body
-
-  if (!project_id || !user_id || !role_id) {
+  let body: unknown
+  try {
+    body = await request.json()
+  } catch {
     return NextResponse.json<IApiErrorResponse>(
-      { error: { message: 'project_id, user_id, and role_id are required' } },
+      { error: { message: 'Invalid JSON body' } },
       { status: 400 },
     )
   }
 
-  // Use security definer function to swap role (bypasses RLS)
-  const { error } = await supabase.rpc(
-    'update_user_role' as never,
-    {
-      p_project_id: project_id,
-      p_user_id: user_id,
-      p_role_id: role_id,
-    } as never,
-  )
+  const { project_id, user_id, role_id } =
+    body && typeof body === 'object' && !Array.isArray(body)
+      ? (body as Record<string, unknown>)
+      : {}
+  const isUuid = (value: unknown): value is string =>
+    typeof value === 'string' &&
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+      value,
+    )
+
+  if (!isUuid(project_id) || !isUuid(user_id) || !isUuid(role_id)) {
+    return NextResponse.json<IApiErrorResponse>(
+      {
+        error: {
+          message: 'project_id, user_id, and role_id must be valid UUIDs',
+        },
+      },
+      { status: 400 },
+    )
+  }
+
+  // The database authenticates, authorizes and validates before the atomic swap.
+  const { error } = await supabase.rpc('update_user_role', {
+    p_project_id: project_id,
+    p_user_id: user_id,
+    p_role_id: role_id,
+  })
 
   if (error) {
+    const status =
+      error.code === '28000'
+        ? 401
+        : error.code === '42501'
+          ? 403
+          : error.code === '22023' || error.code === '22P02'
+            ? 400
+            : 500
     return NextResponse.json<IApiErrorResponse>(
       { error: { message: error.message } },
-      { status: 500 },
+      { status },
     )
   }
 

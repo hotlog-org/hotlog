@@ -8,7 +8,9 @@ export enum EProjectApiKeyKey {
 
 export interface IProjectApiKeyDto {
   id: number
-  key: string
+  key_prefix: string
+  last_used_at: string | null
+  revoked_at: string | null
   project_id: string
 }
 
@@ -17,9 +19,13 @@ export interface IProjectApiKeysResponse {
 }
 
 export interface IProjectApiKeyResponse {
-  data: IProjectApiKeyDto
+  data: IProjectApiKeyDto & { key: string }
 }
 
 export interface ICreateApiKeyPayload {
   project_id: string
+}
+
+export interface IRotateApiKeyPayload extends ICreateApiKeyPayload {
+  id: number
 }

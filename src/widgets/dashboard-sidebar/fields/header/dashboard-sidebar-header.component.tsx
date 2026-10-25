@@ -132,11 +132,10 @@ const DashboardSidebarHeaderComponent = () => {
 
           <form
             className='space-y-4'
-            onSubmit={(e) => {
+            onSubmit={async (e) => {
               e.preventDefault()
-              service.handleCreateProject(projectName)
-              service.setCreateDialogOpen(false)
-              setProjectName('')
+              if (await service.handleCreateProject(projectName))
+                setProjectName('')
             }}
           >
             <Input
@@ -145,8 +144,17 @@ const DashboardSidebarHeaderComponent = () => {
               onChange={(e) => setProjectName(e.target.value)}
             />
 
+            {service.createError && (
+              <p role='alert' className='text-sm text-destructive'>
+                {service.createError}
+              </p>
+            )}
             <DialogFooter>
-              <Button variant='outline' type='submit'>
+              <Button
+                variant='outline'
+                type='submit'
+                disabled={service.isCreating || !projectName.trim()}
+              >
                 {service.t('create')}
               </Button>
             </DialogFooter>

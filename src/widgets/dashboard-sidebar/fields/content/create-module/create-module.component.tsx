@@ -61,7 +61,7 @@ export const DashboardSidebarCreateModuleComponent = (
             <DialogDescription>{service.t('create.subtitle')}</DialogDescription>
           </DialogHeader>
 
-          <div className='space-y-4 py-2'>
+          <fieldset disabled={service.draftLocked} className='space-y-4 py-2'>
             <Field>
               <FieldLabel>{service.t('create.name')}</FieldLabel>
               <FieldControl>
@@ -92,21 +92,25 @@ export const DashboardSidebarCreateModuleComponent = (
             </Field>
 
             <Field>
-              <FieldLabel>Visibility</FieldLabel>
+              <FieldLabel>{service.t('visibility.label')}</FieldLabel>
               <FieldControl>
                 <div className='space-y-2'>
                   {service.selectedRoleIds.length === 0 ? (
                     <Badge variant='secondary' className='text-xs'>
-                      Public — visible to all members
+                      {service.t('visibility.publicDescription')}
                     </Badge>
                   ) : (
                     <Badge variant='outline' className='text-xs'>
-                      Restricted to {service.selectedRoleIds.length} role{service.selectedRoleIds.length > 1 ? 's' : ''}
+                      {service.t('visibility.restricted', {
+                        count: service.selectedRoleIds.length,
+                      })}
                     </Badge>
                   )}
                   <div className='max-h-32 space-y-1 overflow-y-auto rounded-md border border-border p-2'>
                     {service.roles.length === 0 ? (
-                      <p className='text-xs text-muted-foreground'>No roles available</p>
+                      <p className='text-xs text-muted-foreground'>
+                        {service.t('visibility.noRoles')}
+                      </p>
                     ) : (
                       service.roles.map((role) => (
                         <label
@@ -117,7 +121,13 @@ export const DashboardSidebarCreateModuleComponent = (
                             checked={service.selectedRoleIds.includes(role.id)}
                             onChange={() => service.toggleRole(role.id)}
                           />
-                          <span>{role.name}</span>
+                          <span>
+                            {role.name === 'Owner'
+                              ? service.t('visibility.owner')
+                              : role.name === 'Admin'
+                                ? service.t('visibility.admin')
+                                : role.name}
+                          </span>
                         </label>
                       ))
                     )}
@@ -125,7 +135,12 @@ export const DashboardSidebarCreateModuleComponent = (
                 </div>
               </FieldControl>
             </Field>
-          </div>
+          </fieldset>
+          {service.error && (
+            <p role='alert' className='text-sm text-destructive'>
+              {service.error}
+            </p>
+          )}
 
           <DialogFooter className='flex flex-row items-center justify-end gap-2'>
             <Button variant='ghost' onClick={() => service.setOpen(false)}>
@@ -133,7 +148,11 @@ export const DashboardSidebarCreateModuleComponent = (
             </Button>
             <Button
               onClick={service.handleSubmit}
-              disabled={!service.name.trim() || service.isCreating}
+              disabled={
+                !service.name.trim() ||
+                service.isCreating ||
+                service.submitBlocked
+              }
             >
               {service.t('create.submit')}
             </Button>

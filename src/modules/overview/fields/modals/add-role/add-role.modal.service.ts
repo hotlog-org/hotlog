@@ -11,7 +11,6 @@ export const useAddRoleModalService = ({
   open,
   permissions,
   onSubmit,
-  onClose,
 }: AddRoleModalProps) => {
   const [name, setName] = useState('')
   const [permissionIds, setPermissionIds] = useState<string[]>([])
@@ -53,7 +52,6 @@ export const useAddRoleModalService = ({
     }
 
     onSubmit(parsed.data)
-    onClose()
   }
 
   return {

@@ -5,6 +5,7 @@ import { restApiFetcher } from '@/lib/rest-api/fetcher'
 import {
   EProjectApiKeyApi,
   type ICreateApiKeyPayload,
+  type IRotateApiKeyPayload,
   type IProjectApiKeyResponse,
   type IProjectApiKeysResponse,
 } from '../interface'
@@ -39,4 +40,14 @@ export const deleteApiKeyApi = async (id: number): Promise<void> => {
   await restApiFetcher.delete(EProjectApiKeyApi.PROJECT_API_KEYS_API, {
     searchParams: { id: String(id) },
   })
+}
+
+export const rotateApiKeyApi = async (
+  payload: IRotateApiKeyPayload,
+): Promise<IProjectApiKeyResponse> => {
+  const response = await restApiFetcher.patch<IProjectApiKeyResponse>(
+    EProjectApiKeyApi.PROJECT_API_KEYS_API,
+    { json: payload },
+  )
+  return response.json()
 }

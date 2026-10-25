@@ -114,6 +114,7 @@ export interface EventsService {
   canDelete: boolean
   isLoading: boolean
   isError: boolean
+  loadError: string | null
   hasNextPage: boolean
   isFetchingNextPage: boolean
   loadMore: () => void
@@ -183,7 +184,11 @@ const FIELD_TYPE_MAP_REVERSE: Record<FieldType, ProjectFieldType> = {
 const useEventsService = (): EventsService => {
   const t = useTranslations('modules.dashboard.events')
   const selectedProjectId = useDashboardProject((s) => s.selectedProjectId)
-  const { can } = useUserPermissions(selectedProjectId)
+  const {
+    can,
+    isPending: permissionsPending,
+    isPlaceholderData: permissionsPlaceholder,
+  } = useUserPermissions(selectedProjectId)
   const canRead = can('read:events')
   const canDelete = can('delete:events')
 
@@ -209,20 +214,26 @@ const useEventsService = (): EventsService => {
   const schemasQuery = useSchemasQuery(canRead ? selectedProjectId : undefined)
 
   const schemas: SchemaOption[] = useMemo(() => {
-    const list = schemasQuery.data?.data ?? []
+    const list = schemasQuery.isPlaceholderData
+      ? []
+      : (schemasQuery.data?.data ?? [])
     return list.map((s) => ({
       id: s.id,
       name: s.displayName,
       version: '',
       fields: [],
     }))
-  }, [schemasQuery.data])
+  }, [schemasQuery.data, schemasQuery.isPlaceholderData])
 
   // Fan out: fetch active fields for every schema in the project so the
   // filter parser can resolve identifiers across all schemas. Each query
   // is cached individually and shared with the detail drawer's per-schema
   // fetch, so we don't double-fetch.
-  const schemaList = schemasQuery.data?.data ?? []
+  const schemaList = useMemo(
+    () =>
+      schemasQuery.isPlaceholderData ? [] : (schemasQuery.data?.data ?? []),
+    [schemasQuery.data, schemasQuery.isPlaceholderData],
+  )
   const fieldQueries = useQueries({
     queries: schemaList.map((s) => ({
       queryKey: [
@@ -264,8 +275,11 @@ const useEventsService = (): EventsService => {
   })
 
   const flatEvents: IEventDto[] = useMemo(
-    () => eventsQuery.data?.pages.flatMap((p) => p.data) ?? [],
-    [eventsQuery.data],
+    () =>
+      eventsQuery.isPlaceholderData
+        ? []
+        : (eventsQuery.data?.pages.flatMap((p) => p.data) ?? []),
+    [eventsQuery.data, eventsQuery.isPlaceholderData],
   )
 
   const schemaNameById = useMemo(() => {
@@ -632,8 +646,12 @@ const useEventsService = (): EventsService => {
     hasNoProject: !selectedProjectId,
     canRead,
     canDelete,
-    isLoading: eventsQuery.isLoading,
+    isLoading:
+      (Boolean(selectedProjectId) &&
+        (permissionsPending || permissionsPlaceholder)) ||
+      (canRead && (eventsQuery.isLoading || eventsQuery.isPlaceholderData)),
     isError: eventsQuery.isError,
+    loadError: eventsQuery.error?.message ?? null,
     hasNextPage: Boolean(eventsQuery.hasNextPage),
     isFetchingNextPage: eventsQuery.isFetchingNextPage,
     loadMore: () => {

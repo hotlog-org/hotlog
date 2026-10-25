@@ -1,4 +1,9 @@
-import { queryOptions, useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import {
+  queryOptions,
+  useQuery,
+  useMutation,
+  useQueryClient,
+} from '@tanstack/react-query'
 
 import {
   createProjectApi,
@@ -15,8 +20,8 @@ const userProjectsQueryOptions = () => {
   })
 }
 
-export const useUserProjectsQuery = () => {
-  return useQuery(userProjectsQueryOptions())
+export const useUserProjectsQuery = (options: { enabled?: boolean } = {}) => {
+  return useQuery({ ...userProjectsQueryOptions(), ...options })
 }
 
 export const useCreateProjectMutation = () => {

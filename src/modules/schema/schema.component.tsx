@@ -1,6 +1,9 @@
 'use client'
 
 import { useState } from 'react'
+import { Loading03Icon } from '@hugeicons/core-free-icons'
+import { HugeiconsIcon } from '@hugeicons/react'
+import type { IArchivedSchemaConflict } from '@/shared/api/interface'
 
 import {
   Dialog,
@@ -39,12 +42,16 @@ function SchemaTableSkeleton() {
   )
 }
 
-function CreateSchemaDialog(props: {
+export function CreateSchemaDialog(props: {
   open: boolean
   onClose: () => void
   onSubmit: (displayName: string) => void
   isSubmitting: boolean
   error: string | null
+  conflict: IArchivedSchemaConflict | null
+  onDraftChange: () => void
+  onRestore?: (key: string) => void
+  isRestoring: boolean
   t: ReturnType<typeof useSchemaService>['t']
 }) {
   const [displayName, setDisplayName] = useState('')
@@ -54,13 +61,10 @@ function CreateSchemaDialog(props: {
     <Dialog
       open={props.open}
       onOpenChange={(open) => {
-        if (!open) {
-          setDisplayName('')
-          props.onClose()
-        }
+        if (!open && !props.isSubmitting) props.onClose()
       }}
     >
-      <DialogContent className='sm:max-w-md'>
+      <DialogContent className='sm:max-w-md' aria-describedby={undefined}>
         <DialogHeader>
           <DialogTitle>{props.t('createDialog.title')}</DialogTitle>
         </DialogHeader>
@@ -70,7 +74,11 @@ function CreateSchemaDialog(props: {
             <FieldControl>
               <Input
                 value={displayName}
-                onChange={(e) => setDisplayName(e.target.value)}
+                onChange={(e) => {
+                  setDisplayName(e.target.value)
+                  props.onDraftChange()
+                }}
+                disabled={props.isSubmitting}
                 placeholder={props.t('createDialog.displayNamePlaceholder')}
                 autoFocus
               />
@@ -80,24 +88,60 @@ function CreateSchemaDialog(props: {
             {props.t('createDialog.keyPreview')}{' '}
             <span className='font-mono'>{previewKey}</span>
           </p>
-          {props.error && <p className='text-sm text-red-500'>{props.error}</p>}
+          {props.error && (
+            <p role='alert' className='text-sm text-destructive'>
+              {props.error}
+            </p>
+          )}
+          {props.conflict?.key === previewKey && (
+            <div className='space-y-2 rounded-md border p-3 text-sm'>
+              <p className='font-medium'>{props.conflict.displayName}</p>
+              <p className='text-muted-foreground'>
+                {props.onRestore
+                  ? props.t('createDialog.restoreDescription')
+                  : props.t('createDialog.restoreNoPermission')}
+              </p>
+              {props.onRestore && (
+                <Button
+                  variant='outline'
+                  disabled={props.isSubmitting}
+                  aria-busy={props.isRestoring}
+                  onClick={() => props.onRestore?.(previewKey)}
+                >
+                  {props.isRestoring && (
+                    <HugeiconsIcon
+                      icon={Loading03Icon}
+                      className='size-4 animate-spin'
+                      aria-hidden='true'
+                    />
+                  )}
+                  {props.t(
+                    props.isRestoring
+                      ? 'createDialog.restoring'
+                      : 'createDialog.restore',
+                  )}
+                </Button>
+              )}
+            </div>
+          )}
         </div>
         <DialogFooter>
           <Button
             variant='outline'
-            onClick={() => {
-              setDisplayName('')
-              props.onClose()
-            }}
+            onClick={props.onClose}
             disabled={props.isSubmitting}
           >
             {props.t('editor.cancel')}
           </Button>
           <Button
             onClick={() => props.onSubmit(displayName)}
-            disabled={!displayName.trim() || props.isSubmitting}
+            disabled={
+              !displayName.trim() ||
+              props.isSubmitting ||
+              props.conflict?.key === previewKey
+            }
           >
-            {props.isSubmitting
+            {props.isSubmitting && !props.isRestoring
               ? props.t('createDialog.creating')
               : props.t('createDialog.create')}
           </Button>
@@ -114,18 +158,28 @@ export function SchemaComponent() {
     <div className='flex min-h-0 flex-1 flex-col gap-4'>
       <h1 className='text-2xl font-semibold'>{service.t('title')}</h1>
 
+      {service.loadError && service.rows.length > 0 && (
+        <p role='alert' className='text-sm text-destructive'>
+          {service.loadError}
+        </p>
+      )}
+
       {service.hasNoProject ? (
         <div className='flex flex-1 items-center justify-center text-muted-foreground'>
           {service.t('emptyState.noProject')}
-        </div>
-      ) : !service.canRead ? (
-        <div className='flex flex-1 items-center justify-center text-muted-foreground'>
-          {service.t('emptyState.noPermission')}
         </div>
       ) : service.isLoading ? (
         <div className='flex min-h-0 flex-1 flex-col overflow-hidden'>
           <SchemaTableSkeleton />
         </div>
+      ) : !service.canRead ? (
+        <div className='flex flex-1 items-center justify-center text-muted-foreground'>
+          {service.t('emptyState.noPermission')}
+        </div>
+      ) : service.loadError && service.rows.length === 0 ? (
+        <p role='alert' className='text-sm text-destructive'>
+          {service.loadError}
+        </p>
       ) : (
         <div className='flex min-h-0 flex-1 flex-col overflow-hidden'>
           <SchemaTable
@@ -174,11 +228,20 @@ export function SchemaComponent() {
       />
 
       <CreateSchemaDialog
+        key={service.createSchemaSession}
         open={service.createSchemaOpen}
         onClose={service.closeCreateSchema}
         onSubmit={service.submitCreateSchema}
         isSubmitting={service.isCreatingSchema}
         error={service.createSchemaError}
+        conflict={service.archivedSchemaConflict}
+        onDraftChange={service.clearCreateSchemaConflict}
+        onRestore={
+          service.canRestoreSchema
+            ? service.restoreConflictingSchema
+            : undefined
+        }
+        isRestoring={service.isRestoringSchema}
         t={service.t}
       />
     </div>

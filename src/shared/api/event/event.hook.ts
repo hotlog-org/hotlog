@@ -75,7 +75,8 @@ interface DeleteMutationContext {
   }>
 }
 
-export const useDeleteEventsMutation = (projectId?: string) => {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars -- Keep the existing call signature; the payload owns the project.
+export const useDeleteEventsMutation = (_projectId?: string) => {
   const queryClient = useQueryClient()
 
   return useMutation({
@@ -113,21 +114,48 @@ export const useDeleteEventsMutation = (projectId?: string) => {
 
       return { snapshots }
     },
-    onError: (_err, _payload, context) => {
+    onError: (_err, payload, context) => {
       if (!context) return
-      // Roll back every query we touched.
+      const deletedIds = new Set(payload.ids)
       for (const snapshot of context.snapshots) {
-        queryClient.setQueryData(snapshot.queryKey, snapshot.data)
+        queryClient.setQueryData<EventsInfiniteData>(
+          snapshot.queryKey,
+          (current) => {
+            if (!current || !snapshot.data) return current
+            return {
+              ...current,
+              pages: current.pages.map((page, pageIndex) => {
+                const previousPage = snapshot.data?.pages[pageIndex]
+                if (
+                  !previousPage ||
+                  current.pageParams[pageIndex] !==
+                    snapshot.data?.pageParams[pageIndex]
+                )
+                  return page
+                const data = [...page.data]
+                previousPage.data.forEach((event, index) => {
+                  if (
+                    deletedIds.has(event.id) &&
+                    !data.some((item) => item.id === event.id)
+                  ) {
+                    data.splice(Math.min(index, data.length), 0, event)
+                  }
+                })
+                return { ...page, data }
+              }),
+            }
+          },
+        )
       }
     },
-    onSettled: () => {
+    onSettled: (_data, _error, payload) => {
       // Refetch to reconcile with the server: confirms the optimistic
       // edit on success, restores the canonical truth on error.
       queryClient.invalidateQueries({
-        queryKey: [EEventKey.EVENTS_QUERY, projectId],
+        queryKey: [EEventKey.EVENTS_QUERY, payload.projectId],
       })
       queryClient.invalidateQueries({
-        queryKey: [EEventKey.EVENT_STATS_QUERY, projectId],
+        queryKey: [EEventKey.EVENT_STATS_QUERY, payload.projectId],
       })
     },
   })

@@ -1,5 +1,4 @@
 .DS_Store
-yarn.lock
 
 # Logs
 logs
@@ -142,3 +141,11 @@ dist
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 .vite/
+
+# Local database exports may contain user data and credentials
+/hotlog_*_dump.sql
+/supabase_schema.sql
+/supabase/supabase_schema.sql
+
+# Local agent connection state
+/.pi/remote-pi/

@@ -25,6 +25,7 @@ import { useModulesEditorService } from './modules-editor.service'
 
 export interface ModulesEditorProps {
   open: boolean
+  disabled?: boolean
   mode: 'create' | 'edit'
   component: ModuleComponent | null
   schemas: ModuleSchemaDefinition[]
@@ -46,7 +47,8 @@ export const ModulesEditor = (props: ModulesEditorProps) => {
       ),
   )
 
-  const disabled = !draft || !draft.schemaId || missingRequiredBindings
+  const disabled =
+    props.disabled || !draft || !draft.schemaId || missingRequiredBindings
 
   return (
     <Drawer
@@ -69,7 +71,10 @@ export const ModulesEditor = (props: ModulesEditorProps) => {
         <Separator />
 
         {draft ? (
-          <div className='grid grid-cols-1 gap-6 p-4'>
+          <fieldset
+            disabled={props.disabled}
+            className='grid grid-cols-1 gap-6 p-4'
+          >
             <div className='space-y-4'>
               <Field>
                 <FieldLabel>{props.t('drawer.titleLabel')}</FieldLabel>
@@ -210,7 +215,7 @@ export const ModulesEditor = (props: ModulesEditorProps) => {
                 </FieldControl>
               </Field>
             </div>
-          </div>
+          </fieldset>
         ) : null}
 
         <DrawerFooter className='w-full'>

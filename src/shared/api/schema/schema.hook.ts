@@ -52,14 +52,14 @@ export const useSchemaFieldsQuery = (
   })
 }
 
-export const useCreateSchemaMutation = (projectId?: string) => {
+export const useCreateSchemaMutation = () => {
   const queryClient = useQueryClient()
 
   return useMutation({
     mutationFn: (payload: ICreateSchemaPayload) => createSchemaApi(payload),
-    onSuccess: () => {
+    onSuccess: (_response, payload) => {
       queryClient.invalidateQueries({
-        queryKey: [ESchemaKey.SCHEMAS_QUERY, projectId],
+        queryKey: [ESchemaKey.SCHEMAS_QUERY, payload.project_id],
       })
     },
   })
@@ -70,11 +70,11 @@ export const useUpdateSchemaMutation = (projectId?: string) => {
 
   return useMutation({
     mutationFn: (payload: IUpdateSchemaPayload) => updateSchemaApi(payload),
-    onSuccess: () => {
+    onMutate: () => ({ projectId }),
+    onSuccess: (_response, _payload, context) =>
       queryClient.invalidateQueries({
-        queryKey: [ESchemaKey.SCHEMAS_QUERY, projectId],
-      })
-    },
+        queryKey: [ESchemaKey.SCHEMAS_QUERY, context.projectId],
+      }),
   })
 }
 

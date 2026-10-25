@@ -97,6 +97,7 @@ export const useModulesEditorService = (props: ModulesEditorProps) => {
   }, [draft, props.schemas])
 
   const setDraftValue = (next: ModuleComponent | null) => {
+    if (props.disabled) return
     setDraft(next)
   }
 
@@ -148,7 +149,7 @@ export const useModulesEditorService = (props: ModulesEditorProps) => {
   }
 
   const handleSubmit = () => {
-    if (!draft) return
+    if (props.disabled || !draft) return
     props.onSubmit(draft)
   }
 

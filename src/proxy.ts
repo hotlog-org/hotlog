@@ -8,6 +8,9 @@ const proxyMiddleware = createMiddleware(routing)
 
 export async function proxy(request: NextRequest) {
   const authResponse = await updateSession(request)
+  // The email token confirmation endpoint is deliberately not localized.
+  if (request.nextUrl.pathname === '/auth/confirm') return authResponse
+
   const intlResponse = proxyMiddleware(request)
 
   authResponse.cookies.getAll().forEach((cookie) => {
