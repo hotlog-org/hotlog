@@ -66,6 +66,21 @@ const writes = [
   () => createInvitationApi({ project_id: 'p', email: 'test@example.invalid' }),
 ]
 
+describe('API origin selection', () => {
+  it.each([undefined, 'https://preview.hotlog.invalid'])(
+    'selects the API origin for %s',
+    async (origin) => {
+      vi.resetModules()
+      if (origin) vi.stubGlobal('window', { location: { origin } })
+      const { restApiFetcher: fetcher } = await import('./rest-api.fetcher')
+      vi.mocked(fetch).mockResolvedValueOnce(Response.json({ data: [] }))
+      await fetcher.get('test')
+      const request = vi.mocked(fetch).mock.calls[0][0] as Request
+      expect(request.url).toBe(`${origin ?? 'https://hotlog.invalid'}/api/test`)
+    },
+  )
+})
+
 describe('shared HTTP failure contract', () => {
   it.each([400, 401, 403, 404, 409, 413, 429, 500, 503])(
     'preserves JSON message/status %i without HTTP retries',
